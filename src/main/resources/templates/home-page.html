@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trang chủ</title>
+    <link rel="stylesheet" href="/css/home-page.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+</head>
+<body>
+<!-- Navigation -->
+<nav class="navbar" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 20px;">
+    <div class="nav-container" style="display: flex; align-items: center; justify-content: space-between; width: 100%; max-width: 1000px; margin: 0 200px; padding: 0 40px;">
+        <img src="https://res.cloudinary.com/dpkxslork/image/upload/v1750066568/logoooooooo_j1ynjc.png" style="height: 40px;">
+
+        <ul class="nav-links" style="display: flex; gap: 20px; list-style: none; padding: 0; margin: 0;">
+            <li><a href="/home-page">Trang chủ</a></li>
+            <li><a href="#issues">Vấn đề</a></li>
+            <li><a href="#storages">Danh sách</a></li>
+            <li><a href="#booking">Đặt kho</a></li>
+            <li><a href="#support">Hỗ trợ</a></li>
+            <li><a href="#my-bookings">Đơn hàng của tôi</a></li>
+        </ul>
+    </div>
+
+    <!-- User Menu -->
+    <div class="user-menu" style="display: flex; align-items: center; gap: 15px;">
+        <ul style="display: flex; align-items: center; gap: 24px; list-style: none; margin: 0;">
+            <!-- Notification Bell -->
+            <li>
+                <a href="#notifications" class="notification-bell" title="Thông báo" style="position:relative; color: white;">
+                    <i class="fa fa-bell" style="font-size:1.5rem;"></i>
+                </a>
+            </li>
+
+            <!-- User Profile -->
+            <li class="profile-menu" style="position:relative;">
+                <a href="#profile" title="Tài khoản" style="color:white;">
+                    <i class="fa fa-user-circle" style="font-size: 1.8rem;"></i>
+                </a>
+                <ul class="profile-dropdown" style="position:absolute;right:0;top:40px;background:white;padding:0;border-radius:10px;box-shadow:0 4px 12px rgba(0,0,0,0.2);z-index:999;width:200px;">
+                    <li style="border-bottom: 1px solid #eee;"><a href="#profile-info" style="display:block;padding:10px 16px;text-decoration:none;color:#333;"><i class="fa fa-id-card"></i> Thông tin cá nhân</a></li>
+                    <li style="border-bottom: 1px solid #eee;"><a href="#profile-update" style="display:block;padding:10px 16px;text-decoration:none;color:#333;"><i class="fa fa-edit"></i> Cập nhật thông tin</a></li>
+                    <li style="border-bottom: 1px solid #eee;"><a href="#profile-forgot" style="display:block;padding:10px 16px;text-decoration:none;color:#333;"><i class="fa fa-unlock-alt"></i> Quên mật khẩu</a></li>
+                    <li style="border-bottom: 1px solid #eee;"><a href="#logout" style="display:block;padding:10px 16px;text-decoration:none;color:#333;"><i class="fa fa-sign-out-alt"></i> Đăng xuất</a></li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+</nav>
+
+<!-- Hero Section -->
+<section class="hero" id="home">
+    <div class="container">
+        <div class="hero-content">
+            <div class="hero-text">
+                <h1>Hệ Thống Quản Lý Kho Chuyên Nghiệp</h1>
+                <p>An toàn, tin cậy và hiệu quả cho nhu cầu lưu trữ doanh nghiệp của bạn.</p>
+                <div class="hero-buttons">
+                    <a href="#storages" class="btn btn-outline-white">Bắt đầu ngay</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="features" id="services">
+    <div class="container">
+        <div class="features-content">
+            <div class="features-text">
+                <h2>Được xây dựng với những công cụ quản lý vượt trội.</h2>
+                <p>Hệ thống quản lý kho của chúng tôi cung cấp khả năng theo dõi toàn diện, kiểm soát tồn kho và báo cáo tự động.</p>
+                <a href="#features" class="btn btn-dark">Khám phá tính năng</a>
+            </div>
+            <div class="storage-grid">
+                <div class="storage-item">
+                    <div class="storage-icon">📦</div>
+                    <h3>Kho Nhỏ</h3>
+                    <div class="price">150.000 VNĐ</div>
+                </div>
+                <div class="storage-item">
+                    <div class="storage-icon">🏢</div>
+                    <h3>Kho Vừa</h3>
+                    <div class="price">200.000 VNĐ</div>
+                </div>
+                <div class="storage-item">
+                    <div class="storage-icon">🏭</div>
+                    <h3>Kho Lớn</h3>
+                    <div class="price">300.000 VNĐ</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Why Choose Us Section -->
+<section class="why-choose-us" id="about">
+    <div class="container">
+        <div class="why-choose-content">
+            <div class="why-choose-text">
+                <h2>Tại sao chọn chúng tôi</h2>
+                <p>Giải pháp quản lý kho chuyên nghiệp được thiết kế cho doanh nghiệp hiện đại.</p>
+                <div class="benefits-grid">
+                    <div class="benefit-item">
+                        <div class="benefit-icon">🚚</div>
+                        <div>
+                            <h3>Giao Hàng Nhanh & Miễn Phí</h3>
+                            <p>Dịch vụ vận chuyển nhanh chóng và tin cậy cho hàng hóa lưu kho của bạn.</p>
+                        </div>
+                    </div>
+                    <div class="benefit-item">
+                        <div class="benefit-icon">🛒</div>
+                        <div>
+                            <h3>Dễ Dàng Quản Lý</h3>
+                            <p>Giao diện quản lý trực quan với khả năng theo dõi tồn kho thời gian thực.</p>
+                        </div>
+                    </div>
+                    <div class="benefit-item">
+                        <div class="benefit-icon">🛡️</div>
+                        <div>
+                            <h3>Hỗ Trợ 24/7</h3>
+                            <p>Hỗ trợ khách hàng và giám sát kho 24/7.</p>
+                        </div>
+                    </div>
+                    <div class="benefit-item">
+                        <div class="benefit-icon">🔄</div>
+                        <div>
+                            <h3>Giải Pháp Linh Hoạt</h3>
+                            <p>Tùy chọn lưu trữ linh hoạt phù hợp với sự phát triển của doanh nghiệp bạn.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="why-choose-visual">
+                <div class="visual-decoration">
+                    <div class="dots-pattern"></div>
+                    <div class="storage-visual">
+                        <div class="storage-boxes">
+                            <div class="box box-1"></div>
+                            <div class="box box-2"></div>
+                            <div class="box box-3"></div>
+                        </div>
+                        <div class="furniture-elements">
+                            <div class="shelf"></div>
+                            <div class="cabinet"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Testimonials Section -->
+<section class="testimonials">
+    <div class="container">
+        <h2>Khách hàng nói gì về chúng tôi</h2>
+        <div class="testimonial-content">
+            <div class="testimonial-main">
+                <div class="testimonial-slide active">
+                    <p class="testimonial-text">"Hệ thống quản lý kho rất hiệu quả và dễ sử dụng."</p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">
+                            <img src="/images/placeholder.jpg" alt="Maria Jones">
+                        </div>
+                        <div class="author-info">
+                            <h4>Maria Jones</h4>
+                            <p>Giám đốc điều hành, XYZ Inc.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-slide">
+                    <p class="testimonial-text">"Trải nghiệm quản lý kho tuyệt vời, đội ngũ hỗ trợ tận tâm."</p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">
+                            <img src="/images/placeholder.jpg" alt="John Smith">
+                        </div>
+                        <div class="author-info">
+                            <h4>John Smith</h4>
+                            <p>Quản lý vận hành, ABC Corp.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-slide">
+                    <p class="testimonial-text">"Dịch vụ chuyên nghiệp, giải pháp lưu kho đáng tin cậy."</p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">
+                            <img src="/images/placeholder.jpg" alt="Sarah Wilson">
+                        </div>
+                        <div class="author-info">
+                            <h4>Sarah Wilson</h4>
+                            <p>Giám đốc Logistics, DEF Industries</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Footer -->
+<footer style="background:#333;color:white;padding:20px;text-align:center;">
+    <p>&copy; 2025 QVL Storage. All rights reserved.</p>
+</footer>
+
+</body>
+</html>
