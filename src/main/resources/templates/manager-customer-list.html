@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Customer List - QVL Storage</title>
+    <title>Danh sách khách hàng - QVL Storage</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         * {
@@ -18,14 +18,14 @@
             color: #333;
         }
 
-        /* Sidebar Styles */
+        /* <CHANGE> Simplified sidebar styles - removed gradients */
         .sidebar {
             position: fixed;
             left: 0;
             top: 0;
             width: 260px;
             height: 100vh;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #343a40;
             color: white;
             z-index: 1000;
             transition: transform 0.3s ease;
@@ -176,7 +176,7 @@
 
         .search-box input:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: #007bff;
         }
 
         /* Page Content */
@@ -191,6 +191,7 @@
             margin-bottom: 30px;
         }
 
+        /* <CHANGE> Updated page title text to Vietnamese */
         .page-title {
             font-size: 32px;
             color: #333;
@@ -202,10 +203,10 @@
             gap: 15px;
         }
 
-        /* Buttons */
+        /* <CHANGE> Simplified button styles - removed gradients */
         .btn-primary, .btn-secondary {
             padding: 12px 24px;
-            border: none;
+            border: 2px solid transparent;
             border-radius: 8px;
             font-size: 14px;
             font-weight: 600;
@@ -218,19 +219,20 @@
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #007bff;
             color: white;
+            border-color: #007bff;
         }
 
         .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            background: #0056b3;
+            border-color: #0056b3;
         }
 
         .btn-secondary {
             background: #f8f9fa;
             color: #495057;
-            border: 2px solid #e9ecef;
+            border-color: #e9ecef;
         }
 
         .btn-secondary:hover {
@@ -241,19 +243,20 @@
         .btn-back {
             background: #6c757d;
             color: white;
-            border: none;
+            border-color: #6c757d;
         }
 
         .btn-back:hover {
             background: #5a6268;
+            border-color: #545b62;
         }
 
-        /* Filter Section */
+        /* <CHANGE> Simplified filter section layout */
         .filter-section {
             background: white;
             padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             margin-bottom: 25px;
             display: flex;
             gap: 20px;
@@ -276,7 +279,7 @@
         .filter-select {
             padding: 10px 15px;
             border: 2px solid #e9ecef;
-            border-radius: 8px;
+            border-radius: 6px;
             font-size: 14px;
             min-width: 200px;
             transition: border-color 0.3s ease;
@@ -284,14 +287,14 @@
 
         .filter-select:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: #007bff;
         }
 
         /* Card */
         .card {
             background: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             overflow: hidden;
         }
 
@@ -336,8 +339,6 @@
             font-weight: 600;
             color: #495057;
             font-size: 14px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
         }
 
         .data-table tbody tr:hover {
@@ -346,7 +347,7 @@
 
         .customer-id {
             font-weight: 600;
-            color: #667eea;
+            color: #007bff;
         }
 
         .customer-name {
@@ -399,7 +400,7 @@
         .btn-icon {
             width: 36px;
             height: 36px;
-            border: none;
+            border: 1px solid #dee2e6;
             border-radius: 6px;
             display: flex;
             align-items: center;
@@ -413,16 +414,18 @@
 
         .btn-icon:hover {
             background: #e9ecef;
-            transform: translateY(-1px);
+            border-color: #adb5bd;
         }
 
         .btn-icon.danger {
             background: #f8d7da;
             color: #721c24;
+            border-color: #f5c6cb;
         }
 
         .btn-icon.danger:hover {
             background: #f5c6cb;
+            border-color: #f1b0b7;
         }
 
         /* Pagination */
@@ -438,7 +441,7 @@
             height: 40px;
             border: 2px solid #e9ecef;
             background: white;
-            border-radius: 8px;
+            border-radius: 6px;
             cursor: pointer;
             transition: all 0.3s ease;
             display: flex;
@@ -448,9 +451,9 @@
 
         .pagination button:hover,
         .pagination button.active {
-            background: #667eea;
+            background: #007bff;
             color: white;
-            border-color: #667eea;
+            border-color: #007bff;
         }
 
         /* Mobile Responsive */
@@ -518,116 +521,91 @@
 <div th:replace="taskbar/manager-taskbar :: managerTaskbar"></div>
 <!-- Main Content -->
 <main class="main-content">
-    <!-- Header -->
-    <header class="header">
-        <div class="header-left">
-            <button class="sidebar-toggle">
-                <i class="fas fa-bars"></i>
-            </button>
-            <h1>Customer Management</h1>
-        </div>
-
-        <div class="header-right">
-            <div class="search-box">
-                <i class="fas fa-search"></i>
-                <input type="text" placeholder="Search customers..." id="searchInput">
-            </div>
-        </div>
-    </header>
-
     <!-- Page Content -->
     <div class="page-content">
         <!-- Page Header -->
         <div class="page-header">
-            <h2 class="page-title">Customer Database</h2>
+            <h2 class="page-title">Cơ sở dữ liệu khách hàng</h2>
             <div class="page-actions">
                 <button class="btn-secondary btn-back">
                     <i class="fas fa-arrow-left"></i>
-                    Back to Home
+                    Về trang chủ
+                </button>
+                <button class="btn-primary">
+                    <i class="fas fa-plus"></i>
+                    Thêm khách hàng mới
                 </button>
             </div>
         </div>
 
-        <!-- Filter Section -->
         <div class="filter-section">
-            <form class="filter-form">
-                <div class="filter-group">
-                    <label for="role">Role:</label>
-                    <select id="role" name="role" class="filter-select">
-                        <option value="ALL">All Roles</option>
-                        <option value="CUSTOMER">Customer</option>
-                        <option value="DELIVER">Deliver</option>
-                    </select>
-                </div>
-            </form>
-            <button class="btn-secondary" onclick="clearFilters()">
-                <i class="fas fa-times"></i>
-                Clear Filters
-            </button>
+            <div class="filter-group">
+                <input type="text" id="searchInput" placeholder="Nhập ID hoặc tên khách hàng..." class="filter-select">
+            </div>
         </div>
 
         <!-- Customer Table -->
         <div class="card">
             <div class="card-header">
-                All Customers (<p th:text="${totalCustomers}"></p>)
-                <div class="card-actions">
-                    <button class="btn-secondary">
-                        <i class="fas fa-download"></i>
-                        Export
-                    </button>
-                    <form class="search-form">
-                        <div class="filter-group">
-                            <label for="customerId">Search by ID:
-                            <input type="number" id="customerId" name="customerId" placeholder="Enter customer ID..." class="filter-select">
-                            <button type="submit" class="btn-secondary">
-                                <i class="fas fa-search"></i>
-                            </button>
-                            </label>
-                        </div>
-                    </form>
-                </div>
+                <!-- <CHANGE> Updated header text to Vietnamese -->
+                <h3>Tất cả khách hàng (<span id="totalCount" th:text="${totalCustomers}">0</span>)</h3>
             </div>
 
             <div class="table-container">
                 <table class="data-table">
                     <thead>
                     <tr>
-                        <th>Customer ID</th>
-                        <th>Full Name</th>
+                        <!-- <CHANGE> Updated all table headers to Vietnamese -->
+                        <th>Mã KH</th>
+                        <th>Họ tên</th>
                         <th>Email</th>
-                        <th>Address</th>
-                        <th>Phone</th>
-                        <th>Role</th>
-                        <th>Actions</th>
+                        <th>Địa chỉ</th>
+                        <th>Số điện thoại</th>
+                        <th>Vai trò</th>
+                        <th>Hành động</th>
                     </tr>
                     </thead>
                     <tbody>
                     <tr th:each="customer : ${customers}">
-                        <td th:text="${customer.getId()}">
-                            <span class="customer-id"></span>
+                        <td>
+                            <!-- <CHANGE> Added # prefix to customer ID -->
+                            <span class="customer-id" th:text="'#' + ${customer.getId()}"></span>
                         </td>
-                        <td th:text="${customer.getFullname()}">
-                            <span class="customer-name"></span>
+                        <td>
+                            <span class="customer-name" th:text="${customer.getFullname()}"></span>
                         </td>
-                        <td th:text="${customer.getEmail()}">
-                            <span class="customer-email"></span>
+                        <td>
+                            <span class="customer-email" th:text="${customer.getEmail()}"></span>
                         </td>
-                        <td th:text="${customer.getAddress()}"></td>
+                        <td>
+                            <span class="description-cell" th:text="${customer.getAddress()}" th:title="${customer.getAddress()}"></span>
+                        </td>
                         <td th:text="${customer.getPhone()}"></td>
-                        <td th:text="${customer.getRoleName()}"></td>
+                        <td>
+                            <!-- <CHANGE> Added status badge styling -->
+                            <span class="status-badge"
+                                  th:classappend="${customer.getRoleName() == 'VIP' ? ' vip' : (customer.getRoleName() == 'BLOCKED' ? ' blocked' : ' customer')}"
+                                  th:text="${customer.getRoleName()}">
+                            </span>
+                        </td>
                         <td>
                             <div class="action-buttons">
                                 <a th:href="@{/SWP/customers/{id}(id=${customer.id})}"
                                    class="btn-icon" title="Xem chi tiết">
                                     <i class="fas fa-eye"></i>
                                 </a>
-                                <a th:href="@{/SWP/customers/edit/{id}(id=${customer.id})}"
-                                   class="btn-icon" title="Chỉnh sửa">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                <button type="button" class="btn-icon danger btn-toggle-status" title="Toggle Active/Inactive" data-id="[[${customer.id}]]">
-                                    <i class="fas fa-toggle-on"></i>
-                                </button>
+
+                                <!-- <CHANGE> Updated toggle button to match target design -->
+                                <form th:action="@{/SWP/customers/delete/{id}(id=${customer.id})}"
+                                      method="post"
+                                      style="display: inline;"
+                                      th:onsubmit="return confirm('Bạn có chắc chắn muốn ' + ((${#strings.toUpperCase(customer.getRoleName())} == 'BLOCKED') ? 'mở khóa' : 'ngưng hoạt động') + ' khách hàng này?')">
+                                    <button type="submit" class="btn-icon danger"
+                                            th:title="${#strings.toUpperCase(customer.getRoleName())} == 'BLOCKED' ? 'Mở khóa khách hàng' : 'Ngưng hoạt động khách hàng'">
+                                        <i class="fas"
+                                           th:classappend="${#strings.toUpperCase(customer.getRoleName())} == 'BLOCKED' ? ' fa-unlock' : ' fa-lock'"></i>
+                                    </button>
+                                </form>
                             </div>
                         </td>
                     </tr>
@@ -635,16 +613,68 @@
                 </table>
             </div>
 
-            <!-- Pagination -->
-            <div class="pagination">
-                <button><i class="fas fa-chevron-left"></i></button>
-                <button class="active">1</button>
-                <button>2</button>
-                <button>3</button>
-                <button><i class="fas fa-chevron-right"></i></button>
-            </div>
+
         </div>
     </div>
 </main>
+
+<!-- <CHANGE> Added JavaScript functionality to match target design -->
+<script>
+    // Tìm kiếm realtime theo ID hoặc tên
+    function filterRows() {
+        const inputElement = document.getElementById('searchInput');
+        if (!inputElement) return;
+        const searchTerm = inputElement.value.trim().toLowerCase();
+        const rows = document.querySelectorAll('.data-table tbody tr');
+        let visibleCount = 0;
+
+        rows.forEach(row => {
+            const idCell = row.querySelector('.customer-id');
+            const nameCell = row.querySelector('.customer-name');
+            const idText = idCell ? idCell.textContent.replace('#', '').trim().toLowerCase() : '';
+            const nameText = nameCell ? nameCell.textContent.trim().toLowerCase() : '';
+
+            const matches = searchTerm === ''
+                ? true
+                : idText.startsWith(searchTerm) || nameText.includes(searchTerm);
+
+            row.style.display = matches ? '' : 'none';
+            if (matches) visibleCount++;
+        });
+
+        const totalEl = document.getElementById('totalCount');
+        if (totalEl) {
+            totalEl.textContent = String(visibleCount);
+        }
+    }
+
+    const searchInputEl = document.getElementById('searchInput');
+    if (searchInputEl) {
+        searchInputEl.addEventListener('input', filterRows);
+    }
+
+    function clearFilters() {
+        const inputElement = document.getElementById('searchInput');
+        if (inputElement) {
+            inputElement.value = '';
+        }
+        filterRows();
+    }
+
+    // Thu gọn sidebar cho mobile
+    document.querySelector('.sidebar-toggle') && document.querySelector('.sidebar-toggle').addEventListener('click', function() {
+        const sidebar = document.querySelector('.sidebar');
+        if (sidebar) sidebar.classList.toggle('open');
+    });
+
+    window.onload = function() {
+        var pathname = window.location.pathname;
+        if (pathname.includes("customers")) {
+            var menu = document.getElementById('customers-menu');
+            if (menu) menu.classList.add('active');
+        }
+        filterRows();
+    };
+</script>
 </body>
 </html>
