@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Danh sách nhân viên</title>
+    <link rel="stylesheet" th:href="@{/css/staff-list.css}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+</head>
+<body>
+<div th:replace="taskbar/manager-taskbar :: managerTaskbar"></div>
+<!-- Main Content -->
+<main class="main-content">
+
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <button class="sidebar-toggle">
+                <i class="fas fa-bars"></i>
+            </button>
+            <h1>Quản lý nhân viên</h1>
+        </div>
+
+        <div class="header-right">
+
+        </div>
+    </header>
+    <!-- Page Content -->
+    <div class="page-content">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h2 class="page-title">Danh sách nhân viên</h2>
+            <div class="page-actions">
+                <a th:href="@{'/admin/manager-dashboard'}" class="btn-secondary btn-back">
+                    <i class="fas fa-arrow-left"></i> Back to Home </a>
+            </div>
+        </div>
+
+    <!-- Staff Table -->
+    <div class="card">
+        <div class="card-header">
+            <div class="staff-count">
+                Số nhân viên (<span th:text="${totalStaff}"></span>)
+            </div>
+            <div class="card-actions">
+                <button onclick="exportStaffExcel()" class="export-excel-btn">
+                    <i class="fas fa-download"></i> Xuất Excel
+                </button>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                <tr>
+                    <th>Tên nhân viên</th>
+                    <th>Email</th>
+                    <th>SĐT</th>
+                    <th>CCCD</th>
+                    <th>Role</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="staff : ${staffs}">
+                    <td th:text="${staff.fullname}">
+                        <span class="staff-name"></span>
+                    </td>
+                    <td th:text="${staff.email}">
+                        <span class="staff-email"></span>
+                    </td>
+                    <td th:text="${staff.phone}"></td>
+                    <td th:text="${staff.idCitizenCard}"></td>
+                    <td th:text="${staff.roleName}"></td>
+                    <td>
+                        <div class="action-buttons">
+                            <a th:href="@{'/admin/staff-list/detail/' + ${staff.staffid}}" class="btn-icon" title="View Details">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a th:href="@{'/admin/staff-list/edit/' + ${staff.staffid}}" class="btn-icon" title="Edit Staff">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+
+    <!-- Pagination -->
+    <div class="pagination">
+        <a th:if="${currentPage > 1}" th:href="@{staff-list(page=${currentPage - 1},size=10)}">Trước</a>
+        <span>Page <span th:text="${currentPage}"></span> of <span th:text="${totalPages}"></span></span>
+        <a th:if="${currentPage < totalPages}" th:href="@{staff-list(page=${currentPage + 1},size=10)}">Tiếp</a>
+    </div>
+    </div>
+    </div>
+</main>
+<script>
+    // Search functionality
+    document.getElementById('searchInput').addEventListener('input', function(e) {
+        const searchTerm = e.target.value.toLowerCase();
+        const tableRows = document.querySelectorAll('#staffTable tbody tr');
+
+        tableRows.forEach(row => {
+            const staffName = row.querySelector('.staff-name').textContent.toLowerCase();
+            const staffEmail = row.querySelector('.staff-email').textContent.toLowerCase();
+            const company = row.cells[1].textContent.toLowerCase();
+
+            if (staffName.includes(searchTerm) ||
+                staffEmail.includes(searchTerm) ||
+                company.includes(searchTerm)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    });
+
+    // Add click handlers for buttons
+    document.querySelectorAll('.btn-primary').forEach(button => {
+        button.addEventListener('click', function() {
+            if (this.textContent === 'Edit') {
+                alert('Edit functionality would be implemented here');
+            }
+        });
+    });
+
+    document.querySelectorAll('.btn-secondary').forEach(button => {
+        button.addEventListener('click', function() {
+            if (this.textContent === 'View') {
+                alert('View staff details would be implemented here');
+            } else if (this.textContent === 'Previous' || this.textContent === 'Next') {
+                alert('Pagination functionality would be implemented here');
+            }
+        });
+    });
+
+    // Export to Excel
+    function exportStaffExcel() {
+        const table = document.querySelector('.data-table');
+        const visibleRows = Array.from(table.querySelectorAll('tbody tr')).filter(row => row.style.display !== 'none');
+
+        const data = [];
+        data.push(['Tên nhân viên', 'Email', 'SĐT', 'CCCD', 'Role']);
+
+        visibleRows.forEach(row => {
+            const cells = row.querySelectorAll('td');
+            const rowData = [
+                cells[0].textContent.trim(),
+                cells[1].textContent.trim(),
+                cells[2].textContent.trim(),
+                cells[3].textContent.trim(),
+                cells[4].textContent.trim()
+            ];
+            data.push(rowData);
+        });
+
+        const ws = XLSX.utils.aoa_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Tasks');
+
+        const fileName = 'danh_sach_nhan_vien' + new Date().toISOString().slice(0, 10) + '.xlsx';
+        XLSX.writeFile(wb, fileName);
+    }
+</script>
+</body>
+</html>
