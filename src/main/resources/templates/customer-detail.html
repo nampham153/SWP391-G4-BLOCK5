@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chi tiết khách hàng - QVL Storage</title>
+    <link rel="stylesheet" th:href="@{/css/customer-detail.css}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+<!-- Sidebar -->
+<!-- <div th:replace="taskbar/staff-taskbar :: staffTaskbar"></div> -->
+
+<!-- Main Content -->
+<main class="main-content">
+    <div class="page-content">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h2 class="page-title">Chi tiết khách hàng</h2>
+            <div class="page-actions">
+                <button class="btn-secondary btn-back">
+                    <a href="/SWP/customers" style="color: inherit; text-decoration: none;">
+                        <i class="fas fa-arrow-left"></i>
+                        Quay lại danh sách
+                    </a>
+                </button>
+            </div>
+        </div>
+
+        <!-- Customer Info Card -->
+        <div class="card">
+            <div class="card-header">
+                <h3>Thông tin cá nhân</h3>
+                <span class="status-badge" th:text="${customer.roleName}">CUSTOMER</span>
+            </div>
+            <div class="card-body">
+                <div class="customer-info-grid">
+                    <div class="info-item">
+                        <label>Mã khách hàng:</label>
+                        <span th:text="'#' + ${customer.id}"></span>
+                    </div>
+                    <div class="info-item">
+                        <label>Họ tên:</label>
+                        <span th:text="${customer.fullname}"></span>
+                    </div>
+                    <div class="info-item">
+                        <label>Email:</label>
+                        <span th:text="${customer.email}"></span>
+                    </div>
+                    <div class="info-item">
+                        <label>Số điện thoại:</label>
+                        <span th:text="${customer.phone}"></span>
+                    </div>
+                    <div class="info-item">
+                        <label>Địa chỉ:</label>
+                        <span th:text="${customer.address}"></span>
+                    </div>
+                    <div class="info-item">
+                        <label>Điểm tích lũy:</label>
+                        <span th:text="${customer.points ?: 0}"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions Card -->
+        <div class="card">
+            <div class="card-header">
+                <h3>Hành động</h3>
+            </div>
+            <div class="card-body">
+                <div class="action-buttons-detail">
+                    <form th:action="@{/SWP/customers/delete/{id}(id=${customer.id})}" method="post">
+                        <button type="submit" class="btn-action btn-danger">
+                            Ngưng hoạt động khách hàng
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+</body>
+</html>
+

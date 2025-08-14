@@ -8,74 +8,44 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
-<!-- Simple Navigation -->
-<div style="background-color: #2c3e50; color: white; padding: 15px 20px; margin-bottom: 20px;">
-    <div style="display: flex; justify-content: space-between; align-items: center; max-width: 1200px; margin: 0 auto;">
-        <h2 style="margin: 0;">QVL Storage</h2>
-        <div style="display: flex; gap: 20px;">
-            <a href="/SWP" style="color: white; text-decoration: none;">Trang chủ</a>
-            <a href="/SWP/customers" style="color: white; text-decoration: none;">Khách hàng</a>
-        </div>
-    </div>
-</div>
+<!-- Sidebar -->
+<div th:replace="taskbar/staff-taskbar :: staffTaskbar"></div>
 
 <!-- Main Content -->
 <main class="main-content">
-
-
     <!-- Page Content -->
     <div class="page-content">
         <!-- Page Header -->
         <div class="page-header">
             <h2 class="page-title">Cơ sở dữ liệu khách hàng</h2>
-
+            <div class="page-actions">
+                <button class="btn-secondary btn-back">
+                    <a href="/SWP" style="color: inherit; text-decoration: none;">
+                        <i class="fas fa-arrow-left"></i>
+                        Về trang chủ
+                    </a>
+                </button>
+                <button class="btn-primary">
+                    <a href="/SWP/customers/create" style="color: white; text-decoration: none;">
+                        <i class="fas fa-plus"></i>
+                        Thêm khách hàng mới
+                    </a>
+                </button>
+            </div>
         </div>
 
         <!-- Filter Section -->
         <div class="filter-section">
-            <form action="/SWP/customers" method="get" class="filter-form">
-<!--                <div class="filter-group">-->
-<!--                    <label for="role">Vai trò:</label>-->
-<!--                    <select id="role" name="role" class="filter-select" onchange="this.form.submit()">-->
-<!--                        <option value="ALL" th:selected="${selectedRole == 'ALL'}">Tất cả</option>-->
-<!--                        <option value="CUSTOMER" th:selected="${selectedRole == 'CUSTOMER'}">Khách hàng</option>-->
-<!--                        <option value="VIP" th:selected="${selectedRole == 'VIP'}">VIP</option>-->
-<!--                        <option value="BLOCKED" th:selected="${selectedRole == 'BLOCKED'}">Bị khóa</option>-->
-<!--                    </select>-->
-<!--                </div>-->
-            </form>
-
-<!--            <form action="/SWP/customers" method="get" class="search-form">-->
-<!--                <div class="filter-group">-->
-<!--                    <label for="customerId">Tìm theo ID:</label>-->
-<!--                    <input type="number" id="customerId" name="customerId" placeholder="Nhập ID khách hàng..." class="filter-select">-->
-<!--                    <button type="submit" class="btn-secondary">-->
-<!--                        <i class="fas fa-search"></i>-->
-<!--                        Tìm-->
-<!--                    </button>-->
-<!--                </div>-->
-<!--            </form>-->
-
-<!--            <button class="btn-secondary" onclick="clearFilters()">-->
-<!--                <i class="fas fa-times"></i>-->
-<!--                Xóa bộ lọc-->
-<!--            </button>-->
+            <div class="filter-group">
+                <label for="searchInput">Tìm theo ID hoặc tên:</label>
+                <input type="text" id="searchInput" placeholder="Nhập ID hoặc tên khách hàng..." class="filter-select">
+            </div>
         </div>
 
         <!-- Customer Table -->
         <div class="card">
             <div class="card-header">
                 <h3>Tất cả khách hàng (<span id="totalCount" th:text="${#lists.size(customers)}">0</span>)</h3>
-<!--                <div class="card-actions">-->
-<!--                    <button class="btn-secondary">-->
-<!--                        <i class="fas fa-download"></i>-->
-<!--                        Xuất file-->
-<!--                    </button>-->
-<!--                    <button class="btn-secondary">-->
-<!--                        <i class="fas fa-print"></i>-->
-<!--                        In danh sách-->
-<!--                    </button>-->
-<!--                </div>-->
             </div>
 
             <div class="table-container">
@@ -88,6 +58,7 @@
                         <th>Địa chỉ</th>
                         <th>Số điện thoại</th>
                         <th>Vai trò</th>
+                        <th>Hành động</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -111,27 +82,98 @@
                                   th:text="${customer.roleName}">
                             </span>
                         </td>
+                        <td>
+                            <div class="action-buttons">
+                                <a th:href="@{/SWP/customers/{id}(id=${customer.id})}"
+                                   class="btn-icon" title="Xem chi tiết">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                
+                                <form th:action="@{/SWP/customers/delete/{id}(id=${customer.id})}"
+                                      method="post"
+                                      style="display: inline;"
+                                      th:onsubmit="return confirm('Bạn có chắc chắn muốn ' + ((${#strings.toUpperCase(customer.roleName)} == 'BLOCKED') ? 'mở khóa' : 'ngưng hoạt động') + ' khách hàng này?')">
+                                    <button type="submit" class="btn-icon danger"
+                                            th:title="${#strings.toUpperCase(customer.roleName)} == 'BLOCKED' ? 'Mở khóa khách hàng' : 'Ngưng hoạt động khách hàng'">
+                                        <i class="fas"
+                                           th:classappend="${#strings.toUpperCase(customer.roleName)} == 'BLOCKED' ? ' fa-unlock' : ' fa-lock'"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
                     </tr>
                     </tbody>
                 </table>
             </div>
 
-            
+            <!-- Pagination -->
+            <div class="pagination">
+                <button><i class="fas fa-chevron-left"></i></button>
+                <button class="active">1</button>
+                <button>2</button>
+                <button>3</button>
+                <button><i class="fas fa-chevron-right"></i></button>
+            </div>
         </div>
     </div>
 </main>
 
 <script>
-    // Simple search functionality
-    document.addEventListener('DOMContentLoaded', function() {
-        const searchInput = document.getElementById('customerId');
-        if (searchInput) {
-            searchInput.addEventListener('input', function(e) {
-                // Basic search functionality
-                console.log('Searching for:', e.target.value);
-            });
+    // Tìm kiếm realtime theo ID hoặc tên
+    function filterRows() {
+        const inputElement = document.getElementById('searchInput');
+        if (!inputElement) return;
+        const searchTerm = inputElement.value.trim().toLowerCase();
+        const rows = document.querySelectorAll('.data-table tbody tr');
+        let visibleCount = 0;
+
+        rows.forEach(row => {
+            const idCell = row.querySelector('.customer-id');
+            const nameCell = row.querySelector('.customer-name');
+            const idText = idCell ? idCell.textContent.replace('#', '').trim().toLowerCase() : '';
+            const nameText = nameCell ? nameCell.textContent.trim().toLowerCase() : '';
+
+            const matches = searchTerm === ''
+                ? true
+                : idText.startsWith(searchTerm) || nameText.includes(searchTerm);
+
+            row.style.display = matches ? '' : 'none';
+            if (matches) visibleCount++;
+        });
+
+        const totalEl = document.getElementById('totalCount');
+        if (totalEl) {
+            totalEl.textContent = String(visibleCount);
         }
+    }
+
+    const searchInputEl = document.getElementById('searchInput');
+    if (searchInputEl) {
+        searchInputEl.addEventListener('input', filterRows);
+    }
+
+    function clearFilters() {
+        const inputElement = document.getElementById('searchInput');
+        if (inputElement) {
+            inputElement.value = '';
+        }
+        filterRows();
+    }
+
+    // Thu gọn sidebar cho mobile
+    document.querySelector('.sidebar-toggle') && document.querySelector('.sidebar-toggle').addEventListener('click', function() {
+        const sidebar = document.querySelector('.sidebar');
+        if (sidebar) sidebar.classList.toggle('open');
     });
+
+    window.onload = function() {
+        var pathname = window.location.pathname;
+        if (pathname.includes("customers")) {
+            var menu = document.getElementById('customers-menu');
+            if (menu) menu.classList.add('active');
+        }
+        filterRows();
+    };
 </script>
 </body>
 </html>

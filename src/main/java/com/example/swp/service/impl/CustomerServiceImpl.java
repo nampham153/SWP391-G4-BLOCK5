@@ -29,43 +29,43 @@ public class CustomerServiceImpl implements CustomerService {
         return customerRepository.findById(id).orElse(null);
     }
 
-//    @Override
-//    public Optional<Customer> findByEmail1(String email) {
-//        return customerRepository.findByEmail(email);
-//    }
-//
-//    @Override
-//    public List<Customer> searchByName(String name) {
-//        return customerRepository.findByFullnameContainingIgnoreCase(name);
-//    }
-//
-//    @Override
-//    public List<Customer> filterByRole(RoleName roleName) {
-//        return customerRepository.findByRoleName(roleName);
-//    }
-//
-//    @Override
-//    public Customer save(Customer customer) {
-//        return customerRepository.save(customer);
-//    }
-//
-//    @Override
-//    public void delete(int id) {
-//        customerRepository.deleteById(id);
-//    }
-//
-//    @Override
-//    public Customer findByEmail(String email) {
-//        return customerRepository.findByEmail(email).orElse(null);
-//    }
-//    @Override
-//    public boolean existsByEmail(String email) {
-//        return customerRepository.existsByEmail(email);
-//    }
-//
-//    @Override
-//    public boolean existsByPhone(String phone) {
-//        return customerRepository.existsByPhone(phone);
-//    }
+    @Override
+    public Optional<Customer> findByEmail1(String email) {
+        return customerRepository.findByEmail(email);
+    }
+
+    @Override
+    public List<Customer> searchByName(String name) {
+        return customerRepository.findByFullnameContainingIgnoreCase(name);
+    }
+
+    @Override
+    public List<Customer> filterByRole(RoleName roleName) {
+        return customerRepository.findByRoleName(roleName);
+    }
+
+    @Override
+    public Customer save(Customer customer) {
+        return customerRepository.save(customer);
+    }
+
+    @Override
+    public void delete(int id) {
+        customerRepository.deleteById(id);
+    }
+
+    @Override
+    public Customer findByEmail(String email) {
+        return customerRepository.findByEmail(email).orElse(null);
+    }
+    @Override
+    public boolean existsByEmail(String email) {
+        return customerRepository.existsByEmail(email);
+    }
+
+    @Override
+    public boolean existsByPhone(String phone) {
+        return customerRepository.existsByPhone(phone);
+    }
 
 }
