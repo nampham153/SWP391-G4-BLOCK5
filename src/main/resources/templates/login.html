@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Login Page</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: url('https://res.cloudinary.com/dpkxslork/image/upload/v1749656968/sto_3_vd9fdi.png') no-repeat center center fixed;
+            background-size: cover;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        h2 {
+            margin-bottom: 20px;
+            color: #ffff;
+            letter-spacing: 1px;
+            text-align: center;
+        }
+
+        form#loginForm {
+            background: #fff;
+            padding: 36px 28px;
+            border-radius: 12px;
+            box-shadow: 0 4px 24px rgba(44, 62, 80, 0.10);
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            min-width: 340px;
+            border: 2px solid #a7c7e7;
+        }
+
+        input[type="email"],
+        input[type="password"] {
+            padding: 12px;
+            border: 1.5px solid #a7c7e7;
+            border-radius: 6px;
+            font-size: 16px;
+            background: #f7fbff;
+            transition: border 0.2s;
+        }
+
+        input[type="email"]:focus,
+        input[type="password"]:focus {
+            border: 1.5px solid #1976d2;
+            outline: none;
+        }
+
+        button[type="submit"] {
+            background: linear-gradient(90deg, #1976d2 0%, #42a5f5 100%);
+            color: #fff;
+            border: none;
+            padding: 12px 0;
+            border-radius: 6px;
+            font-size: 17px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+        }
+
+        button[type="submit"]:hover {
+            background: linear-gradient(90deg, #1565c0 0%, #64b5f6 100%);
+            transform: translateY(-2px) scale(1.03);
+        }
+
+        #error {
+            margin-top: 12px;
+            font-size: 15px;
+            color: #d32f2f;
+            text-align: center;
+        }
+
+        .links-container {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 12px;
+            font-size: 14px;
+        }
+
+        .links-container a {
+            text-decoration: none;
+            color: #1976d2;
+        }
+
+        .links-container a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+<div class="login-container">
+    <h2>Login</h2>
+    <form id="loginForm">
+        <input type="email" id="email" name="email" placeholder="Email" required>
+        <input type="password" id="password" name="password" placeholder="Password" required>
+        <button type="submit">Login</button>
+        <div class="links-container">
+            <a href="#">Quên mật khẩu?</a>
+            <a th:href="@{/register}">Tạo tài khoản mới</a>
+        </div>
+    </form>
+    <p id="error"></p>
+</div>
+
+<script>
+    document.getElementById("loginForm").addEventListener("submit", async function (e) {
+        e.preventDefault();
+
+        const email = document.getElementById("email").value;
+        const password = document.getElementById("password").value;
+
+        try {
+            const response = await fetch("/api/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                credentials: "include", // ✅ CẦN THIẾT để Spring nhận JSESSIONID
+                body: JSON.stringify({ email, password })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                const sessionRedirect = sessionStorage.getItem("redirectAfterLogin");
+
+                if (sessionRedirect) {
+                    sessionStorage.removeItem("redirectAfterLogin");
+                    window.location.href = sessionRedirect;
+                } else if (data.redirect) {
+                    window.location.href = data.redirect;
+                } else {
+                    window.location.href = "/home-page";
+                }
+            } else {
+                const error = await response.text();
+                document.getElementById("error").innerText = error;
+            }
+        } catch (err) {
+            document.getElementById("error").innerText = "Lỗi kết nối tới máy chủ.";
+            console.error(err);
+        }
+    });
+</script>
+</body>
+</html>
