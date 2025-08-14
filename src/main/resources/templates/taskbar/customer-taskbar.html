@@ -1,0 +1,32 @@
+<!-- templates/fragments/customer-taskbar.html -->
+<div th:fragment="customerSidebar(customer)">
+  <link rel="stylesheet" th:href="@{/css/customer-detail.css}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+  <nav class="sidebar">
+    <div class="sidebar-header">
+      <div class="logo">
+        <i class="fas fa-database"></i>
+        <span>QVL Storage</span>
+      </div>
+    </div>
+    <ul class="sidebar-menu">
+      <li class="menu-item"><a href="/home-page"><i class="fas fa-home"></i><span>Trang chủ</span></a></li>
+      <li class="menu-item"><a href="/SWP/storages"><i class="fas fa-warehouse"></i><span>Danh sách kho</span></a></li>
+      <li class="menu-item"><a href="/SWP/customers/my-bookings"><i class="fas fa-box"></i><span>Đơn hàng</span></a></li>
+      <li class="menu-item"><a href="/SWP/customers/my-transactions"><i class="fas fa-exchange-alt"></i><span>Lịch sử giao dịch</span></a></li>
+      <li class="menu-item"><a href="/qvl-chatbot"><i class="fas fa-robot"></i><span>Chatbot Vấn Đáp</span></a></li>
+      <li class="menu-item"><a href="/SWP/activity/recent"><i class="fas fa-clock"></i><span>Nhật ký hoạt động</span></a></li>
+      <li class="menu-item"><a href="/logout"><i class="fas fa-sign-out-alt"></i><span>Đăng xuất</span></a></li>
+    </ul>
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <div class="user-avatar"><i class="fas fa-user"></i></div>
+        <div class="user-details">
+          <span class="user-name" th:text="${customer.fullname}">Tên khách hàng</span>
+          <span class="user-role">Customer</span>
+        </div>
+      </div>
+    </div>
+  </nav>
+</div>

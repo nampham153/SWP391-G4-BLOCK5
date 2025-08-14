@@ -1,0 +1,107 @@
+<!-- File: templates/taskbar/manager-taskbar.html -->
+<div th:fragment="managerTaskbar">
+    <link rel="stylesheet" href="/css/manager-taskbar.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+
+    <!-- Sidebar -->
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <i class="fas fa-database"></i>
+                <span>Quản lý kho</span>
+            </div>
+        </div>
+        <ul class="sidebar-menu">
+            <li class="menu-item active">
+                <a href="/admin/manager-dashboard">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Trang chính</span>
+                </a>
+            </li>
+            <li class="menu-item">
+                <a href="social-chat">
+                    <i class="fas fa-box"></i>
+                        <span>Hỗ trợ khách hàng</span>
+                    </a>
+            <li class="menu-item">
+                <a href="addstorage">
+                    <i class="fas fa-hdd"></i>
+                    <span>Thêm kho</span>
+                </a>
+            </li>
+            <li class="menu-item">
+                <a href="/SWP/feedbacks">
+                    <i class="fas fa-boxes"></i>
+                    <span>Phản hồi</span>
+                </a>
+            </li>
+            <li class="menu-item">
+                <a href="/SWP/statistics">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Thống kê doanh thu</span>
+                </a>
+            </li>
+            <li class="menu-item">
+                <a href="/SWP/orders">
+                    <i class="fas fa-file-alt"></i>
+                    <span>Danh sách đơn hàng</span>
+                </a>
+            </li>
+            <li class="menu-item">
+                <a href="/admin/contracts">
+                    <i class="fas fa-file-signature"></i>
+                    <span>Quản lý hợp đồng</span>
+                </a>
+            </li>
+            <li class="menu-item">
+                <a href="manager-customer-list">
+                    <i class="fas fa-users"></i>
+                    <span>Quản lý người dùng</span>
+                </a>
+            </li>
+
+            <li class="menu-item">
+                <a href="/admin/staff-list">
+                    <i class="fas fa-users"></i>
+                    <span>Quản lý nhân viên</span>
+                </a>
+            </li>
+            <li class="menu-item">
+                <a href="/admin/task-list">
+                    <i class="fas fa-tasks"></i>
+                    <span>Quản lý công việc</span>
+                </a>
+            </li>
+            <li class="menu-item">
+                <a href="/admin/issue-list">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span>Quản lý vấn đề</span>
+                </a>
+            </li>
+
+            <li class="menu-item">
+                <a href="manager-setting">
+                    <i class="fas fa-cog"></i>
+                    <span>Cài đặt</span>
+                </a>
+            </li>
+        </ul>
+
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <div class="user-avatar">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div class="user-details">
+                    <span class="user-name" th:text="${userName}">Tên người dùng</span>
+                    <span class="user-role" th:text="${userRole}">Vai trò</span>
+                    <form th:action="@{/logout}" method="post" style="margin: 0;">
+                        <button type="submit" class="logout-link btn" style="background: none; border: none; color: #d0d0d0; cursor: pointer;">
+                            <i class="fas fa-sign-out-alt"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </nav>
+</div>

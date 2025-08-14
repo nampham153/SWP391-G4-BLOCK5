@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voucher List - Staff Manager</title>
+    <link rel="stylesheet" th:href="@{/css/staff-dashboard.css}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+<!-- Sidebar -->
+<div th:replace="taskbar/staff-taskbar :: staffTaskbar"></div>
+<main class="main-content">
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <button class="sidebar-toggle">
+                <i class="fas fa-bars"></i>
+            </button>
+            <h1>Quản Lý Voucher</h1>
+        </div>
+
+        <div class="header-right">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchInput" placeholder="Tìm kiếm voucher...">
+            </div>
+        </div>
+    </header>
+    <!-- Page Content -->
+    <div class="page-content">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h2 class="page-title">Tất cả các voucher</h2>
+            <div class="page-actions">
+                <button class="btn-secondary btn-back">
+                    <a href="/SWP/staff/staff-dashboard" style="color: inherit; text-decoration: none;">
+                        <i class="fas fa-arrow-left"></i>
+                        Quay Lại Dashboard
+                    </a>
+                </button>
+                <button class="btn-primary">
+                    <a href="/SWP/staff/addvoucher" style="color: white; text-decoration: none;">
+                        <i class="fas fa-plus"></i>
+                        Thêm Voucher Mới
+                    </a>
+                </button>
+                <button class="btn-primary">
+                    <a href="/SWP/staff/voucher-usage" style="color: inherit; text-decoration: none;">
+                        <i class="fas fa-history"></i> Lịch sử sử dụng
+                    </a>
+                </button>
+            </div>
+        </div>
+
+        <!-- Filter Section -->
+        <div class="filter-section">
+            <div class="filter-group">
+                <label for="statusFilter">Trạng thái:</label>
+                <select id="statusFilter" class="filter-select">
+                    <option value="">Tất cả</option>
+                    <option value="ACTIVE">Hoạt động</option>
+                    <option value="INACTIVE">Tạm dừng</option>
+                    <option value="EXPIRED">Hết hạn</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="pointFilter">Điểm đổi:</label>
+                <select id="pointFilter" class="filter-select">
+                    <option value="">Tất cả</option>
+                    <option value="lt10">Dưới 10</option>
+                    <option value="10to30">10 - 30</option>
+                    <option value="gt30">Trên 30</option>
+                </select>
+            </div>
+            <button class="btn-primary" type="button" onclick="applyFilters()">
+                <i class="fas fa-filter"></i> Lọc
+            </button>
+            <button class="btn-secondary" onclick="clearFilters()">
+                <i class="fas fa-times"></i>
+                Xóa Filters
+            </button>
+
+            <div class="filter-group">
+                <label for="sortSelect">Sắp xếp:</label>
+                <select id="sortSelect" class="filter-select">
+                    <option value="">Mặc định</option>
+                    <option value="discount-asc">Giảm giá tăng dần</option>
+                    <option value="discount-desc">Giảm giá giảm dần</option>
+                    <option value="point-asc">Điểm đổi tăng dần</option>
+                    <option value="point-desc">Điểm đổi giảm dần</option>
+                </select>
+            </div>
+
+        </div>
+
+        <!-- Voucher Table -->
+        <div class="card">
+            <div class="card-header">
+                <h3>Tổng voucher (<span id="totalCount" th:text="${#lists.size(vouchers)}"></span>)</h3>
+            </div>
+
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Tên voucher</th>
+                        <th>Mô tả</th>
+                        <th>Giảm giá</th>
+                        <th>Điểm đổi</th>
+                        <th>Số lượng còn</th>
+                        <th>Trạng thái</th>
+                        <th>Thời gian</th>
+                        <th>Hành động</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="voucher : ${vouchers}">
+                        <td th:text="${voucher.id}"></td>
+                        <td th:text="${voucher.name}"></td>
+                        <td th:text="${voucher.description}"></td>
+                        <td th:text="${#numbers.formatDecimal(voucher.discountAmount, 0, 2)}"></td>
+                        <td th:text="${voucher.requiredPoint}"></td>
+                        <td th:text="${voucher.remainQuantity}"></td>
+                        <td>
+                            <span th:text="${voucher.status}"
+                                  th:class="'status-badge ' + ${voucher.status.toString().toLowerCase()}"></span>
+                        </td>
+                        <td>
+                            <span th:text="${#temporals.format(voucher.startDate, 'dd/MM/yyyy')}"></span>
+                            -
+                            <span th:text="${#temporals.format(voucher.endDate, 'dd/MM/yyyy')}"></span>
+                        </td>
+                        <td>
+                            <div class="action-buttons">
+                                <a th:href="@{'/SWP/staff/vouchers/' + ${voucher.id} + '/edit'}"
+                                   class="btn-icon" title="View Details">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <form th:action="@{'/SWP/staff/vouchers/' + ${voucher.id} + '/toggle-status'}"
+                                      method="post" style="display: inline;">
+                                    <input type="hidden" name="returnUrl" value="/SWP/staff/vouchers"/>
+                                    <button type="submit"
+                                            th:class="'btn-icon ' + (${voucher.status.name() == 'ACTIVE'} ? 'toggle-active' : 'toggle-inactive')"
+                                            th:title="${voucher.status.name() == 'ACTIVE'} ? 'Inactive Voucher' : 'Activate Voucher'">
+                                        <i th:class="${voucher.status.name() == 'ACTIVE'} ? 'fas fa-ban' : 'fas fa-check'"></i>
+                                    </button>
+                                </form>
+                                <form th:action="@{'/SWP/staff/vouchers/' + ${voucher.id} + '/delete'}"
+                                      method="post" style="display: inline;"
+                                      onsubmit="return confirm('Bạn có chắc là xóa voucher này không?');">
+                                    <input type="hidden" name="returnUrl" value="/SWP/staff/vouchers"/>
+                                    <button type="submit" class="btn-icon danger" title="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination">
+                <button><i class="fas fa-chevron-left"></i></button>
+                <button class="active">1</button>
+                <button>2</button>
+                <button>3</button>
+                <button><i class="fas fa-chevron-right"></i></button>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script>
+    document.getElementById('searchInput').addEventListener('input', function(e) {
+        const searchTerm = e.target.value.toLowerCase();
+        const rows = document.querySelectorAll('.data-table tbody tr');
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(searchTerm) ? '' : 'none';
+        });
+    });
+
+    function applyFilters() {
+        const statusFilter = document.getElementById('statusFilter').value;
+        const pointFilter = document.getElementById('pointFilter').value;
+        const rows = document.querySelectorAll('.data-table tbody tr');
+
+        rows.forEach(row => {
+            let show = true;
+
+            // Trạng thái
+            const statusBadge = row.querySelector('.status-badge');
+            const status = statusBadge ? statusBadge.textContent.toUpperCase() : '';
+
+            // Điểm đổi
+            const point = parseInt(row.children[4].textContent.trim());
+
+            // Filter Status
+            if (statusFilter && show) {
+                if (status !== statusFilter) show = false;
+            }
+
+            // Filter Point
+            if (pointFilter && show) {
+                if (pointFilter === 'lt10' && !(point < 10)) show = false;
+                if (pointFilter === '10to30' && !(point >= 10 && point <= 30)) show = false;
+                if (pointFilter === 'gt30' && !(point > 30)) show = false;
+            }
+
+            row.style.display = show ? '' : 'none';
+        });
+        showPage(1);
+        // Gọi sort sau lọc
+        const currentSort = document.getElementById('sortSelect').value;
+        if (currentSort) {
+            sortTable(currentSort);
+        }
+    }
+
+    function clearFilters() {
+        document.getElementById('statusFilter').value = '';
+        document.getElementById('pointFilter').value = '';
+        applyFilters();
+        showPage(1);
+    }
+
+    // Pagination & Sidebar Active Code - giữ nguyên như trang storage
+    const rowsPerPage = 10;
+    let currentPage = 1;
+
+    function showPage(page) {
+        const rows = document.querySelectorAll('.data-table tbody tr');
+        const totalRows = Array.from(rows).filter(row => row.style.display !== 'none').length;
+        const totalPages = Math.ceil(totalRows / rowsPerPage);
+
+        if (page < 1) page = 1;
+        if (page > totalPages) page = totalPages;
+        currentPage = page;
+
+        let shown = 0;
+        let skipped = 0;
+        rows.forEach(row => {
+            if (row.style.display === 'none') {
+                row.dataset.pagiHide = '1';
+                return;
+            }
+            if (skipped < (page - 1) * rowsPerPage) {
+                row.style.display = 'none';
+                row.dataset.pagiHide = '1';
+                skipped++;
+            } else if (shown < rowsPerPage) {
+                row.style.display = '';
+                row.dataset.pagiHide = '';
+                shown++;
+            } else {
+                row.style.display = 'none';
+                row.dataset.pagiHide = '1';
+            }
+        });
+        renderPagination(totalPages);
+    }
+
+    function renderPagination(totalPages) {
+        const pagination = document.querySelector('.pagination');
+        if (!pagination) return;
+        pagination.innerHTML = '';
+
+        const prevBtn = document.createElement('button');
+        prevBtn.innerHTML = '<i class="fas fa-chevron-left"></i>';
+        prevBtn.disabled = currentPage === 1;
+        prevBtn.onclick = () => showPage(currentPage - 1);
+        pagination.appendChild(prevBtn);
+
+        for (let i = 1; i <= totalPages; i++) {
+            const btn = document.createElement('button');
+            btn.textContent = i;
+            if (i === currentPage) btn.classList.add('active');
+            btn.onclick = () => showPage(i);
+            pagination.appendChild(btn);
+        }
+
+        const nextBtn = document.createElement('button');
+        nextBtn.innerHTML = '<i class="fas fa-chevron-right"></i>';
+        nextBtn.disabled = currentPage === totalPages;
+        nextBtn.onclick = () => showPage(currentPage + 1);
+        pagination.appendChild(nextBtn);
+    }
+
+    // Sidebar toggle & page active highlight (nếu có menu như trang kho)
+    document.querySelector('.sidebar-toggle').addEventListener('click', function() {
+        document.querySelector('.sidebar').classList.toggle('open');
+    });
+    window.onload = function() {
+        showPage(1);
+    };
+    document.getElementById('sortSelect').addEventListener('change', function () {
+        const sortValue = this.value;
+        sortTable(sortValue);
+    });
+
+    function sortTable(sortValue) {
+        const rows = Array.from(document.querySelectorAll('.data-table tbody tr'));
+        if (!sortValue || sortValue === "") {
+            showPage(1);
+            return;
+        }
+
+        const [field, order] = sortValue.split("-");
+
+        rows.sort((a, b) => {
+            let valA = 0;
+            let valB = 0;
+
+            if (field === "discount") {
+                valA = parseFloat(a.children[3].textContent.replace(/,/g, '')) || 0;
+                valB = parseFloat(b.children[3].textContent.replace(/,/g, '')) || 0;
+            } else if (field === "point") {
+                valA = parseInt(a.children[4].textContent) || 0;
+                valB = parseInt(b.children[4].textContent) || 0;
+            }
+
+            return (order === "asc" ? valA - valB : valB - valA);
+        });
+
+        const tbody = document.querySelector('.data-table tbody');
+        rows.forEach(row => tbody.appendChild(row));
+        showPage(1);
+    }
+</script>
+</body>
+</html>
