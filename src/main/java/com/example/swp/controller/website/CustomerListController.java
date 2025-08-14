@@ -41,4 +41,14 @@ public class CustomerListController {
         model.addAttribute("customers", customers);
         return "customer-list";
     }
+
+    @GetMapping("/customers/{id}")
+    public String customerDetail(@PathVariable int id, Model model) {
+        Customer customer = customerService.getCustomer(id);
+        if (customer == null) {
+            return "redirect:/SWP/customers";
+        }
+        model.addAttribute("customer", customer);
+        return "customer-detail";
+    }
 }

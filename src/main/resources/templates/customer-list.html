@@ -88,10 +88,7 @@
                                    class="btn-icon" title="Xem chi tiết">
                                     <i class="fas fa-eye"></i>
                                 </a>
-                                <a th:href="@{/SWP/customers/edit/{id}(id=${customer.id})}"
-                                   class="btn-icon" title="Chỉnh sửa">
-                                    <i class="fas fa-edit"></i>
-                                </a>
+                                
                                 <form th:action="@{/SWP/customers/delete/{id}(id=${customer.id})}"
                                       method="post"
                                       style="display: inline;"
