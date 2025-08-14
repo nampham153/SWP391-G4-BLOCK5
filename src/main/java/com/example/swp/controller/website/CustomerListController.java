@@ -28,6 +28,12 @@ public class CustomerListController {
             Customer found = customerService.getCustomer(customerId);
             customers = found != null ? List.of(found) : List.of();
             model.addAttribute("selectedRole", "ALL");
+        } else if (name != null && !name.isEmpty()) {
+            customers = customerService.searchByName(name);
+            model.addAttribute("selectedRole", "ALL");
+        } else if (!"ALL".equalsIgnoreCase(role)) {
+            customers = customerService.filterByRole(RoleName.valueOf(role));
+            model.addAttribute("selectedRole", role);
         } else {
             customers = customerService.getAll();
             model.addAttribute("selectedRole", "ALL");
@@ -35,8 +41,4 @@ public class CustomerListController {
         model.addAttribute("customers", customers);
         return "customer-list";
     }
-
-
-
-
 }
