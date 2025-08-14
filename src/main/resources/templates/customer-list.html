@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Danh sách khách hàng - QVL Storage</title>
+    <link rel="stylesheet" th:href="@{/css/customer-list.css}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+<!-- Simple Navigation -->
+<div style="background-color: #2c3e50; color: white; padding: 15px 20px; margin-bottom: 20px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; max-width: 1200px; margin: 0 auto;">
+        <h2 style="margin: 0;">QVL Storage</h2>
+        <div style="display: flex; gap: 20px;">
+            <a href="/SWP" style="color: white; text-decoration: none;">Trang chủ</a>
+            <a href="/SWP/customers" style="color: white; text-decoration: none;">Khách hàng</a>
+        </div>
+    </div>
+</div>
+
+<!-- Main Content -->
+<main class="main-content">
+
+
+    <!-- Page Content -->
+    <div class="page-content">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h2 class="page-title">Cơ sở dữ liệu khách hàng</h2>
+
+        </div>
+
+        <!-- Filter Section -->
+        <div class="filter-section">
+            <form action="/SWP/customers" method="get" class="filter-form">
+<!--                <div class="filter-group">-->
+<!--                    <label for="role">Vai trò:</label>-->
+<!--                    <select id="role" name="role" class="filter-select" onchange="this.form.submit()">-->
+<!--                        <option value="ALL" th:selected="${selectedRole == 'ALL'}">Tất cả</option>-->
+<!--                        <option value="CUSTOMER" th:selected="${selectedRole == 'CUSTOMER'}">Khách hàng</option>-->
+<!--                        <option value="VIP" th:selected="${selectedRole == 'VIP'}">VIP</option>-->
+<!--                        <option value="BLOCKED" th:selected="${selectedRole == 'BLOCKED'}">Bị khóa</option>-->
+<!--                    </select>-->
+<!--                </div>-->
+            </form>
+
+<!--            <form action="/SWP/customers" method="get" class="search-form">-->
+<!--                <div class="filter-group">-->
+<!--                    <label for="customerId">Tìm theo ID:</label>-->
+<!--                    <input type="number" id="customerId" name="customerId" placeholder="Nhập ID khách hàng..." class="filter-select">-->
+<!--                    <button type="submit" class="btn-secondary">-->
+<!--                        <i class="fas fa-search"></i>-->
+<!--                        Tìm-->
+<!--                    </button>-->
+<!--                </div>-->
+<!--            </form>-->
+
+<!--            <button class="btn-secondary" onclick="clearFilters()">-->
+<!--                <i class="fas fa-times"></i>-->
+<!--                Xóa bộ lọc-->
+<!--            </button>-->
+        </div>
+
+        <!-- Customer Table -->
+        <div class="card">
+            <div class="card-header">
+                <h3>Tất cả khách hàng (<span id="totalCount" th:text="${#lists.size(customers)}">0</span>)</h3>
+<!--                <div class="card-actions">-->
+<!--                    <button class="btn-secondary">-->
+<!--                        <i class="fas fa-download"></i>-->
+<!--                        Xuất file-->
+<!--                    </button>-->
+<!--                    <button class="btn-secondary">-->
+<!--                        <i class="fas fa-print"></i>-->
+<!--                        In danh sách-->
+<!--                    </button>-->
+<!--                </div>-->
+            </div>
+
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                    <tr>
+                        <th>Mã KH</th>
+                        <th>Họ tên</th>
+                        <th>Email</th>
+                        <th>Địa chỉ</th>
+                        <th>Số điện thoại</th>
+                        <th>Vai trò</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="customer : ${customers}">
+                        <td>
+                            <span class="customer-id" th:text="'#' + ${customer.id}"></span>
+                        </td>
+                        <td>
+                            <span class="customer-name" th:text="${customer.fullname}"></span>
+                        </td>
+                        <td>
+                            <span class="customer-email" th:text="${customer.email}"></span>
+                        </td>
+                        <td>
+                            <span class="description-cell" th:text="${customer.address}" th:title="${customer.address}"></span>
+                        </td>
+                        <td th:text="${customer.phone}"></td>
+                        <td>
+                            <span class="status-badge"
+                                  th:classappend="${customer.roleName == 'VIP' ? ' vip' : (customer.roleName == 'BLOCKED' ? ' blocked' : ' customer')}"
+                                  th:text="${customer.roleName}">
+                            </span>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            
+        </div>
+    </div>
+</main>
+
+<script>
+    // Simple search functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('customerId');
+        if (searchInput) {
+            searchInput.addEventListener('input', function(e) {
+                // Basic search functionality
+                console.log('Searching for:', e.target.value);
+            });
+        }
+    });
+</script>
+</body>
+</html>
