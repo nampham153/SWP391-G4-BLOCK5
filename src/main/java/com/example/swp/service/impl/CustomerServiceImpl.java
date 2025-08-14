@@ -5,6 +5,8 @@ import com.example.swp.enums.RoleName;
 import com.example.swp.repository.CustomerRepository;
 import com.example.swp.service.CustomerService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -15,9 +17,9 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Autowired
     private CustomerRepository customerRepository;
-//    public Optional<Customer> findByEmail(String email) {
-//        return customerRepository.findByEmail(email);
-//    }
+    // public Optional<Customer> findByEmail(String email) {
+    // return customerRepository.findByEmail(email);
+    // }
 
     @Override
     public List<Customer> getAll() {
@@ -45,6 +47,21 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
+    public Page<Customer> getAllWithPagination(Pageable pageable) {
+        return customerRepository.findAll(pageable);
+    }
+
+    @Override
+    public Page<Customer> searchByNameWithPagination(String name, Pageable pageable) {
+        return customerRepository.findByFullnameContainingIgnoreCase(name, pageable);
+    }
+
+    @Override
+    public Page<Customer> filterByRoleWithPagination(RoleName roleName, Pageable pageable) {
+        return customerRepository.findByRoleName(roleName, pageable);
+    }
+
+    @Override
     public Customer save(Customer customer) {
         return customerRepository.save(customer);
     }
@@ -58,6 +75,7 @@ public class CustomerServiceImpl implements CustomerService {
     public Customer findByEmail(String email) {
         return customerRepository.findByEmail(email).orElse(null);
     }
+
     @Override
     public boolean existsByEmail(String email) {
         return customerRepository.existsByEmail(email);

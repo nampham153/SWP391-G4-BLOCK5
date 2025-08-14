@@ -7,7 +7,6 @@ import com.example.swp.service.CustomerService;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -37,7 +36,6 @@ public class ManagerController {
             model.addAttribute("userRole", "Manager");
         }
 
-
         List<Customer> customers = customerService.getAll();
         int totalUser = customers.size();
 
@@ -60,16 +58,13 @@ public class ManagerController {
         return "manager-customer-list";
     }
 
-
-//    @GetMapping("/manager/profile")
-//    public String managerProfilePage(HttpSession session, Model model) {
-//        Manager loggedInManager = (Manager) session.getAttribute("loggedInManager");
-//        if (loggedInManager != null) {
-//            model.addAttribute("user", loggedInManager); // -> biến 'user' trong HTML
-//        }
-//        return "manager-setting";
-//    }
-
-
+    // @GetMapping("/manager/profile")
+    // public String managerProfilePage(HttpSession session, Model model) {
+    // Manager loggedInManager = (Manager) session.getAttribute("loggedInManager");
+    // if (loggedInManager != null) {
+    // model.addAttribute("user", loggedInManager); // -> biến 'user' trong HTML
+    // }
+    // return "manager-setting";
+    // }
 
 }
