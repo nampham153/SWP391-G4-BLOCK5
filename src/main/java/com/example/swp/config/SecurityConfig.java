@@ -14,7 +14,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .authorizeHttpRequests(authz -> authz
-                .requestMatchers("/", "/index.html", "/css/**", "/js/**", "/img/**", "/fonts/**", "/lib/**").permitAll()
+                .requestMatchers("/", "/SWP", "/SWP/customers", "/home-page", "/css/**", "/js/**", "/img/**", "/fonts/**", "/lib/**").permitAll()
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form
@@ -23,7 +23,8 @@ public class SecurityConfig {
             )
             .logout(logout -> logout
                 .permitAll()
-            );
+            )
+            .csrf(csrf -> csrf.disable()); // Tạm thời disable CSRF để test
         
         return http.build();
     }
