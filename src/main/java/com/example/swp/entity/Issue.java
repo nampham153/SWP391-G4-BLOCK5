@@ -10,10 +10,10 @@ import lombok.Setter;
 
 
 import java.util.Date;
-    @Setter
     @Getter
-    @AllArgsConstructor
+    @Setter
     @NoArgsConstructor
+    @AllArgsConstructor
     @Entity
     public class Issue {
         @Id
@@ -40,6 +40,23 @@ import java.util.Date;
 
         @Column(name = "created_by_type", length = 20)
         private String createdByType;
+
+        // Explicit getter and setter methods for fields that are causing compilation errors
+        public String getCreatedByType() {
+            return createdByType;
+        }
+
+        public void setCreatedByType(String createdByType) {
+            this.createdByType = createdByType;
+        }
+
+        public IssueStatus getStatus() {
+            return status;
+        }
+
+        public void setStatus(IssueStatus status) {
+            this.status = status;
+        }
     }
 
 

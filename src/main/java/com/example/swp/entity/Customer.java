@@ -123,4 +123,9 @@ public class Customer implements UserDetails {
     public boolean isEnabled() {
         return true;
     }
+
+    // Explicit getter method for id field that is causing compilation errors
+    public int getId() {
+        return id;
+    }
 }
