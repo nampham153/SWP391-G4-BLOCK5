@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chi tiết Issue</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 650px;
+            margin: 40px auto;
+            background: #fff;
+            border-radius: 18px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+            padding: 40px 32px 32px 32px;
+            position: relative;
+        }
+        .back-btn {
+            position: absolute;
+            top: 18px;
+            left: 24px;
+            background: #f3f4f6;
+            color: #667eea;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 40px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: background 0.25s;
+        }
+        .back-btn:hover {
+            background: #e0e7ef;
+            color: #5a67d8;
+        }
+        h1 {
+            margin-top: 0;
+            font-size: 2.2rem;
+            font-weight: bold;
+            color: #2d3748;
+            text-align: center;
+            margin-bottom: 18px;
+        }
+        .info-list {
+            margin: 32px 0 0 0;
+            padding: 0;
+            list-style: none;
+        }
+        .info-list li {
+            margin-bottom: 18px;
+            display: flex;
+            gap: 12px;
+            font-size: 1.07rem;
+        }
+        .label {
+            min-width: 120px;
+            color: #718096;
+            font-weight: 600;
+        }
+        .value {
+            color: #2d3748;
+            font-weight: 500;
+        }
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 15px;
+            border-radius: 18px;
+            font-size: 1.07rem;
+            font-weight: 600;
+        }
+        .status-badge.pending { background: #fef3c7; color: #92400e; }
+        .status-badge.progress { background: #dbeafe; color: #1e40af; }
+        .status-badge.resolved { background: #d1fae5; color: #065f46; }
+        .status-badge.closed { background: #f3f4f6; color: #374151; }
+
+        @media (max-width: 600px) {
+            .container { padding: 20px 5px 10px 5px; }
+            .info-list li { flex-direction: column; gap: 2px; }
+            h1 { font-size: 1.4rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <a th:href="@{/SWP/issues/my-issues}" class="back-btn">&larr; Quay lại</a>
+    <h1>Chi tiết Issue</h1>
+    <ul class="info-list">
+        <li><span class="label">ID:</span> <span class="value" th:text="${issue.id}">15</span></li>
+        <li><span class="label">Chủ đề:</span> <span class="value" th:text="${issue.subject}">Tiêu đề issue</span></li>
+        <li><span class="label">Mô tả:</span> <span class="value" th:text="${issue.description}">Mô tả chi tiết...</span></li>
+        <li>
+            <span class="label">Khách hàng:</span>
+            <span class="value" th:text="${issue.customer != null ? issue.customer.fullname : 'Không có'}">Tên khách hàng</span>
+        </li>
+        <li><span class="label">Staff phụ trách:</span> <span class="value" th:text="${issue.assignedStaff.fullname}">Tên staff</span></li>
+        <li><span class="label">Ngày tạo:</span> <span class="value" th:text="${#dates.format(issue.createdDate, 'dd/MM/yyyy HH:mm')}">27/06/2025 00:56</span></li>
+        <li>
+            <span class="label">Trạng thái:</span>
+            <span class="status-badge" th:classappend="${#strings.toLowerCase(issue.status)}">
+                <span th:switch="${issue.status}">
+                    <span th:case="'Pending'">⏱️ Chờ xử lý</span>
+                    <span th:case="'In_Progress'">🔄 Đang xử lý</span>
+                    <span th:case="'Resolved'">✅ Đã giải quyết</span>
+                    <span th:case="'Closed'">❌ Đã đóng</span>
+                </span>
+            </span>
+        </li>
+    </ul>
+</div>
+</body>
+</html>

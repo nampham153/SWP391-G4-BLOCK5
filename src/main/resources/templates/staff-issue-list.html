@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Issue List</title>
+    <link rel="stylesheet" th:href="@{/css/staff-dashboard.css}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        .filter-bar {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .filter-bar label {
+            font-weight: 500;
+            margin-right: 0.5rem;
+        }
+        .btn {
+            display: inline-block;
+            padding: 0.4rem 1rem;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+        .btn-primary {
+            background: #2c3e50;
+            color: #fff;
+        }
+        .btn-primary:hover { background: #0056b3; }
+        .btn-secondary {
+            background: #eee;
+            color: #333;
+        }
+        .btn-secondary:hover { background: #ccc; }
+        @media (max-width: 600px) {
+            .action-bar { flex-direction: column; align-items: stretch; gap: 1rem;}
+            .filter-bar { flex-wrap: wrap;}
+        }
+        .action-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            margin-top: 10px;
+            flex-wrap: wrap; /* Giúp responsive khi thu nhỏ */
+        }
+        .action-top {
+            padding-right: 0;
+            margin-bottom: 0;
+        }
+
+
+        .filter-flex {
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+
+        .filter-group-container {
+            display: flex;
+            gap: 24px;
+            flex-wrap: wrap;
+        }
+
+        .filter-section {
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+<!-- Sidebar -->
+<div th:replace="taskbar/staff-taskbar :: staffTaskbar"></div>
+
+<main class="main-content">
+    <header class="header">
+        <div class="header-left">
+            <button class="sidebar-toggle">
+                <i class="fas fa-bars"></i>
+            </button>
+            <h1>Quản Lý Vấn Đề</h1>
+        </div>
+        <div class="header-right">
+
+        </div>
+    </header>
+    <div class="page-content">
+        <div class="page-header">
+            <h2 class="page-title">
+                Danh sách vấn đề của nhân viên
+            </h2>
+        </div>
+
+        <!-- Action Bar -->
+        <div class="action-bar">
+            <div class="action-top">
+                <a th:href="@{/SWP/staff-dashboard}" class="btn btn-secondary">
+                    <i class="fa-solid fa-arrow-left"></i> Quay lại Dashboard
+                </a>
+            </div>
+
+            <div class="filter-section filter-flex">
+                <div class="filter-group-container">
+                    <div class="filter-group">
+                        <label for="statusFilter"><i class="fa-solid fa-filter"></i> Lọc trạng thái:</label>
+                        <select id="statusFilter" class="filter-select" onchange="filterIssues()">
+                            <option value="all">Tất cả</option>
+                            <option value="resolved">Đã xử lý</option>
+                            <option value="unresolved">Chờ xử lý</option>
+                        </select>
+                    </div>
+
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button onclick="exportIssuesExcel()" class="btn btn-success">
+                        <i class="fa-solid fa-download"></i> Xuất Excel
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Thông báo -->
+        <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+        <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+        <!-- Bảng Issues -->
+        <div class="card">
+            <div class="card-header">
+                <h3>
+                    Danh Sách Vấn Đề
+                    (<span id="totalCount" th:text="${issues != null ? #lists.size(issues) : 0}"></span>)
+                </h3>
+            </div>
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                    <tr>
+                        <th>Tiêu đề</th>
+                        <th>Mô tả</th>
+                        <th>Khách hàng</th>
+                        <th>Nhân viên xử lý</th>
+                        <th>Người tạo</th>
+                        <th>Trạng thái</th>
+                        <th>Hành động</th>
+                    </tr>
+                    </thead>
+                    <tbody id="issueTableBody">
+                    <tr th:each="issue, iterStat : ${issues}">
+                        <td th:text="${issue.subject}"></td>
+                        <td th:text="${issue.description}"></td>
+                        <td th:text="${issue.customer?.fullname}"></td>
+                        <td th:text="${issue.assignedStaff?.fullname ?: 'Chưa gán'}"></td>
+                        <td>
+                            <span class="created-by-badge" th:text="${issue.createdByType == 'STAFF' ? 'Nhân viên' : 'Khách hàng'}"></span>
+                        </td>
+                        <td>
+                            <span th:if="${issue.resolved}" class="status-badge active">Đã xử lý</span>
+                            <span th:if="${!issue.resolved}" class="status-badge warning">Chờ xử lý</span>
+                        </td>
+                        <td>
+                            <div class="action-buttons">
+                                <a th:href="@{/SWP/issues/staff/view/{id}(id=${issue.id})}" class="btn btn-info">
+                                    <i class="fas fa-eye"></i> Xem
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    <!-- Dòng hiển thị khi không có dữ liệu -->
+                    <tr id="noIssueRow" th:if="${#lists.isEmpty(issues)}">
+                        <td colspan="6" class="text-center">Không có issue nào.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <!-- Pagination -->
+            <div class="pagination"></div>
+        </div>
+    </div>
+</main>
+
+<script>
+    const COLUMN_COUNT = 7;
+    const rowsPerPage = 10;
+    let currentPage = 1;
+
+    document.addEventListener('DOMContentLoaded', function () {
+        // Gắn sự kiện
+        document.getElementById('searchInput').addEventListener('input', applyFiltersAndPaginate);
+        document.getElementById('statusFilter').addEventListener('change', applyFiltersAndPaginate);
+        document.getElementById('sortSelect').addEventListener('change', handleSort);
+
+        // Gọi lần đầu
+        applyFiltersAndPaginate();
+    });
+
+    function applyFiltersAndPaginate() {
+        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+        const status = document.getElementById('statusFilter').value;
+
+        const rows = Array.from(document.querySelectorAll('.data-table tbody tr'))
+            .filter(row => row.querySelectorAll('td').length === COLUMN_COUNT);
+
+        let visibleRows = 0;
+
+        rows.forEach(row => {
+            const rowText = row.textContent.toLowerCase();
+            let show = true;
+
+            // Lọc theo từ khóa
+            if (searchTerm && !rowText.includes(searchTerm)) show = false;
+
+            // Lọc theo trạng thái
+            const isResolved = !!row.querySelector('.status-badge.active');
+            if (status === 'resolved' && !isResolved) show = false;
+            if (status === 'unresolved' && isResolved) show = false;
+
+            row.style.display = show ? '' : 'none';
+            row.dataset.filtered = show ? 'true' : 'false';
+            if (show) visibleRows++;
+        });
+
+        updateTotalCount(visibleRows);
+        toggleNoIssueRow(visibleRows);
+
+        const totalPages = Math.max(1, Math.ceil(visibleRows / rowsPerPage));
+        currentPage = 1;
+        renderPagination(totalPages);
+        showPage(currentPage);
+    }
+
+    function handleSort() {
+        const sortValue = document.getElementById('sortSelect').value;
+        if (!sortValue) {
+            applyFiltersAndPaginate();
+            return;
+        }
+
+        const [field, order] = sortValue.split("-");
+        const rows = Array.from(document.querySelectorAll('.data-table tbody tr'))
+            .filter(row => row.querySelectorAll('td').length === COLUMN_COUNT);
+
+        rows.sort((a, b) => {
+            let aText = '', bText = '';
+
+            if (field === 'customer') {
+                aText = a.children[3].textContent.trim().toLowerCase();
+                bText = b.children[3].textContent.trim().toLowerCase();
+            } else if (field === 'staff') {
+                aText = a.children[4].textContent.trim().toLowerCase();
+                bText = b.children[4].textContent.trim().toLowerCase();
+            }
+
+            const cmp = aText.localeCompare(bText, 'vi', { sensitivity: 'base' });
+            return order === 'asc' ? cmp : -cmp;
+        });
+
+        const tbody = document.querySelector('.data-table tbody');
+        rows.forEach(row => tbody.appendChild(row));
+
+        applyFiltersAndPaginate(); // Sau sắp xếp thì áp dụng lọc lại
+    }
+
+    function showPage(page) {
+        const rows = Array.from(document.querySelectorAll('.data-table tbody tr'))
+            .filter(row => row.dataset.filtered === 'true');
+        const totalRows = rows.length;
+        const totalPages = Math.max(1, Math.ceil(totalRows / rowsPerPage));
+
+        currentPage = Math.min(Math.max(1, page), totalPages);
+
+        rows.forEach((row, index) => {
+            if (index >= (currentPage - 1) * rowsPerPage && index < currentPage * rowsPerPage) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+
+        highlightActivePage();
+    }
+
+    function renderPagination(totalPages) {
+        const pagination = document.querySelector('.pagination');
+        if (!pagination) return;
+        pagination.innerHTML = '';
+
+        // Previous button
+        const prev = document.createElement('button');
+        prev.innerHTML = '<i class="fas fa-chevron-left"></i>';
+        prev.disabled = currentPage === 1;
+        prev.addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                showPage(currentPage);
+            }
+        });
+        pagination.appendChild(prev);
+
+        // Number buttons
+        for (let i = 1; i <= totalPages; i++) {
+            const btn = document.createElement('button');
+            btn.textContent = i;
+            btn.classList.toggle('active', i === currentPage);
+            btn.addEventListener('click', () => {
+                currentPage = i;
+                showPage(currentPage);
+            });
+            pagination.appendChild(btn);
+        }
+
+        // Next button
+        const next = document.createElement('button');
+        next.innerHTML = '<i class="fas fa-chevron-right"></i>';
+        next.disabled = currentPage === totalPages;
+        next.addEventListener('click', () => {
+            if (currentPage < totalPages) {
+                currentPage++;
+                showPage(currentPage);
+            }
+        });
+        pagination.appendChild(next);
+    }
+
+    function highlightActivePage() {
+        const paginationButtons = document.querySelectorAll('.pagination button');
+        paginationButtons.forEach(btn => {
+            if (btn.textContent === String(currentPage)) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+    }
+
+    function updateTotalCount(count) {
+        document.getElementById('totalCount').textContent = count;
+    }
+
+    function toggleNoIssueRow(count) {
+        const row = document.getElementById('noIssueRow');
+        if (row) {
+            row.style.display = count === 0 ? '' : 'none';
+        }
+    }
+</script>
+<script>
+    function filterIssues() {
+        const statusFilter = document.getElementById('statusFilter').value;
+        const rows = document.querySelectorAll('.data-table tbody tr');
+
+        rows.forEach(row => {
+            const statusCell = row.querySelector('.status-badge');
+            let showRow = true;
+
+            if (statusFilter !== 'all') {
+                const statusText = statusCell.textContent.trim();
+                if (statusFilter === 'resolved' && statusText !== 'Đã xử lý') showRow = false;
+                if (statusFilter === 'unresolved' && statusText !== 'Chờ xử lý') showRow = false;
+            }
+
+            row.style.display = showRow ? '' : 'none';
+        });
+
+        currentPage = 1;
+        applyFiltersAndPaginate();
+    }
+
+    function exportIssuesExcel() {
+        const table = document.querySelector('.data-table');
+        const visibleRows = Array.from(table.querySelectorAll('tbody tr')).filter(row => row.style.display !== 'none');
+
+        const data = [];
+        data.push(['Tiêu đề', 'Mô tả', 'Khách hàng', 'Nhân viên xử lý', 'Người tạo', 'Trạng thái']);
+
+        visibleRows.forEach(row => {
+            const cells = row.querySelectorAll('td');
+            const rowData = [
+                cells[0].textContent.trim(),
+                cells[1].textContent.trim(),
+                cells[2].textContent.trim(),
+                cells[3].textContent.trim(),
+                cells[4].textContent.trim(),
+                cells[5].textContent.trim()
+            ];
+            data.push(rowData);
+        });
+
+        const ws = XLSX.utils.aoa_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Issues');
+
+        const fileName = 'danh_sach_van_de_nhan_vien_' + new Date().toISOString().slice(0, 10) + '.xlsx';
+        XLSX.writeFile(wb, fileName);
+    }
+
+    document.getElementById('sortSelect').addEventListener('change', filterIssues);
+</script>
+</body>
+</html>

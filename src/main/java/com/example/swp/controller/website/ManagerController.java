@@ -9,6 +9,7 @@ import com.example.swp.service.CustomerService;
 import com.example.swp.service.StaffService;
 
 import jakarta.servlet.http.HttpSession;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
@@ -38,7 +39,27 @@ public class ManagerController {
 
 
 
+    @GetMapping("/manager-dashboard")
+    public String showDashboard(Model model, HttpSession session) {
+        Manager loggedInManager = (Manager) session.getAttribute("loggedInManager");
+        if (loggedInManager != null) {
+            model.addAttribute("user", loggedInManager.getFullname());
+            model.addAttribute("userName", loggedInManager.getEmail());
+            model.addAttribute("userRole", "Manager");
+        }
 
+        List<Customer> customers = customerService.getAll();
+        int totalUser = customers.size();
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getPrincipal())) {
+            UserDetails userDetails = (UserDetails) auth.getPrincipal();
+            model.addAttribute("userName", userDetails.getUsername());
+            model.addAttribute("userRole", auth.getAuthorities().iterator().next().getAuthority());
+        }
+
+        return "admin";
+    }
     //danh sách staff
     @GetMapping("/staff-list")
     public String showStaffList(
@@ -106,15 +127,23 @@ public class ManagerController {
     }
 
 
+    @GetMapping("/manager-customer-list")
+    public String showUserList(Model model) {
+        List<Customer> customers = customerService.getAll();
+        int totalCustomers = customers.size();
+        model.addAttribute("totalCustomers", totalCustomers);
+        model.addAttribute("customers", customers);
+        return "manager-customer-list";
+    }
 
-//    @GetMapping("/manager/profile")
-//    public String managerProfilePage(HttpSession session, Model model) {
-//        Manager loggedInManager = (Manager) session.getAttribute("loggedInManager");
-//        if (loggedInManager != null) {
-//            model.addAttribute("user", loggedInManager); // -> biến 'user' trong HTML
-//        }
-//        return "manager-setting";
-//    }
+    // @GetMapping("/manager/profile")
+    // public String managerProfilePage(HttpSession session, Model model) {
+    // Manager loggedInManager = (Manager) session.getAttribute("loggedInManager");
+    // if (loggedInManager != null) {
+    // model.addAttribute("user", loggedInManager); // -> biến 'user' trong HTML
+    // }
+    // return "manager-setting";
+    // }
 
 
 

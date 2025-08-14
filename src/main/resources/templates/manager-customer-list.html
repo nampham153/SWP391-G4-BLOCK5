@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Danh sách khách hàng - QVL Storage</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+
+        /* <CHANGE> Simplified sidebar styles - removed gradients */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 260px;
+            height: 100vh;
+            background: #343a40;
+            color: white;
+            z-index: 1000;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .logo i {
+            margin-right: 10px;
+            font-size: 28px;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            padding: 20px 0;
+        }
+
+        .menu-item {
+            margin-bottom: 5px;
+        }
+
+        .menu-item a {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .menu-item a:hover,
+        .menu-item.active a {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+            border-right: 3px solid #fff;
+        }
+
+        .menu-item i {
+            margin-right: 12px;
+            width: 20px;
+            text-align: center;
+        }
+
+        .sidebar-footer {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            padding: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+        }
+
+        .user-details {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-name {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .user-role {
+            font-size: 12px;
+            opacity: 0.7;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 260px;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: white;
+            padding: 20px 30px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+        }
+
+        .sidebar-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 20px;
+            margin-right: 15px;
+            cursor: pointer;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .search-box {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 15px;
+            color: #666;
+        }
+
+        .search-box input {
+            padding: 12px 15px 12px 45px;
+            border: 2px solid #e1e5e9;
+            border-radius: 25px;
+            width: 300px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+
+        /* Page Content */
+        .page-content {
+            padding: 30px;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        /* <CHANGE> Updated page title text to Vietnamese */
+        .page-title {
+            font-size: 32px;
+            color: #333;
+            font-weight: 700;
+        }
+
+        .page-actions {
+            display: flex;
+            gap: 15px;
+        }
+
+        /* <CHANGE> Simplified button styles - removed gradients */
+        .btn-primary, .btn-secondary {
+            padding: 12px 24px;
+            border: 2px solid transparent;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+
+        .btn-primary:hover {
+            background: #0056b3;
+            border-color: #0056b3;
+        }
+
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #495057;
+            border-color: #e9ecef;
+        }
+
+        .btn-secondary:hover {
+            background: #e9ecef;
+            border-color: #dee2e6;
+        }
+
+        .btn-back {
+            background: #6c757d;
+            color: white;
+            border-color: #6c757d;
+        }
+
+        .btn-back:hover {
+            background: #5a6268;
+            border-color: #545b62;
+        }
+
+        /* <CHANGE> Simplified filter section layout */
+        .filter-section {
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 25px;
+            display: flex;
+            gap: 20px;
+            align-items: end;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .filter-group label {
+            font-weight: 600;
+            color: #495057;
+            font-size: 14px;
+        }
+
+        .filter-select {
+            padding: 10px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 6px;
+            font-size: 14px;
+            min-width: 200px;
+            transition: border-color 0.3s ease;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+
+        /* Card */
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 25px;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-header h3 {
+            font-size: 20px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* Table */
+        .table-container {
+            overflow-x: auto;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .data-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: #495057;
+            font-size: 14px;
+        }
+
+        .data-table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .customer-id {
+            font-weight: 600;
+            color: #007bff;
+        }
+
+        .customer-name {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .customer-email {
+            color: #6c757d;
+        }
+
+        .description-cell {
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* Status Badges */
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-badge.customer {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .status-badge.vip {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        .status-badge.blocked {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-icon {
+            width: 36px;
+            height: 36px;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+            color: #495057;
+            text-decoration: none;
+        }
+
+        .btn-icon:hover {
+            background: #e9ecef;
+            border-color: #adb5bd;
+        }
+
+        .btn-icon.danger {
+            background: #f8d7da;
+            color: #721c24;
+            border-color: #f5c6cb;
+        }
+
+        .btn-icon.danger:hover {
+            background: #f5c6cb;
+            border-color: #f1b0b7;
+        }
+
+        /* Pagination */
+        .pagination {
+            padding: 25px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .pagination button {
+            width: 40px;
+            height: 40px;
+            border: 2px solid #e9ecef;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .pagination button:hover,
+        .pagination button.active {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+
+        .pagination a {
+            text-decoration: none;
+        }
+
+        .pagination a.disabled {
+            pointer-events: none;
+            opacity: 0.5;
+        }
+
+        .pagination-btn {
+            width: 40px;
+            height: 40px;
+            border: 2px solid #e9ecef;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .pagination-btn:hover,
+        .pagination-btn.active {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+
+        .pagination-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        .page-info {
+            text-align: center;
+            margin-top: 15px;
+            color: #6c757d;
+            font-size: 14px;
+        }
+
+        .page-info span {
+            font-weight: 600;
+            color: #007bff;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .sidebar-toggle {
+                display: block;
+            }
+
+            .header {
+                padding: 15px 20px;
+            }
+
+            .header h1 {
+                font-size: 20px;
+            }
+
+            .search-box input {
+                width: 200px;
+            }
+
+            .page-content {
+                padding: 20px;
+            }
+
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+
+            .page-title {
+                font-size: 24px;
+            }
+
+            .filter-section {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .filter-select {
+                min-width: auto;
+            }
+
+            .card-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div th:replace="taskbar/manager-taskbar :: managerTaskbar"></div>
+<!-- Main Content -->
+<main class="main-content">
+    <!-- Page Content -->
+    <div class="page-content">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h2 class="page-title">Cơ sở dữ liệu khách hàng</h2>
+            <div class="page-actions">
+                <button class="btn-secondary btn-back">
+                    <i class="fas fa-arrow-left"></i>
+                    Về trang chủ
+                </button>
+                <button class="btn-primary">
+                    <i class="fas fa-plus"></i>
+                    Thêm khách hàng mới
+                </button>
+            </div>
+        </div>
+
+        <div class="filter-section">
+            <div class="filter-group">
+                <input type="text" id="searchInput" placeholder="Nhập ID hoặc tên khách hàng..." class="filter-select">
+            </div>
+        </div>
+
+        <!-- Customer Table -->
+        <div class="card">
+            <div class="card-header">
+                <!-- <CHANGE> Updated header text to Vietnamese -->
+                <h3>Tất cả khách hàng (<span id="totalCount" th:text="${totalCustomers}">0</span>)</h3>
+            </div>
+
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                    <tr>
+                        <!-- <CHANGE> Updated all table headers to Vietnamese -->
+                        <th>Mã KH</th>
+                        <th>Họ tên</th>
+                        <th>Email</th>
+                        <th>Địa chỉ</th>
+                        <th>Số điện thoại</th>
+                        <th>Vai trò</th>
+                        <th>Hành động</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="customer : ${customers}">
+                        <td>
+                            <!-- <CHANGE> Added # prefix to customer ID -->
+                            <span class="customer-id" th:text="'#' + ${customer.getId()}"></span>
+                        </td>
+                        <td>
+                            <span class="customer-name" th:text="${customer.getFullname()}"></span>
+                        </td>
+                        <td>
+                            <span class="customer-email" th:text="${customer.getEmail()}"></span>
+                        </td>
+                        <td>
+                            <span class="description-cell" th:text="${customer.getAddress()}" th:title="${customer.getAddress()}"></span>
+                        </td>
+                        <td th:text="${customer.getPhone()}"></td>
+                        <td>
+                            <!-- <CHANGE> Added status badge styling -->
+                            <span class="status-badge"
+                                  th:classappend="${customer.getRoleName() == 'VIP' ? ' vip' : (customer.getRoleName() == 'BLOCKED' ? ' blocked' : ' customer')}"
+                                  th:text="${customer.getRoleName()}">
+                            </span>
+                        </td>
+                        <td>
+                            <div class="action-buttons">
+                                <a th:href="@{/SWP/customers/{id}(id=${customer.id})}"
+                                   class="btn-icon" title="Xem chi tiết">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+
+                                <!-- <CHANGE> Updated toggle button to match target design -->
+                                <form th:action="@{/SWP/customers/delete/{id}(id=${customer.id})}"
+                                      method="post"
+                                      style="display: inline;"
+                                      th:onsubmit="return confirm('Bạn có chắc chắn muốn ' + ((${#strings.toUpperCase(customer.getRoleName())} == 'BLOCKED') ? 'mở khóa' : 'ngưng hoạt động') + ' khách hàng này?')">
+                                    <button type="submit" class="btn-icon danger"
+                                            th:title="${#strings.toUpperCase(customer.getRoleName())} == 'BLOCKED' ? 'Mở khóa khách hàng' : 'Ngưng hoạt động khách hàng'">
+                                        <i class="fas"
+                                           th:classappend="${#strings.toUpperCase(customer.getRoleName())} == 'BLOCKED' ? ' fa-unlock' : ' fa-lock'"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination" id="pagination" style="display: flex; justify-content: center; gap: 10px; padding: 25px;">
+                <p>Pagination sẽ hiển thị ở đây...</p>
+            </div>
+
+            <!-- Page info -->
+            <div class="page-info" id="pageInfo" style="text-align: center; margin-top: 15px; color: #6c757d; font-size: 14px;">
+                <p>Thông tin trang sẽ hiển thị ở đây...</p>
+            </div>
+
+        </div>
+    </div>
+</main>
+
+<!-- JavaScript functionality with pagination -->
+<script>
+    // Pagination variables
+    const rowsPerPage = 8; // 8 khách hàng mỗi trang
+    let currentPage = 1;
+    let allRows = [];
+    let filteredRows = [];
+
+    // Tìm kiếm realtime theo ID hoặc tên
+    function filterRows() {
+        const inputElement = document.getElementById('searchInput');
+        if (!inputElement) return;
+        const searchTerm = inputElement.value.trim().toLowerCase();
+
+        filteredRows = [];
+        allRows.forEach(row => {
+            const idCell = row.querySelector('.customer-id');
+            const nameCell = row.querySelector('.customer-name');
+            const idText = idCell ? idCell.textContent.replace('#', '').trim().toLowerCase() : '';
+            const nameText = nameCell ? nameCell.textContent.trim().toLowerCase() : '';
+
+            const matches = searchTerm === ''
+                ? true
+                : idText.startsWith(searchTerm) || nameText.includes(searchTerm);
+
+            if (matches) {
+                filteredRows.push(row);
+            }
+        });
+
+        // Reset to first page when filtering
+        currentPage = 1;
+        showPage(currentPage);
+        updateTotalCount();
+    }
+
+    // Show specific page
+    function showPage(page) {
+        const totalFilteredRows = filteredRows.length;
+        const totalPages = Math.ceil(totalFilteredRows / rowsPerPage);
+
+        // Validate page number
+        if (page < 1) page = 1;
+        if (page > totalPages && totalPages > 0) page = totalPages;
+        currentPage = page;
+
+        // Hide all rows first
+        allRows.forEach(row => {
+            row.style.display = 'none';
+        });
+
+        // Show rows for current page
+        const startIndex = (page - 1) * rowsPerPage;
+        const endIndex = startIndex + rowsPerPage;
+
+        for (let i = startIndex; i < endIndex && i < filteredRows.length; i++) {
+            filteredRows[i].style.display = '';
+        }
+
+        // Update pagination controls
+        renderPagination(totalPages);
+        updatePageInfo(page, totalPages, totalFilteredRows);
+    }
+
+    // Render pagination buttons
+    function renderPagination(totalPages) {
+        const pagination = document.getElementById('pagination');
+        if (!pagination) return;
+
+        if (totalPages <= 1) {
+            pagination.style.display = 'none';
+            return;
+        }
+
+        pagination.style.display = 'flex';
+        pagination.innerHTML = '';
+
+        // Previous button
+        const prevBtn = document.createElement('button');
+        prevBtn.innerHTML = '‹';
+        prevBtn.style.cssText = `
+            width: 40px; height: 40px; border: 2px solid #e9ecef; background: white;
+            border-radius: 6px; cursor: pointer; display: flex; align-items: center;
+            justify-content: center; font-size: 18px; font-weight: bold;
+            ${currentPage === 1 ? 'opacity: 0.5; cursor: not-allowed;' : ''}
+        `;
+        if (currentPage > 1) {
+            prevBtn.onclick = () => showPage(currentPage - 1);
+            prevBtn.onmouseover = () => {
+                prevBtn.style.background = '#007bff';
+                prevBtn.style.color = 'white';
+            };
+            prevBtn.onmouseout = () => {
+                prevBtn.style.background = 'white';
+                prevBtn.style.color = 'black';
+            };
+        }
+        pagination.appendChild(prevBtn);
+
+        // Page number buttons
+        for (let i = 1; i <= totalPages; i++) {
+            const btn = document.createElement('button');
+            btn.textContent = i;
+            btn.style.cssText = `
+                width: 40px; height: 40px; border: 2px solid #e9ecef;
+                background: ${i === currentPage ? '#007bff' : 'white'};
+                color: ${i === currentPage ? 'white' : 'black'};
+                border-radius: 6px; cursor: pointer; display: flex; align-items: center;
+                justify-content: center; font-size: 14px; font-weight: 500;
+            `;
+            btn.onclick = () => showPage(i);
+            if (i !== currentPage) {
+                btn.onmouseover = () => {
+                    btn.style.background = '#007bff';
+                    btn.style.color = 'white';
+                };
+                btn.onmouseout = () => {
+                    btn.style.background = 'white';
+                    btn.style.color = 'black';
+                };
+            }
+            pagination.appendChild(btn);
+        }
+
+        // Next button
+        const nextBtn = document.createElement('button');
+        nextBtn.innerHTML = '›';
+        nextBtn.style.cssText = `
+            width: 40px; height: 40px; border: 2px solid #e9ecef; background: white;
+            border-radius: 6px; cursor: pointer; display: flex; align-items: center;
+            justify-content: center; font-size: 18px; font-weight: bold;
+            ${currentPage === totalPages ? 'opacity: 0.5; cursor: not-allowed;' : ''}
+        `;
+        if (currentPage < totalPages) {
+            nextBtn.onclick = () => showPage(currentPage + 1);
+            nextBtn.onmouseover = () => {
+                nextBtn.style.background = '#007bff';
+                nextBtn.style.color = 'white';
+            };
+            nextBtn.onmouseout = () => {
+                nextBtn.style.background = 'white';
+                nextBtn.style.color = 'black';
+            };
+        }
+        pagination.appendChild(nextBtn);
+    }
+
+    // Update page info
+    function updatePageInfo(page, totalPages, totalItems) {
+        const pageInfo = document.getElementById('pageInfo');
+        if (!pageInfo) return;
+
+        if (totalPages <= 1) {
+            pageInfo.style.display = 'none';
+            return;
+        }
+
+        pageInfo.style.display = 'block';
+        pageInfo.innerHTML = `<p>Trang <span>${page}</span> / <span>${totalPages}</span> - Tổng <span>${totalItems}</span> khách hàng (8 khách hàng/trang)</p>`;
+    }
+
+    // Update total count in header
+    function updateTotalCount() {
+        const totalEl = document.getElementById('totalCount');
+        if (totalEl) {
+            totalEl.textContent = String(filteredRows.length);
+        }
+    }
+
+    // Initialize
+    function initializePagination() {
+        // Get all rows initially
+        const rows = document.querySelectorAll('.data-table tbody tr');
+        allRows = Array.from(rows);
+        filteredRows = Array.from(rows);
+
+        // Show first page
+        showPage(1);
+        updateTotalCount();
+    }
+
+    // Event listeners
+    const searchInputEl = document.getElementById('searchInput');
+    if (searchInputEl) {
+        searchInputEl.addEventListener('input', filterRows);
+    }
+
+    // Thu gọn sidebar cho mobile
+    document.querySelector('.sidebar-toggle') && document.querySelector('.sidebar-toggle').addEventListener('click', function() {
+        const sidebar = document.querySelector('.sidebar');
+        if (sidebar) sidebar.classList.toggle('open');
+    });
+
+    // Initialize when page loads
+    window.onload = function() {
+        var pathname = window.location.pathname;
+        if (pathname.includes("customers")) {
+            var menu = document.getElementById('customers-menu');
+            if (menu) menu.classList.add('active');
+        }
+
+        // Initialize pagination
+        setTimeout(() => {
+            initializePagination();
+        }, 100);
+    };
+</script>
+</body>
+</html>
