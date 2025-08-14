@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Chi tiết nhân viên</title>
+    <link rel="stylesheet" href="/css/staff-detail.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+<div th:replace="taskbar/manager-taskbar :: managerTaskbar"></div>
+
+<div class="container">
+    <!-- Header nhân viên -->
+    <div class="profile-header">
+        <!-- Avatar -->
+        <div class="avatar">
+            <img src="/images/avatar.png" alt="Avatar">
+        </div>
+
+        <!-- Tên và vai trò -->
+        <div class="profile-info">
+            <h2 th:text="${staff.fullname}"></h2>
+            <div class="badge-role" th:text="${staff.roleName}"></div>
+            <div class="id">Mã: #<span th:text="${staff.staffid}"></span></div>
+        </div>
+
+        <!-- Nút quay lại -->
+        <div>
+            <a th:href="@{/admin/staff-list}" class="btn-back">
+                <i class="fas fa-arrow-left"></i> Quay lại danh sách
+            </a>
+        </div>
+    </div>
+
+    <!-- Thông tin nhân viên -->
+    <div class="info-section">
+        <h3 class="mb-0">
+            <i class="bi bi-person-badge-fill text-primary me-2"></i>
+            Thông tin nhân viên
+        </h3>
+
+        <div class="info-item">
+            <i class="fas fa-envelope "></i>
+            <span class="info-label">Địa chỉ Email:</span>
+            <span th:text="${staff.email}"></span>
+        </div>
+
+        <div class="info-item">
+            <i class="fas fa-phone"></i>
+            <span class="info-label">Số điện thoại:</span>
+            <span th:text="${staff.phone}"></span>
+        </div>
+
+        <div class="info-item">
+            <i class="fas fa-id-card"></i>
+            <span class="info-label">CCCD/CMND:</span>
+            <span th:text="${staff.idCitizenCard}"></span>
+        </div>
+
+        <div class="info-item">
+            <i class="fas fa-user-tag"></i>
+            <span class="info-label">Vai trò:</span>
+            <span th:text="${staff.roleName}"></span>
+        </div>
+
+        <!-- Nếu muốn hiển thị giới tính -->
+        <div class="info-item">
+            <i class="fas fa-venus-mars"></i>
+            <span class="info-label">Giới tính:</span>
+            <span th:text="${staff.sex} == true ? 'Nam' : 'Nữ'"></span>
+        </div>
+    </div>
+
+    <!-- Nút sửa -->
+    <a th:href="@{'/admin/staff-list/edit/' + ${staff.staffid}}" class="btn-edit">
+        <i class="fas fa-edit"></i> Sửa nhân viên
+    </a>
+</div>
+
+</body>
+</html>
