@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thêm Voucher Mới</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .error-message {
+            color: red;
+            font-size: 0.9rem;
+            margin-top: 4px;
+        }
+        .btn-back {
+            font-size: 14px;
+            padding: 6px;
+            margin: 5px;
+            display: inline-block;
+            text-align: center;
+            min-width: 200px;
+        }
+        .btn-container {
+            text-align: center;
+            margin-top: -20px;
+        }
+        .error-border {
+            border-color: red !important;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen py-8">
+<div th:replace="taskbar/staff-taskbar :: staffTaskbar"></div>
+<main class="main-content" style="margin-top:-30px;">
+    <header class="header">
+        <div class="header-left">
+            <button class="sidebar-toggle">
+                <i class="fas fa-bars"></i>
+            </button>
+            <h1>Thêm Voucher</h1>
+        </div>
+        <div class="header-right">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Search...">
+            </div>
+        </div>
+    </header>
+
+    <div class="text-center mb-8" style="margin-top: 20px;">
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">Thêm Voucher Mới</h1>
+        <p class="text-gray-600">Điền thông tin chi tiết để thêm voucher vào hệ thống</p>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-lg p-8 mb-10 max-w-xl mx-auto">
+        <form action="#" th:action="@{/SWP/staff/addvoucher}" th:object="${voucher}" method="post" class="space-y-6">
+            <!-- Voucher Name -->
+            <div>
+                <label for="name" class="block text-sm font-medium text-gray-700 mb-2">
+                    Tên voucher <span class="text-red-500">*</span>
+                </label>
+                <input
+                        type="text"
+                        id="name"
+                        name="name"
+                        maxlength="50"
+                        th:field="*{name}"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 ease-in-out"
+                        placeholder="Nhập tên voucher"
+                />
+                <div class="error-message" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></div>
+            </div>
+
+            <!-- Description -->
+            <div>
+                <label for="description" class="block text-sm font-medium text-gray-700 mb-2">
+                    Mô tả
+                </label>
+                <textarea
+                        id="description"
+                        name="description"
+                        rows="3"
+                        maxlength="500"
+                        th:field="*{description}"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 ease-in-out resize-vertical"
+                        placeholder="Mô tả voucher..."
+                ></textarea>
+                <div class="error-message" th:if="${#fields.hasErrors('description')}" th:errors="*{description}"></div>
+            </div>
+
+            <!-- Discount & Required Point -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="discountAmount" class="block text-sm font-medium text-gray-700 mb-2">
+                        Số tiền giảm giá (VNĐ) <span class="text-red-500">*</span>
+                    </label>
+                    <input
+                            type="text"
+                            id="discountAmount"
+                            name="discountAmount"
+                            th:field="*{discountAmount}"
+                            min="1000"
+                            step="1000"
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 ease-in-out"
+                            placeholder="Nhập số tiền giảm giá"
+                    />
+                    <div class="error-message" th:if="${#fields.hasErrors('discountAmount')}" th:errors="*{discountAmount}"></div>
+                </div>
+                <div>
+                    <label for="requiredPoint" class="block text-sm font-medium text-gray-700 mb-2">
+                        Điểm đổi <span class="text-red-500">*</span>
+                    </label>
+                    <input
+                            type="number"
+                            id="requiredPoint"
+                            name="requiredPoint"
+                            th:field="*{requiredPoint}"
+                            min="1"
+                            step="1"
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 ease-in-out"
+                            placeholder="Nhập điểm cần để đổi"
+                    />
+                    <div class="error-message" th:if="${#fields.hasErrors('requiredPoint')}" th:errors="*{requiredPoint}"></div>
+                </div>
+            </div>
+
+            <!-- Date Row -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="startDate" class="block text-sm font-medium text-gray-700 mb-2">
+                        Ngày bắt đầu <span class="text-red-500">*</span>
+                    </label>
+                    <input
+                            type="datetime-local"
+                            id="startDate"
+                            name="startDate"
+                            th:field="*{startDate}"
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                    <div class="error-message" th:if="${#fields.hasErrors('startDate')}" th:errors="*{startDate}"></div>
+                </div>
+                <div>
+                    <label for="endDate" class="block text-sm font-medium text-gray-700 mb-2">
+                        Ngày kết thúc <span class="text-red-500">*</span>
+                    </label>
+                    <input
+                            type="datetime-local"
+                            id="endDate"
+                            name="endDate"
+                            th:field="*{endDate}"
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                    <div class="error-message" th:if="${#fields.hasErrors('endDate')}" th:errors="*{endDate}"></div>
+                </div>
+            </div>
+
+            <!-- Quantity Row -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="totalQuantity" class="block text-sm font-medium text-gray-700 mb-2">
+                        Số lượng phát hành <span class="text-red-500">*</span>
+                    </label>
+                    <input
+                            type="number"
+                            id="totalQuantity"
+                            name="totalQuantity"
+                            th:field="*{totalQuantity}"
+                            min="1"
+                            step="1"
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="Số lượng phát hành"
+                    />
+                    <div class="error-message" th:if="${#fields.hasErrors('totalQuantity')}" th:errors="*{totalQuantity}"></div>
+                </div>
+                <div>
+                    <label for="remainQuantity" class="block text-sm font-medium text-gray-700 mb-2">
+                        Số lượng còn lại <span class="text-red-500">*</span>
+                    </label>
+                    <input
+                            type="number"
+                            id="remainQuantity"
+                            name="remainQuantity"
+                            th:field="*{remainQuantity}"
+                            min="0"
+                            step="1"
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="Số lượng còn lại"
+                    />
+                    <div class="error-message" th:if="${#fields.hasErrors('remainQuantity')}" th:errors="*{remainQuantity}"></div>
+                </div>
+            </div>
+
+            <!-- Status -->
+            <div>
+                <label for="status" class="block text-sm font-medium text-gray-700 mb-2">Trạng thái <span class="text-red-500">*</span></label>
+                <select id="status" name="status" th:field="*{status}" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <option value="">-- Chọn trạng thái --</option>
+                    <option value="ACTIVE">Hoạt động</option>
+                    <option value="INACTIVE">Tạm dừng</option>
+                    <option value="EXPIRED">Hết hạn</option>
+                </select>
+                <div class="error-message" th:if="${#fields.hasErrors('status')}" th:errors="*{status}"></div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="pt-4">
+                <button
+                        type="submit"
+                        class="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 px-6 rounded-lg transition duration-200 ease-in-out transform hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                >
+                        <span class="flex items-center justify-center">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                            </svg>
+                            Thêm Voucher
+                        </span>
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="btn-container">
+        <a href="/SWP/staff/staff-dashboard" class="btn-secondary btn-back">
+            <i class="fas fa-arrow-left"></i> Quay Lại Dashboard
+        </a>
+        <a href="/SWP/staff/vouchers" class="btn-secondary btn-back">
+            <i class="fas fa-arrow-left"></i> Quay Lại danh sách mã giảm giá
+        </a>
+    </div>
+</main>
+
+<script>
+    const form = document.querySelector("form");
+    form.addEventListener("submit", function(e) {
+        let isValid = true;
+
+        function setError(inputId, message) {
+            const input = document.getElementById(inputId);
+            const errorDiv = document.getElementById(inputId + "Error");
+            if (message) {
+                input.classList.add("error-border");
+                errorDiv.textContent = message;
+                isValid = false;
+            } else {
+                input.classList.remove("error-border");
+                errorDiv.textContent = "";
+            }
+        }
+
+        const name = document.getElementById("name").value.trim();
+        setError("name", name.length > 50 ? "Tên voucher không vượt quá 50 ký tự." : "");
+
+        const description = document.getElementById("description").value.trim();
+        setError("description", description.length > 500 ? "Mô tả không vượt quá 500 ký tự." : "");
+
+        const discountAmount = document.getElementById("discountAmount").value.trim();
+        setError("discountAmount", (discountAmount === "" || isNaN(discountAmount) || Number(discountAmount) < 1000) ? "Giá trị phải lớn hơn 1000." : "");
+
+        const requiredPoint = document.getElementById("requiredPoint").value.trim();
+        setError("requiredPoint", (requiredPoint === "" || isNaN(requiredPoint) || Number(requiredPoint) < 1) ? "Điểm phải lớn hơn 0." : "");
+
+        const startDate = document.getElementById("startDate").value;
+        const endDate = document.getElementById("endDate").value;
+        if (!startDate) setError("startDate", "Phải nhập ngày bắt đầu.");
+        if (!endDate) setError("endDate", "Phải nhập ngày kết thúc.");
+        if (startDate && endDate && new Date(startDate) >= new Date(endDate)) {
+            setError("endDate", "Ngày kết thúc phải sau ngày bắt đầu.");
+        } else {
+            setError("endDate", "");
+        }
+
+        const totalQuantity = document.getElementById("totalQuantity").value.trim();
+        setError("totalQuantity", (totalQuantity === "" || isNaN(totalQuantity) || Number(totalQuantity) < 1) ? "Số lượng phát hành phải lớn hơn 0." : "");
+
+        const remainQuantity = document.getElementById("remainQuantity").value.trim();
+        setError("remainQuantity", (remainQuantity === "" || isNaN(remainQuantity) || Number(remainQuantity) < 0) ? "Số lượng còn lại không âm." : "");
+
+        const status = document.getElementById("status").value;
+        setError("status", !status ? "Phải chọn trạng thái." : "");
+
+        if (!isValid) e.preventDefault();
+    });
+</script>
+</body>
+</html>

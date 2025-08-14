@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voucher Detail - Staff Dashboard</title>
+    <link rel="stylesheet" href="/css/staff-dashboard.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .detail-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            margin-bottom: 30px;
+        }
+
+        .detail-header {
+            display: flex;
+            align-items: flex-start;
+            padding: 30px;
+            border-bottom: 1px solid #eee;
+            gap: 25px;
+        }
+
+        .detail-header img {
+            width: 200px;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .detail-info {
+            flex: 1;
+        }
+
+        .detail-info h2 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .info-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            font-size: 0.95rem;
+        }
+
+        .detail-label {
+            font-weight: 600;
+            color: #666;
+            min-width: 120px;
+            margin-right: 10px;
+        }
+
+        .detail-value {
+            color: #333;
+        }
+
+        .detail-content {
+            padding: 30px;
+        }
+
+        .detail-field {
+            margin-bottom: 25px;
+        }
+
+        .detail-field label {
+            display: block;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+
+        .field-edit {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            transition: border-color 0.3s ease;
+            margin-bottom: 10px;
+        }
+
+        .field-edit:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .field-edit[readonly] {
+            background-color: #f8f9fa;
+            color: #666;
+        }
+
+        .detail-actions {
+            display: flex;
+            gap: 15px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .btn-edit {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-edit:hover {
+            background: #5a6fd8;
+            transform: translateY(-1px);
+        }
+
+        .btn-delete {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background: #c0392b;
+            transform: translateY(-1px);
+        }
+
+        .btn-save {
+            background: #27ae60;
+            color: white;
+            position: relative;
+        }
+
+        .btn-save:hover {
+            background: #229954;
+        }
+
+        .btn-cancel {
+            background: #95a5a6;
+            color: white;
+        }
+
+        .btn-cancel:hover {
+            background: #7f8c8d;
+        }
+
+        .spinner {
+            display: none;
+            width: 16px;
+            height: 16px;
+            border: 2px solid transparent;
+            border-top: 2px solid currentColor;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .form-loading .spinner {
+            display: inline-block;
+        }
+
+        .btn-close {
+            position: absolute;
+            right: 15px;
+            background: none;
+            border: none;
+            color: inherit;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 4px;
+            opacity: 0.7;
+            transition: opacity 0.3s ease;
+        }
+
+        .btn-close:hover {
+            opacity: 1;
+        }
+
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+            margin-bottom: 20px;
+            padding: 8px 12px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+
+        .back-button:hover {
+            background: rgba(102, 126, 234, 0.1);
+            transform: translateX(-2px);
+        }
+
+        .page-header {
+            margin-bottom: 30px;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .page-subtitle {
+            color: #666;
+            font-size: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .detail-header {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .detail-header img {
+                width: 100%;
+                max-width: 300px;
+            }
+
+            .address-group {
+                grid-template-columns: 1fr;
+            }
+
+            .detail-actions {
+                flex-direction: column;
+            }
+        }
+        .error-message {
+        color: red;
+        font-size: 0.85rem;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<div th:replace="taskbar/staff-taskbar :: staffTaskbar"></div>
+
+<main class="main-content">
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <button class="sidebar-toggle">
+                <i class="fas fa-bars"></i>
+            </button>
+            <h1>Chi tiết Voucher</h1>
+        </div>
+
+        <div class="header-right">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Search vouchers...">
+            </div>
+        </div>
+    </header>
+
+    <!-- Page Content -->
+    <div class="page-content">
+        <div class="page-header">
+            <a th:href="@{/SWP/staff/vouchers}" class="btn-secondary btn-back">
+                <i class="fas fa-arrow-left"></i>
+                Quay lại danh sách Voucher
+            </a>
+            <h1 class="page-title">Chi tiết voucher</h1>
+            <p class="page-subtitle">Xem và quản lý thông tin Voucher</p>
+        </div>
+
+        <!-- Alert Messages -->
+        <div th:if="${message}"
+             th:class="${messageType == 'success'} ? 'alert alert-success alert-dismissible' : 'alert alert-error alert-dismissible'">
+            <i th:class="${messageType == 'success'} ? 'fas fa-check-circle' : 'fas fa-exclamation-triangle'"></i>
+            <span th:text="${message}"></span>
+            <button type="button" class="btn-close" onclick="this.parentElement.style.display='none'">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <!-- Voucher Detail Card -->
+        <div class="detail-card">
+            <div class="detail-header">
+                <div class="detail-info">
+                    <h2 th:text="${voucher.name}"></h2>
+                    <div class="info-row">
+                        <span class="detail-label">Voucher ID:</span>
+                        <span class="detail-value" th:text="${voucher.id}">1</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="detail-label">Status:</span>
+                        <span class="detail-value" th:text="${voucher.status}">ACTIVE</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="detail-label">Discount:</span>
+                        <span class="detail-value" th:text="${#numbers.formatDecimal(voucher.discountAmount,0,0)} + ' VNĐ'">50000 VNĐ</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Edit Form -->
+            <form id="editForm"
+                  th:action="@{'/SWP/staff/vouchers/' + ${voucher.id} + '/edit'}"
+                  th:object="${voucher}"
+                  method="post" th:style="${editMode} ? 'display:block;' : 'display:none;'">
+                <div class="detail-content">
+
+                    <div class="detail-field">
+                        <label class="detail-label">Tên Voucher</label>
+                        <input class="field-edit" type="text" th:field="*{name}" required>
+                        <div class="error-message" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></div>
+                    </div>
+
+                    <div class="detail-field">
+                        <label class="detail-label">Mô tả</label>
+                        <textarea class="field-edit" rows="3" th:field="*{description}"></textarea>
+                        <div class="error-message" th:if="${#fields.hasErrors('description')}" th:errors="*{description}"></div>
+                    </div>
+
+                    <div class="detail-field">
+                        <label class="detail-label">Số tiền giảm giá (VNĐ)</label>
+                        <input class="field-edit" type="number" min="1000" step="1000" th:field="*{discountAmount}" required>
+                        <div class="error-message" th:if="${#fields.hasErrors('discountAmount')}" th:errors="*{discountAmount}"></div>
+                    </div>
+
+                    <div class="detail-field">
+                        <label class="detail-label">Điểm đổi</label>
+                        <input class="field-edit" type="number" min="1" step="1" th:field="*{requiredPoint}" required>
+                        <div class="error-message" th:if="${#fields.hasErrors('requiredPoint')}" th:errors="*{requiredPoint}"></div>
+                    </div>
+
+                    <div class="detail-field">
+                        <label class="detail-label">Ngày bắt đầu</label>
+                        <input class="field-edit" type="datetime-local"
+                               th:value="${#temporals.format(voucher.startDate, 'yyyy-MM-dd''T''HH:mm')}" name="startDate" required>
+                        <div class="error-message" th:if="${#fields.hasErrors('startDate')}" th:errors="*{startDate}"></div>
+                    </div>
+
+                    <div class="detail-field">
+                        <label class="detail-label">Ngày kết thúc</label>
+                        <input class="field-edit" type="datetime-local"
+                               th:value="${#temporals.format(voucher.endDate, 'yyyy-MM-dd''T''HH:mm')}" name="endDate" required>
+                        <div class="error-message" th:if="${#fields.hasErrors('endDate')}" th:errors="*{endDate}"></div>
+                    </div>
+
+                    <div class="detail-field">
+                        <label class="detail-label">Số lượng phát hành</label>
+                        <input class="field-edit" type="number" min="1" th:field="*{totalQuantity}" required>
+                        <div class="error-message" th:if="${#fields.hasErrors('totalQuantity')}" th:errors="*{totalQuantity}"></div>
+                    </div>
+
+                    <div class="detail-field">
+                        <label class="detail-label">Số lượng còn lại</label>
+                        <input class="field-edit" type="number" min="0" th:field="*{remainQuantity}" required>
+                        <div class="error-message" th:if="${#fields.hasErrors('remainQuantity')}" th:errors="*{remainQuantity}"></div>
+                    </div>
+
+                    <div class="detail-field">
+                        <label class="detail-label">Trạng thái</label>
+                        <select class="field-edit" th:field="*{status}">
+                            <option value="ACTIVE">Hoạt động</option>
+                            <option value="INACTIVE">Tạm dừng</option>
+                            <option value="EXPIRED">Hết hạn</option>
+                        </select>
+                        <div class="error-message" th:if="${#fields.hasErrors('status')}" th:errors="*{status}"></div>
+                    </div>
+
+                    <div class="detail-actions">
+                        <button type="submit" class="btn btn-save" id="saveBtn">
+                            <span class="spinner" id="saveSpinner"></span>
+                            <i class="fas fa-save"></i> Lưu thay đổi
+                        </button>
+                        <button type="button" class="btn btn-cancel" onclick="toggleEdit(false)">
+                            <i class="fas fa-times"></i> Hủy
+                        </button>
+                    </div>
+                </div>
+            </form>
+            <!-- View Section -->
+            <div id="viewSection" class="detail-content"  th:style="${editMode} ? 'display:none;' : 'display:block;'">
+                <div class="detail-field">
+                    <label class="detail-label">Mô tả</label>
+                    <div class="detail-value" th:text="${voucher.description}">
+                        Mô tả voucher...
+                    </div>
+                </div>
+
+                <div class="detail-field">
+                    <label class="detail-label">Điểm đổi</label>
+                    <div class="detail-value" th:text="${voucher.requiredPoint}">10</div>
+                </div>
+
+                <div class="detail-field">
+                    <label class="detail-label">Ngày bắt đầu</label>
+                    <div class="detail-value" th:text="${#temporals.format(voucher.startDate, 'dd/MM/yyyy HH:mm')}">
+                        01/07/2025 09:00
+                    </div>
+                </div>
+
+                <div class="detail-field">
+                    <label class="detail-label">Ngày kết thúc</label>
+                    <div class="detail-value" th:text="${#temporals.format(voucher.endDate, 'dd/MM/yyyy HH:mm')}">
+                        31/07/2025 23:59
+                    </div>
+                </div>
+
+                <div class="detail-field">
+                    <label class="detail-label">Số lượng phát hành</label>
+                    <div class="detail-value" th:text="${voucher.totalQuantity}">100</div>
+                </div>
+
+                <div class="detail-field">
+                    <label class="detail-label">Số lượng còn lại</label>
+                    <div class="detail-value" th:text="${voucher.remainQuantity}">50</div>
+                </div>
+
+                <div class="detail-actions">
+                    <button type="button" class="btn btn-edit" onclick="toggleEdit(true)">
+                        <i class="fas fa-edit"></i> Chỉnh sửa
+                    </button>
+
+                    <form th:action="@{'/SWP/staff/vouchers/' + ${voucher.id} + '/delete'}" method="post" style="display: inline;"
+                          onsubmit="return confirm('Bạn có chắc chắn muốn xóa voucher này không?');">
+                        <input type="hidden" name="returnUrl" value="/SWP/staff/vouchers"/>
+                        <button type="submit" class="btn btn-delete">
+                            <i class="fas fa-trash"></i> Xóa Voucher
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script>
+    function toggleEdit(isEdit) {
+        document.getElementById('editForm').style.display = isEdit ? 'block' : 'none';
+        document.getElementById('viewSection').style.display = isEdit ? 'none' : 'block';
+
+        if (isEdit) {
+            document.querySelector('#editForm input[name="name"]').focus();
+        }
+    }
+
+    // Loading spinner on save
+    document.getElementById('editForm').addEventListener('submit', function(e) {
+        const saveBtn = document.getElementById('saveBtn');
+        const spinner = document.getElementById('saveSpinner');
+        saveBtn.disabled = true;
+        spinner.style.display = 'inline-block';
+    });
+
+    // Auto-hide alerts
+    setTimeout(function() {
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(function(alert) {
+            alert.style.transition = 'opacity 0.5s';
+            alert.style.opacity = '0';
+            setTimeout(function() {
+                alert.style.display = 'none';
+            }, 500);
+        });
+    }, 5000);
+
+    // Sidebar toggle
+    document.querySelector('.sidebar-toggle').addEventListener('click', function() {
+        document.querySelector('.sidebar').classList.toggle('open');
+    });
+</script>
+
+</body>
+</html>
