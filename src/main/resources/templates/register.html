@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register</title>
+    <style>
+        /* Modern Register Form Styles */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: url('https://res.cloudinary.com/dpkxslork/image/upload/v1749656968/sto_3_vd9fdi.png') no-repeat center center fixed;
+            background-size: cover;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .register-container {
+            background-color: #fff;
+            padding: 30px 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            width: 420px;
+            text-align: center;
+            box-sizing: border-box;
+        }
+
+        h2 {
+            font-size: 2.2em;
+            color: #333;
+            margin-bottom: 25px;
+            font-weight: 600;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 0.95em;
+            color: #555;
+            font-weight: 500;
+        }
+
+        input[type="text"],
+        input[type="password"],
+        input[type="email"] {
+            width: 100%;
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+            box-sizing: border-box;
+            transition: border-color 0.3s ease;
+        }
+
+        input[type="text"]:focus,
+        input[type="password"]:focus,
+        input[type="email"]:focus {
+            border-color: #71b7e6;
+            outline: none;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px 20px;
+            background-color: #71b7e6;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: 600;
+            margin-top: 25px;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        button:hover {
+            background-color: #5a9ed1;
+            transform: translateY(-2px);
+        }
+
+        .links-container {
+            margin-top: 25px;
+            text-align: center;
+            font-size: 0.9em;
+        }
+
+        .links-container a {
+            color: #71b7e6;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .links-container a:hover {
+            text-decoration: underline;
+            color: #5a9ed1;
+        }
+
+        .message {
+            margin-top: 20px;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+        .message.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .message.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+<div class="register-container">
+    <h2>Đăng ký tài khoản</h2>
+    <form id="registerForm" autocomplete="off">
+        <div class="input-group">
+            <label for="regFullName">Họ tên:</label>
+            <input type="text" id="regFullName" name="fullname" placeholder="Nhập họ tên" required>
+        </div>
+        <div class="input-group">
+            <label for="regPassword">Mật khẩu:</label>
+            <input type="password" id="regPassword" name="password" placeholder="Nhập mật khẩu" required>
+        </div>
+        <div class="input-group">
+            <label for="regEmail">Email:</label>
+            <input type="email" id="regEmail" name="email" placeholder="Nhập email" required>
+        </div>
+        <div class="input-group">
+            <label for="regAddress">Địa chỉ:</label>
+            <input type="text" id="regAddress" name="address" placeholder="Nhập địa chỉ">
+        </div>
+        <div class="input-group">
+            <label for="regPhone">Số điện thoại:</label>
+            <input type="text" id="regPhone" name="phone" placeholder="Nhập số điện thoại" required>
+        </div>
+        <div class="input-group">
+            <label for="regIdCitizen">CCCD:</label>
+            <input type="text" id="regIdCitizen" name="id_citizen" placeholder="Nhập số CCCD">
+        </div>
+        <button type="submit">Đăng ký</button>
+    </form>
+    <div id="registerMessage" class="message"></div>
+    <div class="links-container">
+        <a href="/api/login">Đã có tài khoản? Đăng nhập</a>
+    </div>
+</div>
+
+<script>
+    document.getElementById('registerForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        // Lấy dữ liệu từ form
+        const fullname = document.getElementById('regFullName').value.trim();
+        const password = document.getElementById('regPassword').value.trim();
+        const email = document.getElementById('regEmail').value.trim();
+        const address = document.getElementById('regAddress').value.trim();
+        const phone = document.getElementById('regPhone').value.trim();
+        const id_citizen = document.getElementById('regIdCitizen').value.trim();
+
+        const registerData = {
+            fullname: fullname,
+            password,
+            email,
+            address,
+            phone,
+            id_citizen
+        };
+
+        const messageDiv = document.getElementById('registerMessage');
+        messageDiv.textContent = '';
+        messageDiv.className = 'message';
+
+        try {
+            const response = await fetch('/api/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(registerData)
+            });
+
+            const text = await response.text();
+            if (response.ok) {
+                messageDiv.className = 'message success';
+                messageDiv.textContent = text || 'Đăng ký thành công!';
+                // Sau 1-2s chuyển qua trang login
+                setTimeout(() => {
+                    window.location.href = "login.html";
+                }, 1500);
+            } else {
+                messageDiv.className = 'message error';
+                messageDiv.textContent = text || 'Đăng ký thất bại!';
+            }
+        } catch (error) {
+            messageDiv.className = 'message error';
+            messageDiv.textContent = 'Không kết nối được máy chủ!';
+        }
+    });
+</script>
+</body>
+</html>
