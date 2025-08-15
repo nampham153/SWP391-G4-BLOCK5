@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chi tiết vấn đề</title>
+    <link rel="stylesheet" href="/css/staff.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        .main-content {
+            margin-left: 250px;
+            padding: 20px;
+            min-height: 100vh;
+            background-color: #f8f9fa;
+        }
+        .issue-detail-container {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .issue-header {
+            border-bottom: 1px solid #eee;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .issue-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .issue-meta {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #666;
+        }
+        .issue-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        .content-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 6px;
+        }
+        .section-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+        .section-content {
+            color: #555;
+            line-height: 1.6;
+        }
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .status-badge.pending {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .status-badge.resolved {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .status-badge.rejected {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 30px;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+    </style>
+</head>
+<body>
+    <div th:replace="taskbar/staff-taskbar :: staffTaskbar"></div>
+
+    <div class="main-content">
+        <div class="issue-detail-container">
+            <div class="issue-header">
+                <h1 class="issue-title" th:text="${issue.subject}"></h1>
+                <div class="issue-meta">
+                    <div class="meta-item">
+                        <i class="fas fa-calendar"></i>
+                        <span>Ngày tạo: <strong th:text="${issue.createdDate != null ? #dates.format(issue.createdDate, 'dd/MM/yyyy HH:mm') : 'Không có thông tin'}"></strong></span>
+                    </div>
+                    <div class="meta-item">
+                        <i class="fas fa-user"></i>
+                        <span>Khách hàng: <strong th:text="${issue.customer != null ? issue.customer.fullname : 'Không có'}"></strong></span>
+                    </div>
+                    <div class="meta-item">
+                        <i class="fas fa-user-tie"></i>
+                        <span>Nhân viên xử lý: <strong th:text="${issue.assignedStaff != null ? issue.assignedStaff.fullname : 'Chưa phân công'}"></strong></span>
+                    </div>
+                    <div class="meta-item">
+                        <i class="fas fa-flag"></i>
+                        <span class="status-badge" th:classappend="'status-' + ${issue.status != null ? issue.status.name().toLowerCase() : 'pending'}"
+                              th:text="${issue.status != null ?
+                                       (issue.status.name() == 'Pending' ? 'Chờ xử lý' :
+                                       (issue.status.name() == 'Resolved' ? 'Đã xử lý' :
+                                       (issue.status.name() == 'In_Progess' ? 'Đang xử lý' : 'Đã đóng'))) : 'Chờ xử lý'}"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="issue-content">
+                <div class="content-section">
+                    <h3 class="section-title">Mô tả chi tiết</h3>
+                    <div class="section-content" th:text="${issue.description}"></div>
+                </div>
+
+                <div class="content-section">
+                    <h3 class="section-title">Thông tin khách hàng</h3>
+                    <div class="section-content">
+                        <p><strong>Tên khách hàng:</strong> <span th:text="${issue.customer != null ? issue.customer.fullname : 'Không có thông tin'}"></span></p>
+                        <p><strong>Email:</strong> <span th:text="${issue.customer != null ? issue.customer.email : 'Không có thông tin'}"></span></p>
+                        <p><strong>Số điện thoại:</strong> <span th:text="${issue.customer != null ? issue.customer.phone : 'Không có thông tin'}"></span></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="issue-content">
+                <div class="content-section">
+                    <h3 class="section-title">Thông tin xử lý</h3>
+                    <div class="section-content">
+                        <p><strong>Nhân viên được giao:</strong> <span th:text="${issue.assignedStaff != null ? issue.assignedStaff.fullname : 'Chưa phân công'}"></span></p>
+                        <p><strong>Email nhân viên:</strong> <span th:text="${issue.assignedStaff != null ? issue.assignedStaff.email : 'Không có thông tin'}"></span></p>
+                        <p><strong>Trạng thái xử lý:</strong>
+                            <span class="status-badge" th:classappend="'status-' + ${issue.status != null ? issue.status.name().toLowerCase() : 'pending'}"
+                                  th:text="${issue.status != null ?
+                                           (issue.status.name() == 'Pending' ? 'Chờ xử lý' :
+                                           (issue.status.name() == 'Resolved' ? 'Đã xử lý' :
+                                           (issue.status.name() == 'In_Progess' ? 'Đang xử lý' : 'Đã đóng'))) : 'Chờ xử lý'}"></span>
+                        </p>
+                        <p><strong>Đã giải quyết:</strong> <span th:text="${issue.resolved ? 'Có' : 'Chưa'}"></span></p>
+                    </div>
+                </div>
+
+
+            </div>
+
+            <div class="actions">
+                <a href="/SWP/issues/staff" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Quay lại danh sách
+                </a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
