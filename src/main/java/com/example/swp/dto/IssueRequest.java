@@ -20,8 +20,8 @@ public class IssueRequest {
     @Size(max = 500, message = "Mô tả tối đa 500 ký tự")
     private String description;
 
-    private Integer customerId;        // Wrapper type
-    private Integer assignedStaffId;   // Wrapper type
+    private Integer customerId;        
+    private Integer assignedStaffId;  
 
     // Explicit getter and setter methods to ensure they exist
     public String getSubject() {

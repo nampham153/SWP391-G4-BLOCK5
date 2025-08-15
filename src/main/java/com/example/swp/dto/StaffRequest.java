@@ -1,6 +1,7 @@
 package com.example.swp.dto;
 
 import com.example.swp.enums.RoleName;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
