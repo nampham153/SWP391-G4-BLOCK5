@@ -1,3 +1,4 @@
+/* General Styles */
 * {
     margin: 0;
     padding: 0;
@@ -223,123 +224,91 @@ body {
     align-items: center;
 }
 
+/* Empty State */
+.empty-state {
+    padding: 60px 30px;
+    text-align: center;
+}
+
+.empty-content {
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.empty-state i {
+    font-size: 4rem;
+    color: #bbb;
+    margin-bottom: 20px;
+}
+
+.empty-state h3 {
+    font-size: 1.5rem;
+    color: #666;
+    margin-bottom: 10px;
+}
+
+.empty-state p {
+    color: #999;
+    font-size: 1rem;
+}
+
 /* Table Styles */
-.table-container {
+.table-responsive {
     overflow-x: auto;
 }
 
-.data-table {
+.table {
     width: 100%;
     border-collapse: collapse;
 }
 
-.data-table th,
-.data-table td {
-    padding: 15px;
+.table thead.thead-light th {
+    background-color: #f8f9fa;
+    color: #555;
+    font-weight: 600;
     text-align: left;
+    padding: 12px 20px;
+    border-bottom: 1px solid #ddd;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.table tbody tr {
     border-bottom: 1px solid #eee;
 }
 
-.data-table th {
-    background: #f8f9fa;
-    font-weight: 600;
+.table tbody tr:last-child {
+    border-bottom: none;
+}
+
+.table tbody tr:hover {
+    background-color: #fcfcfc;
+}
+
+.table tbody td {
+    padding: 12px 20px;
+    font-size: 0.95rem;
     color: #333;
-    font-size: 0.9rem;
+    vertical-align: middle;
 }
 
-.data-table td {
-    font-size: 0.9rem;
-}
-
-/* Customer specific styles */
-.customer-id {
+.id-badge {
+    background: #667eea;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
     font-weight: 600;
-    color: #667eea;
-    font-size: 0.9rem;
-}
-
-.customer-avatar {
-    width: 40px;
-    height: 40px;
-    background: linear-gradient(135deg, #667eea, #764ba2);
-    border-radius: 50%;
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    color: white;
-    font-size: 0.9rem;
-}
-
-.customer-name {
-    font-weight: 600;
-    color: #2c3e50;
-}
-
-.customer-email {
-    color: #666;
-    font-size: 0.85rem;
-}
-
-.description-cell {
-    max-width: 200px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-/* Status badges for customer roles */
-.status-badge {
-    padding: 4px 8px;
-    border-radius: 12px;
-    font-size: 0.8rem;
-    font-weight: 500;
-    text-transform: uppercase;
-}
-
-.status-badge.customer {
-    background: #d4edda;
-    color: #155724;
-}
-
-.status-badge.vip {
-    background: #fff3cd;
-    color: #856404;
-}
-
-.status-badge.blocked {
-    background: #f8d7da;
-    color: #721c24;
-}
-
-.action-buttons {
-    display: flex;
-    gap: 5px;
-}
-
-.btn-icon {
-    background: none;
-    border: none;
-    padding: 8px;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-    color: #666;
-    font-size: 0.9rem;
-    text-decoration: none;
-}
-
-.btn-icon:hover {
-    background: #f0f0f0;
-}
-
-.btn-icon.danger:hover {
-    background: #fee;
-    color: #e74c3c;
 }
 
 /* Buttons */
 .btn-primary,
-.btn-secondary {
+.btn-secondary,
+.btn-warning {
     padding: 10px 16px;
     border: none;
     border-radius: 6px;
@@ -380,7 +349,36 @@ body {
     background: #5a6268;
 }
 
-/* Filter and Pagination */
+.btn-warning {
+    background: #ffc107; /* Yellow for warning */
+    color: #333;
+}
+
+.btn-warning:hover {
+    background: #e0a800;
+}
+
+.btn-icon {
+    background: none;
+    border: none;
+    padding: 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.btn-icon:hover {
+    background: #f0f0f0;
+}
+
+.btn-icon.danger:hover {
+    background: #fee;
+    color: #e74c3c;
+}
+
+/* Filter Section */
 .filter-section {
     background: white;
     padding: 20px 30px;
@@ -409,8 +407,10 @@ body {
     border: 1px solid #ddd;
     border-radius: 6px;
     font-size: 0.9rem;
+    min-width: 150px; /* Ensure select has a minimum width */
 }
 
+/* Pagination */
 .pagination {
     display: flex;
     justify-content: center;
@@ -444,51 +444,50 @@ body {
     .search-box input {
         width: 200px;
     }
+    .page-actions {
+        flex-wrap: wrap;
+    }
 }
 
 @media (max-width: 768px) {
     .sidebar {
         transform: translateX(-100%);
     }
-
     .sidebar.open {
         transform: translateX(0);
     }
-
     .main-content {
         margin-left: 0;
     }
-
     .sidebar-toggle {
         display: block;
     }
-
     .header {
         padding: 15px 20px;
     }
-
     .page-content {
         padding: 20px 15px;
     }
-
     .search-box {
         display: none;
     }
-
-    .table-container {
-        font-size: 0.8rem;
-    }
-
     .page-header {
         flex-direction: column;
         gap: 20px;
         align-items: flex-start;
     }
-
     .filter-section {
         flex-direction: column;
         align-items: flex-start;
         gap: 15px;
+    }
+    .table thead.thead-light th {
+        font-size: 0.75rem;
+        padding: 10px 15px;
+    }
+    .table tbody td {
+        font-size: 0.85rem;
+        padding: 10px 15px;
     }
 }
 
@@ -496,23 +495,31 @@ body {
     .header h1 {
         font-size: 1.4rem;
     }
-
     .page-title {
         font-size: 1.5rem;
     }
-
-    .data-table th,
-    .data-table td {
-        padding: 10px 8px;
+    .card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
     }
-
-    .customer-avatar {
-        width: 30px;
-        height: 30px;
-        font-size: 0.8rem;
+    .card-actions {
+        width: 100%;
+        justify-content: flex-start;
     }
-
-    .description-cell {
-        max-width: 120px;
+    .btn-primary,
+    .btn-secondary,
+    .btn-warning {
+        width: 100%;
+        justify-content: center;
+    }
+    .filter-select {
+        width: 100%;
+        min-width: unset;
+    }
+    .filter-group {
+        width: 100%;
+        flex-direction: column;
+        align-items: flex-start;
     }
 }

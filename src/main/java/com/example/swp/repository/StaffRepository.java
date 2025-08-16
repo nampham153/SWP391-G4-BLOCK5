@@ -1,13 +1,14 @@
 package com.example.swp.repository;
 
-import com.example.swp.entity.Staff;
+import java.util.Optional;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
-import java.util.Optional;
+import com.example.swp.entity.Staff;
 
 @Repository
 public interface StaffRepository extends JpaRepository<Staff, Integer> {
@@ -15,6 +16,7 @@ public interface StaffRepository extends JpaRepository<Staff, Integer> {
 
 //    Staff findByStaffEmail(String email);
 
+    @Override
     Page<Staff> findAll(Pageable pageable);
     @Query("SELECT COUNT(s) FROM Staff s")
     int countAllStaff();
