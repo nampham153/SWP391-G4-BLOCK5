@@ -5,7 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import net.minidev.json.annotate.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import java.util.List;
 
@@ -33,19 +34,17 @@ public class Storage {
     private Double latitude;
     private Double longitude;
 
-    //    private String imageUrl; // hoặc dùng List<StorageImage> nếu nhiều ảnh
-public Storage(Integer id) {
-    this.storageid = id;
-}
-
+    // private String imageUrl; // hoặc dùng List<StorageImage> nếu nhiều ảnh
+    public Storage(Integer id) {
+        this.storageid = id;
+    }
 
     @OneToMany(mappedBy = "storage")
     @JsonIgnore
     private List<Contact> contacts;
-    @JsonIgnore
+
     @OneToMany(mappedBy = "storage")
+    @JsonIgnore
     private List<StorageTransaction> storageTransactions;
 
-
 }
-

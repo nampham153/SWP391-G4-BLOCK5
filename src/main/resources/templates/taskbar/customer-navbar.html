@@ -167,7 +167,10 @@
             });
         });
 
-        let wishlistItems = new Set();
+        // Check if wishlistItems already exists to avoid redeclaration
+        if (typeof wishlistItems === 'undefined') {
+            var wishlistItems = new Set();
+        }
 
         // Load wishlist from server on page load
         document.addEventListener('DOMContentLoaded', function() {
