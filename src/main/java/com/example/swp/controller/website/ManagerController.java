@@ -92,40 +92,7 @@ public class ManagerController {
         return "staff-detail";
     }
 
-    @GetMapping("/staff-list/edit/{id}")
-    public String showEditStaffForm(@PathVariable int id, Model model, RedirectAttributes redirectAttributes) {
-        Optional<Staff> staffOpt = staffService.findById(id);
-        if (staffOpt.isPresent()) {
-            model.addAttribute("staff", staffOpt.get());
-            return "edit-staff";
-        } else {
-            redirectAttributes.addFlashAttribute("error", "Staff not found!");
-            return "redirect:/admin/staff-list";
-        }
-    }
 
-    @PostMapping("/staff-list/edit/{id}")
-    public String editStaff(
-            @PathVariable int id,
-            @ModelAttribute("staff") Staff staff,
-            RedirectAttributes redirectAttributes
-    ) {
-        Optional<Staff> staffOpt = staffService.findById(id);
-        if (staffOpt.isPresent()) {
-            Staff existingStaff = staffOpt.get();
-            existingStaff.setFullname(staff.getFullname());
-            existingStaff.setEmail(staff.getEmail());
-            existingStaff.setPhone(staff.getPhone());
-            existingStaff.setIdCitizenCard(staff.getIdCitizenCard());
-
-
-            staffService.save(existingStaff);
-            redirectAttributes.addFlashAttribute("message", "Cập nhật staff thành công!");
-        } else {
-            redirectAttributes.addFlashAttribute("error", "Không tìm thấy nhân viên!");
-        }
-        return "redirect:/admin/staff-list";
-    }
 
 
     @GetMapping("/manager-customer-list")
