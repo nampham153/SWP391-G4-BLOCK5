@@ -1,0 +1,149 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f9f9f9;
+    color: #333;
+    margin: 0;
+    padding: 40px 0;
+}
+
+/* Navigation */
+.navbar {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 0;
+    box-shadow: 0 4px 20px rgba(44, 62, 80, 0.3);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.navbar-content {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 70px;
+}
+
+.navbar-brand {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.navbar-logo {
+    height: 45px;
+    width: auto;
+    margin-left: 50px;
+}
+
+.brand-text {
+    color: white;
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+}
+
+.navbar-nav {
+    list-style: none;
+    display: flex;
+    gap: 2rem;
+}
+
+.navbar-nav a {
+    color: rgba(255, 255, 255, 0.9);
+    text-decoration: none;
+    font-weight: 500;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.navbar-nav a:hover {
+    color: white;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+}
+
+.navbar-nav a.active {
+    color: white;
+    font-weight: 600;
+}
+
+.edit-container {
+    display: flex;
+    max-width: 1100px;
+    margin: auto;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+.left-panel {
+    flex: 1;
+    padding: 20px;
+    border-right: 1px solid #ddd;
+    text-align: center;
+}
+
+.preview-image {
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.right-panel {
+    flex: 2;
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.right-panel input,
+.right-panel select,
+.right-panel textarea {
+    width: 100%;
+    padding: 10px;
+    font-size: 1rem;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+}
+
+.button-group {
+    display: flex;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.btn {
+    padding: 10px 20px;
+    border: none;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 6px;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-update {
+    background-color: #3498db;
+    color: white;
+}
+
+.btn-update:hover {
+    background-color: #2980b9;
+}
+
+.btn-cancel {
+    background-color: #bdc3c7;
+    color: white;
+}
+
+.btn-cancel:hover {
+    background-color: #95a5a6;
+}

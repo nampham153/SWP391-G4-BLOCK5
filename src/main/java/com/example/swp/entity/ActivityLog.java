@@ -1,12 +1,15 @@
 package com.example.swp.entity;
 
 import com.example.swp.enums.ActivityType;
+
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
+
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity
 @Getter

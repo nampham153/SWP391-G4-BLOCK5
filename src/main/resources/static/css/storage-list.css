@@ -823,6 +823,7 @@ input[name="userAddress"]:focus {
 
 input[name="userAddress"] {
     min-height: 2.75rem;
+
 }
 
 /* Real-time search styles */

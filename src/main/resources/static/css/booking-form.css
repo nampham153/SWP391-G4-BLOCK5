@@ -1,0 +1,442 @@
+body {
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+}
+
+.page-wrapper {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+.thumb-img.active {
+    border: 2px solid #72ba2a !important;
+    box-shadow: 0 2px 8px #d9edc6;
+}
+
+.main {
+    flex: 1;
+    padding: 2rem 0;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+.navbar {
+    background: #1e293b;
+    padding: 1rem 0;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.navbar-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 1rem;
+}
+
+.navbar-logo {
+    height: 50px;
+}
+
+.navbar-nav {
+    list-style: none;
+    display: flex;
+    gap: 1rem;
+    margin: 0;
+    padding: 0;
+}
+
+.navbar-nav a {
+    color: #e2e8f0;
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+.navbar-nav a.active,
+.navbar-nav a:hover {
+    background: #3b82f6;
+    color: #fff;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #e2e8f0;
+    font-size: 0.9rem;
+}
+
+.page-header {
+    text-align: center;
+    color: #1e293b;
+    margin: 2rem 0;
+}
+
+.page-header h1 {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+    color: #1e293b;
+}
+
+.page-header p {
+    font-size: 1.1rem;
+    color: #64748b;
+    margin: 0;
+}
+
+.booking-container {
+    background: #fff;
+    max-width: 900px;
+    margin: 0 auto;
+    border-radius: 12px;
+    padding: 2.5rem;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e2e8f0;
+}
+
+.form-section {
+    margin-bottom: 2.5rem;
+}
+
+.section-title {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+    color: #1e293b;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.section-title i {
+    color: #3b82f6;
+}
+
+.storage-info {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+.info-card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 1.2rem;
+    transition: all 0.3s ease;
+}
+
+.info-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.info-card.highlight {
+    background: linear-gradient(135deg, #3b82f6, #6366f1);
+    color: #fff;
+    border: none;
+}
+
+.info-label {
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: #64748b;
+    margin-bottom: 0.5rem;
+    letter-spacing: 0.5px;
+}
+
+.info-card.highlight .info-label {
+    color: #e2e8f0;
+}
+
+.info-value {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 0.5rem;
+}
+
+.info-card.highlight .info-value {
+    color: #fff;
+    font-size: 1.3rem;
+}
+
+.status-badge {
+    display: inline-block;
+    margin-top: 0.5rem;
+    font-size: 0.7rem;
+    padding: 4px 8px;
+    border-radius: 12px;
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.status-available {
+    background: #10b981;
+    color: #fff;
+}
+
+.status-rented {
+    background: #ef4444;
+    color: #fff;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #1e293b;
+    font-size: 0.9rem;
+}
+
+.form-input {
+    width: 100%;
+    padding: 12px 16px;
+    border-radius: 6px;
+    border: 2px solid #e2e8f0;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background: #f8fafc;
+    box-sizing: border-box;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-text {
+    font-size: 0.8rem;
+    color: #64748b;
+    margin-top: 0.5rem;
+    display: block;
+}
+
+.submit-section {
+    text-align: center;
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid #e2e8f0;
+}
+
+.submit-btn {
+    background: linear-gradient(135deg, #3b82f6, #6366f1);
+    color: #fff;
+    border: none;
+    padding: 14px 32px;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.submit-btn:hover {
+    background: linear-gradient(135deg, #2563eb, #5b21b6);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+}
+
+.submit-btn:active {
+    transform: translateY(0);
+}
+
+.terms-text {
+    font-size: 0.85rem;
+    color: #64748b;
+    margin-top: 1rem;
+    line-height: 1.5;
+}
+
+.alert-error {
+    background: #fef2f2;
+    color: #dc2626;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    border: 1px solid #fecaca;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.alert-success {
+    background: #f0fdf4;
+    color: #16a34a;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    border: 1px solid #bbf7d0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.storage-img {
+    width: 100%;
+    max-width: 250px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    margin-bottom: 16px;
+}
+
+.footer {
+    background: #1e293b;
+    color: #e2e8f0;
+    padding: 2rem 0;
+    margin-top: auto;
+}
+
+.footer p {
+    text-align: center;
+    margin: 0;
+    font-size: 0.875rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .navbar-content {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .navbar-nav {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .booking-container {
+        padding: 1.5rem;
+        margin: 0 1rem;
+    }
+
+    .storage-info {
+        grid-template-columns: 1fr;
+    }
+
+    .page-header h1 {
+        font-size: 2rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .booking-container {
+        padding: 1rem;
+    }
+
+    .submit-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+.info-card { margin-bottom: 1rem;}
+.highlight {background: #f6ffe0; border-radius: 6px;}
+.storage-img {
+    width: 100%;
+    max-width: 250px;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px #ddd;
+    margin-bottom: 16px;
+}
+.voucher-btn {
+    background-color: #fca311;
+    border: none;
+    padding: 6px 12px;
+    color: white;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.voucher-modal {
+    position: fixed;
+    z-index: 999;
+    left: 0; top: 0;
+    width: 100%; height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.voucher-modal-content {
+    background-color: white;
+    margin: 10% auto;
+    padding: 30px;
+    width: 600px;
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: 0 0 10px #333;
+}
+
+.voucher-close {
+    float: right;
+    font-size: 22px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.voucher-item {
+    padding: 16px 24px;
+    margin: 10px 0;
+    border-radius: 10px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    font-size: 16px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.voucher-usable {
+    background-color: #fca311;
+    color: white;
+}
+
+.voucher-disabled {
+    background-color: #ccc;
+    color: #666;
+    cursor: not-allowed;
+}
+
+.voucher-item.selected {
+    border: 3px solid #e66d00;
+    transform: scale(1.03);
+    background-color: #ffa733;
+}
+
+.voucher-usable:hover {
+    background-color: #ffb13b;
+    transform: scale(1.02);
+}
+
+.voucher-apply-btn {
+    background-color: #fca311;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    float: right;
+}
