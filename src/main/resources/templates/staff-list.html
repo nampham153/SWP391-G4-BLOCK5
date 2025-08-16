@@ -36,7 +36,14 @@
                     <i class="fas fa-arrow-left"></i> Back to Home </a>
             </div>
         </div>
+        <!-- Filter Section -->
+        <div class="filter-section" style="margin: 16px 0;">
+            <div class="filter-group" style="display:flex; gap: 10px; align-items:center;">
 
+                <input type="text" id="searchInput" placeholder="Tìm kiếm..." class="filter-select"
+                       style="max-width: 360px; padding: 8px 10px; border: 1px solid #e9ecef; border-radius: 6px;">
+            </div>
+        </div>
     <!-- Staff Table -->
     <div class="card">
         <div class="card-header">
@@ -51,7 +58,7 @@
         </div>
 
         <div class="table-container">
-            <table class="data-table">
+            <table class="data-table" id="staffTable">
                 <thead>
                 <tr>
                     <th>Tên nhân viên</th>
@@ -64,23 +71,27 @@
                 </thead>
                 <tbody>
                 <tr th:each="staff : ${staffs}">
-                    <td th:text="${staff.fullname}">
-                        <span class="staff-name"></span>
+                    <td>
+                        <span class="staff-name" th:text="${staff.fullname}"></span>
                     </td>
-                    <td th:text="${staff.email}">
-                        <span class="staff-email"></span>
+                    <td>
+                        <span class="staff-email" th:text="${staff.email}"></span>
                     </td>
-                    <td th:text="${staff.phone}"></td>
-                    <td th:text="${staff.idCitizenCard}"></td>
-                    <td th:text="${staff.roleName}"></td>
+                    <td>
+                        <span class="staff-phone" th:text="${staff.phone}"></span>
+                    </td>
+                    <td>
+                        <span class="staff-cccd" th:text="${staff.idCitizenCard}"></span>
+                    </td>
+                    <td>
+                        <span class="staff-role" th:text="${staff.roleName}"></span>
+                    </td>
                     <td>
                         <div class="action-buttons">
-                            <a th:href="@{'/admin/staff-list/detail/' + ${staff.staffid}}" class="btn-icon" title="View Details">
+                            <a th:href="@{'/admin/staff-list/detail/' + ${staff.staffid}}" class="btn-icon" title="Xem chi tiết">
                                 <i class="fas fa-eye"></i>
                             </a>
-                            <a th:href="@{'/admin/staff-list/edit/' + ${staff.staffid}}" class="btn-icon" title="Edit Staff">
-                                <i class="fas fa-edit"></i>
-                            </a>
+                            <!-- (chỗ này sau bạn có thể thêm nút khoá/mở khoá) -->
                         </div>
                     </td>
                 </tr>
@@ -99,46 +110,31 @@
     </div>
 </main>
 <script>
-    // Search functionality
-    document.getElementById('searchInput').addEventListener('input', function(e) {
-        const searchTerm = e.target.value.toLowerCase();
-        const tableRows = document.querySelectorAll('#staffTable tbody tr');
+    // Live search on current page (filters rows by multiple fields)
+    function attachStaffSearch() {
+        const input = document.getElementById('searchInput');
+        const table = document.getElementById('staffTable');
+        if (!input || !table) return;
 
-        tableRows.forEach(row => {
-            const staffName = row.querySelector('.staff-name').textContent.toLowerCase();
-            const staffEmail = row.querySelector('.staff-email').textContent.toLowerCase();
-            const company = row.cells[1].textContent.toLowerCase();
+        const rows = Array.from(table.querySelectorAll('tbody tr'));
 
-            if (staffName.includes(searchTerm) ||
-                staffEmail.includes(searchTerm) ||
-                company.includes(searchTerm)) {
-                row.style.display = '';
-            } else {
-                row.style.display = 'none';
-            }
+        input.addEventListener('input', function (e) {
+            const q = e.target.value.trim().toLowerCase();
+
+            rows.forEach(row => {
+                const name = row.querySelector('.staff-name')?.textContent.toLowerCase() || '';
+                const email = row.querySelector('.staff-email')?.textContent.toLowerCase() || '';
+                const phone = row.querySelector('.staff-phone')?.textContent.toLowerCase() || '';
+                const cccd = row.querySelector('.staff-cccd')?.textContent.toLowerCase() || '';
+                const role = row.querySelector('.staff-role')?.textContent.toLowerCase() || '';
+
+                const match = !q || name.includes(q) || email.includes(q) || phone.includes(q) || cccd.includes(q) || role.includes(q);
+                row.style.display = match ? '' : 'none';
+            });
         });
-    });
+    }
 
-    // Add click handlers for buttons
-    document.querySelectorAll('.btn-primary').forEach(button => {
-        button.addEventListener('click', function() {
-            if (this.textContent === 'Edit') {
-                alert('Edit functionality would be implemented here');
-            }
-        });
-    });
-
-    document.querySelectorAll('.btn-secondary').forEach(button => {
-        button.addEventListener('click', function() {
-            if (this.textContent === 'View') {
-                alert('View staff details would be implemented here');
-            } else if (this.textContent === 'Previous' || this.textContent === 'Next') {
-                alert('Pagination functionality would be implemented here');
-            }
-        });
-    });
-
-    // Export to Excel
+    // Export to Excel (only visible rows)
     function exportStaffExcel() {
         const table = document.querySelector('.data-table');
         const visibleRows = Array.from(table.querySelectorAll('tbody tr')).filter(row => row.style.display !== 'none');
@@ -147,24 +143,30 @@
         data.push(['Tên nhân viên', 'Email', 'SĐT', 'CCCD', 'Role']);
 
         visibleRows.forEach(row => {
-            const cells = row.querySelectorAll('td');
             const rowData = [
-                cells[0].textContent.trim(),
-                cells[1].textContent.trim(),
-                cells[2].textContent.trim(),
-                cells[3].textContent.trim(),
-                cells[4].textContent.trim()
+                row.querySelector('.staff-name')?.textContent.trim() || '',
+                row.querySelector('.staff-email')?.textContent.trim() || '',
+                row.querySelector('.staff-phone')?.textContent.trim() || '',
+                row.querySelector('.staff-cccd')?.textContent.trim() || '',
+                row.querySelector('.staff-role')?.textContent.trim() || ''
             ];
             data.push(rowData);
         });
 
         const ws = XLSX.utils.aoa_to_sheet(data);
         const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, 'Tasks');
+        XLSX.utils.book_append_sheet(wb, ws, 'Nhân viên');
 
-        const fileName = 'danh_sach_nhan_vien' + new Date().toISOString().slice(0, 10) + '.xlsx';
+        const fileName = 'danh_sach_nhan_vien_' + new Date().toISOString().slice(0, 10) + '.xlsx';
         XLSX.writeFile(wb, fileName);
     }
+
+    // Expose export function to the global scope (called by onclick in HTML)
+    window.exportStaffExcel = exportStaffExcel;
+
+    // Init
+    window.addEventListener('DOMContentLoaded', attachStaffSearch);
 </script>
+
 </body>
 </html>

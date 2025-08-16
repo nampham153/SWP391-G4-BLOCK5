@@ -101,22 +101,4 @@
     display: inline-block;
 }
 
-/* Nút sửa */
-.btn-edit {
-    background-color: #4b74ff;
-    color: white;
-    font-weight: bold;
-    padding: 10px 18px;
-    border: none;
-    border-radius: 8px;
-    margin-top: 25px;
-    cursor: pointer;
-    display: block;
-    margin-left: auto;
-    margin-right: auto;
-    text-decoration: none;
-}
 
-.btn-edit i {
-    margin-right: 5px;
-}
