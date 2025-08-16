@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
 <head>
     <meta charset="UTF-8">
     <title>Chi tiết nhân viên</title>
@@ -7,72 +7,79 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-<div th:replace="taskbar/manager-taskbar :: managerTaskbar"></div>
 
-<div class="container">
-    <!-- Header nhân viên -->
-    <div class="profile-header">
-        <!-- Avatar -->
-        <div class="avatar">
+<!-- Use the non-deprecated fragment syntax -->
+<div th:replace="~{taskbar/manager-taskbar :: managerTaskbar}"></div>
+
+<main class="detail-shell">
+    <!-- Header / identity card -->
+    <section class="identity-card" th:with="role=${staff.roleName != null ? staff.roleName.name() : ''}">
+        <div class="avatar-lg">
             <img src="/images/avatar.png" alt="Avatar">
         </div>
 
-        <!-- Tên và vai trò -->
-        <div class="profile-info">
-            <h2 th:text="${staff.fullname}"></h2>
-            <div class="badge-role" th:text="${staff.roleName}"></div>
-            <div class="id">Mã: #<span th:text="${staff.staffid}"></span></div>
+        <div class="identity-meta">
+            <h1 class="person-name" th:text="${staff.fullname}">Tên nhân viên</h1>
+
+            <div class="chips">
+        <span class="role-chip"
+              th:text="${role}"
+              th:classappend="' ' + ${#strings.toLowerCase(role)}">STAFF</span>
+
+                <span class="id-chip">
+          Mã: <strong th:text="${staff.staffid}">0</strong>
+        </span>
+            </div>
         </div>
 
-        <!-- Nút quay lại -->
-        <div>
-            <a th:href="@{/admin/staff-list}" class="btn-back">
-                <i class="fas fa-arrow-left"></i> Quay lại danh sách
-            </a>
-        </div>
-    </div>
+        <a th:href="@{/admin/staff-list}" class="btn-ghost back-link">
+            <i class="fas fa-arrow-left"></i>
+            Quay lại danh sách
+        </a>
+    </section>
 
-    <!-- Thông tin nhân viên -->
-    <div class="info-section">
-        <h3 class="mb-0">
-            <i class="bi bi-person-badge-fill text-primary me-2"></i>
+    <!-- Read-only form-style layout -->
+    <section class="readonly-card">
+        <h2 class="section-title">
+            <i class="fas fa-id-badge"></i>
             Thông tin nhân viên
-        </h3>
+        </h2>
 
-        <div class="info-item">
-            <i class="fas fa-envelope "></i>
-            <span class="info-label">Địa chỉ Email:</span>
-            <span th:text="${staff.email}"></span>
+        <div class="form-grid">
+            <!-- Email -->
+            <label class="field">
+                <span class="field-label"><i class="fas fa-envelope"></i> Địa chỉ Email</span>
+                <input class="ro-input" type="text" readonly th:value="${staff.email}">
+            </label>
+
+            <!-- Số điện thoại -->
+            <label class="field">
+                <span class="field-label"><i class="fas fa-phone"></i> Số điện thoại</span>
+                <input class="ro-input" type="text" readonly th:value="${staff.phone}">
+            </label>
+
+            <!-- CCCD / CMND -->
+            <label class="field">
+                <span class="field-label"><i class="fas fa-id-card"></i> CCCD/CMND</span>
+                <input class="ro-input" type="text" readonly th:value="${staff.idCitizenCard}">
+            </label>
+
+            <!-- Vai trò -->
+            <label class="field">
+                <span class="field-label"><i class="fas fa-user-tag"></i> Vai trò</span>
+                <input class="ro-input" type="text" readonly th:value="${staff.roleName}">
+            </label>
+
+            <!-- Giới tính -->
+            <label class="field">
+                <span class="field-label"><i class="fas fa-venus-mars"></i> Giới tính</span>
+                <input class="ro-input" type="text" readonly
+                       th:value="${staff.sex == true ? 'Nam' : 'Nữ'}">
+            </label>
         </div>
+    </section>
 
-        <div class="info-item">
-            <i class="fas fa-phone"></i>
-            <span class="info-label">Số điện thoại:</span>
-            <span th:text="${staff.phone}"></span>
-        </div>
-
-        <div class="info-item">
-            <i class="fas fa-id-card"></i>
-            <span class="info-label">CCCD/CMND:</span>
-            <span th:text="${staff.idCitizenCard}"></span>
-        </div>
-
-        <div class="info-item">
-            <i class="fas fa-user-tag"></i>
-            <span class="info-label">Vai trò:</span>
-            <span th:text="${staff.roleName}"></span>
-        </div>
-
-        <!-- Nếu muốn hiển thị giới tính -->
-        <div class="info-item">
-            <i class="fas fa-venus-mars"></i>
-            <span class="info-label">Giới tính:</span>
-            <span th:text="${staff.sex} == true ? 'Nam' : 'Nữ'"></span>
-        </div>
-    </div>
-
-
-</div>
+</main>
 
 </body>
 </html>
