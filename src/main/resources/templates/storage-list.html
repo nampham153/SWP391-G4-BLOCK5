@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Danh sách kho</title>
+    <link rel="stylesheet" th:href="@{/css/storage-list.css}">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+<div class="page-wrapper">
+    <!-- Navigation Bar -->
+    <div th:replace="taskbar/customer-navbar :: customerNavbar"></div>
+
+    <!-- Hero Section -->
+    <div class="hero-section">
+        <div class="hero-content">
+            <h1>Tìm kiếm kho lưu trữ</h1>
+            <p>Hệ thống cho thuê kho hàng chuyên nghiệp với hơn 1000+ kho trên toàn quốc</p>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container">
+        <!-- Search Section -->
+        <div class="search-section">
+            <div class="search-card">
+                <form method="get" th:action="@{/SWP/storages}" class="search-form">
+                    <div class="search-grid">
+                        <div class="form-group" style="margin-left: 20px">
+                            <label for="storageName">Tên kho</label>
+                            <div class="input-with-button">
+                                <div class="input-with-icon">
+                                    <input type="text"
+                                           id="storageName"
+                                           name="storageName"
+                                           th:value="${param.storageName}"
+                                           placeholder="Tìm theo tên kho..."
+                                           class="form-input"
+                                           style="width: 400px;">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="city">Thành phố</label>
+                            <div class="select-wrapper" style=" width: 300px;">
+                                <select name="city" id="city" class="form-select">
+                                    <option value="">Tất cả thành phố</option>
+                                    <option th:each="city : ${cities}"
+                                            th:value="${city}"
+                                            th:text="${city}"
+                                            th:selected="${param.city != null and param.city.equals(city)}">
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="status">Trạng thái</label>
+                            <div class="select-with-button" style="width: 800px;">
+                                <div class="select-wrapper">
+                                    <select name="status" id="status" class="form-select">
+                                        <option value="">Tất cả trạng thái</option>
+                                        <option value="true" th:selected="${param.status != null and param.status.equals('true')}">Còn trống</option>
+                                        <option value="false" th:selected="${param.status != null and param.status.equals('false')}">Đang thuê</option>
+                                    </select>
+                                </div>
+                                <button type="submit" class="btn btn-primary btn-search">
+                                    <i data-lucide="search"></i>
+                                    Tìm kiếm
+                                </button>
+                                <a th:href="@{/SWP/storages}" class="btn btn-secondary btn-reset">
+                                    <i data-lucide="filter-x"></i>
+                                    Xóa bộ lọc
+                                </a>
+                                <a th:href="@{/SWP/storages/compare}" class="btn btn-secondary btn-reset">
+                                    So sánh
+                                </a>
+<!--                                <a th:href="@{/storages/compare}" class="btn-icon" title="So sánh">-->
+<!--                                    <i class="fas fa-eye"></i>-->
+<!--                                </a>-->
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div class="results-section">
+            <div class="results-header">
+                <div class="results-info">
+                    <h2>Tìm thấy <span class="count" th:text="${storages.size()}">0</span> kho</h2>
+                </div>
+            </div>
+
+            <!-- Storage Grid -->
+            <div class="storage-grid" id="storageGrid">
+                <div class="storage-card" th:each="storage : ${storages}">
+                    <div class="card-header">
+                        <h3 class="storage-name" th:text="${storage.storagename}">Tên kho</h3>
+                        <div th:class="${storage.status} ? 'status-badge status-available' : 'status-badge status-rented'"
+                             th:text="${storage.status} ? 'Còn trống' : 'Đang thuê'">
+                            Trạng thái
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        <div class="storage-info">
+                            <div class="info-item">
+                                <i data-lucide="map-pin"></i>
+                                <span th:text="${storage.address}">Địa chỉ</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <a th:href="@{'/SWP/storages/' + ${storage.storageid}}" class="btn btn-primary" style="width: 190px">
+                            <i data-lucide="eye"></i>
+                            Chi tiết
+                        </a>
+                        <button class="btn btn-wishlist btn-cart-icon"
+                                th:attr="data-storage-id=${storage.storageid}"
+                                onclick="toggleWishlist(this)"
+                                style="width: 120px;">
+                            <i data-lucide="shopping-cart"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- No Results Message -->
+            <div th:if="${storages.isEmpty()}" class="no-results">
+                <div class="no-results-icon">
+                    <i data-lucide="search-x"></i>
+                </div>
+                <h3>Không tìm thấy kho nào</h3>
+                <p>Thử thay đổi bộ lọc tìm kiếm để xem thêm kết quả</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div th:replace="taskbar/customer-footer :: customerFooter"></div>
+</div>
+
+<script>
+    lucide.createIcons();
+    const viewButtons = document.querySelectorAll('.view-btn');
+    const storageGrid = document.getElementById('storageGrid');
+    viewButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            viewButtons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            const view = btn.dataset.view;
+            storageGrid.className = view === 'list' ? 'storage-list' : 'storage-grid';
+        });
+    });
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            document.querySelector(this.getAttribute('href')).scrollIntoView({
+                behavior: 'smooth'
+            });
+        });
+    });
+</script>
+<div id="toast" class="toast"></div>
+<script>
+    let wishlistItems = new Set();
+    document.addEventListener('DOMContentLoaded', function() {
+        loadWishlist();
+    });
+    async function loadWishlist() {
+        try {
+            const response = await fetch('/api/wishlist/my');
+            if (response.ok) {
+                const wishlist = await response.json();
+                wishlistItems.clear();
+                wishlist.forEach(item => {
+                    if (item.storage && item.storage.storageid) {
+                        wishlistItems.add(item.storage.storageid);
+                    }
+                });
+                updateWishlistUI();
+                updateCartCount();
+            } else if (response.status === 401) {
+                console.log('User not logged in');
+                updateCartCount();
+            }
+        } catch (error) {
+            console.log('Error loading wishlist:', error);
+            updateCartCount();
+        }
+    }
+    async function toggleWishlist(button) {
+        const storageId = parseInt(button.getAttribute('data-storage-id'));
+        const isInWishlist = wishlistItems.has(storageId);
+        try {
+            const url = isInWishlist ? '/api/wishlist/remove' : '/api/wishlist/add';
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ storageId })
+            });
+            if (response.ok) {
+                if (isInWishlist) {
+                    wishlistItems.delete(storageId);
+                    showToast('Đã xóa khỏi wishlist!', 'success');
+                } else {
+                    wishlistItems.add(storageId);
+                    showToast('Đã thêm vào wishlist!', 'success');
+                }
+                updateWishlistUI();
+                updateCartCount();
+            } else {
+                const errorText = await response.text();
+                showToast(errorText || 'Có lỗi xảy ra!', 'error');
+            }
+        } catch (error) {
+            showToast('Có lỗi xảy ra!', 'error');
+            console.error('Error:', error);
+        } finally {
+            button.disabled = false;
+        }
+    }
+    function updateWishlistUI() {
+        document.querySelectorAll('.btn-wishlist').forEach(button => {
+            const storageId = parseInt(button.getAttribute('data-storage-id'));
+            if (wishlistItems.has(storageId)) {
+                button.classList.add('in-wishlist');
+                button.innerHTML = '<i data-lucide="check"></i>';
+            } else {
+                button.classList.remove('in-wishlist');
+                button.innerHTML = '<i data-lucide="shopping-cart"></i>';
+            }
+        });
+    }
+    function updateCartCount() {
+        const count = wishlistItems.size;
+        const cartCountElement = document.getElementById('cartCount');
+        if (cartCountElement) {
+            cartCountElement.textContent = count;
+            cartCountElement.style.display = count === 0 ? 'none' : 'flex';
+        }
+    }
+    function goToWishlist() {
+        try {
+            window.location.href = '/SWP/wishlist';
+        } catch (error) {
+            console.error('Error navigating to wishlist:', error);
+            showToast('Có lỗi khi chuyển trang!', 'error');
+        }
+    }
+    function showToast(message, type = 'success') {
+        const toast = document.getElementById('toast');
+        if (toast) {
+            toast.textContent = message;
+            toast.className = 'toast ' + type;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+    }
+</script>
+</body>
+</html>
