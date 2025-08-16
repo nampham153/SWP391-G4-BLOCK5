@@ -34,7 +34,7 @@
                                            id="storageName"
                                            name="storageName"
                                            th:value="${searchStorageName}"
-                                           placeholder="Tìm theo tên kho hoặc địa chỉ..."
+                                           placeholder="Tìm theo tên kho..."
                                            class="form-input"
                                            style="width: 400px; padding-right: 40px;"
                                            oninput="performRealTimeSearchSafe(this)"
@@ -241,7 +241,7 @@
                     console.log('Search results:', data);
 
                     // Update the grid with results
-                    updateStorageGrid(data, currentSearchTerm);
+                    updateStorageGrid(data);
                     updateResultCount(data.length);
 
                     // Update last search state
@@ -384,9 +384,8 @@
         }
     }
 
-    function updateStorageGrid(storages, searchTerm = '') {
+    function updateStorageGrid(storages) {
         console.log('Updating storage grid with:', storages.length, 'storages');
-        console.log('Search term:', searchTerm);
 
         const storageGrid = document.getElementById('storageGrid');
         if (!storageGrid) {
@@ -414,14 +413,10 @@
             `;
         } else {
             storageGrid.innerHTML = storages.map(storage => {
-                // Highlight search term in storage name and address
-                const highlightedName = highlightSearchTerm(storage.storagename || 'Tên kho', searchTerm);
-                const highlightedAddress = highlightSearchTerm(storage.address || 'Địa chỉ', searchTerm);
-
                 return `
                 <div class="storage-card">
                     <div class="card-header">
-                        <h3 class="storage-name">${highlightedName}</h3>
+                        <h3 class="storage-name">${storage.storagename || 'Tên kho'}</h3>
                         <div class="${storage.status ? 'status-badge status-available' : 'status-badge status-rented'}">
                             ${storage.status ? 'Còn trống' : 'Đang thuê'}
                         </div>
@@ -430,7 +425,7 @@
                         <div class="storage-info">
                             <div class="info-item">
                                 <i data-lucide="map-pin"></i>
-                                <span>${highlightedAddress}</span>
+                                <span>${storage.address || 'Địa chỉ'}</span>
                             </div>
                         </div>
                     </div>
@@ -467,16 +462,7 @@
         }
     }
 
-    function highlightSearchTerm(text, searchTerm) {
-        if (!searchTerm || !text) return text;
-
-        const regex = new RegExp(`(${escapeRegExp(searchTerm)})`, 'gi');
-        return text.replace(regex, '<span class="search-highlight">$1</span>');
-    }
-
-    function escapeRegExp(string) {
-        return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    }
+    // Removed highlight functions as they are no longer needed
 
     function updateResultCount(count) {
         const countElement = document.querySelector('.results-info .count');

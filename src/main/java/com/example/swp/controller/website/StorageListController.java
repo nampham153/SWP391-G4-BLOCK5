@@ -98,13 +98,12 @@ public class StorageListController {
     private List<Storage> filterStorages(List<Storage> storages, String storageName, String city, String status) {
         return storages.stream()
                 .filter(storage -> {
-                    // Filter by storage name
+                    // Filter by storage name only (not address)
                     if (storageName != null && !storageName.trim().isEmpty()) {
                         String searchName = storageName.trim().toLowerCase();
                         String actualName = storage.getStoragename() != null ? storage.getStoragename().toLowerCase()
                                 : "";
-                        String actualAddress = storage.getAddress() != null ? storage.getAddress().toLowerCase() : "";
-                        if (!actualName.contains(searchName) && !actualAddress.contains(searchName)) {
+                        if (!actualName.contains(searchName)) {
                             return false;
                         }
                     }
