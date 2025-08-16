@@ -36,6 +36,8 @@ public class StorageListController {
 
             // Lấy danh sách cities để hiển thị trong dropdown
             List<String> cities = storageService.findAllCities();
+            System.out.println("Cities found: " + cities.size());
+            System.out.println("Cities list: " + cities);
 
             // Thêm vào model
             model.addAttribute("storages", filteredStorages);

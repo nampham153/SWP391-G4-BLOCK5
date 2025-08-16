@@ -11,16 +11,16 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Component
 public class StorageServiceImpl implements StorageService {
     @Autowired
     private StorageRepository storageRepository;
-
-
 
     @Autowired
     @Lazy
@@ -56,8 +56,6 @@ public class StorageServiceImpl implements StorageService {
             storage.setImUrl(storageRequest.getImUrl());
         }
 
-
-
         // Tạm thời set coordinates mặc định
         storage.setLatitude(10.762622); // Tọa độ TP.HCM
         storage.setLongitude(106.660172);
@@ -84,8 +82,6 @@ public class StorageServiceImpl implements StorageService {
         if (storageRequest.getImUrl() != null && !storageRequest.getImUrl().isEmpty()) {
             storage.setImUrl(storageRequest.getImUrl());
         }
-
-
 
         return storageRepository.save(storage);
     }
@@ -119,12 +115,30 @@ public class StorageServiceImpl implements StorageService {
         return storageRepository.findAvailableStorages(
                 startDate, endDate, minArea, minPrice, maxPrice, nameKeyword, city);
 
-
     }
 
     @Override
     public List<String> findAllCities() {
-        return storageRepository.findAllCities();
+        // Debug: Lấy tất cả storage để xem city values
+        List<Storage> allStorages = storageRepository.findAll();
+        System.out.println("=== DEBUG: All storages count: " + allStorages.size() + " ===");
+
+        Set<String> uniqueCities = new HashSet<>();
+        for (Storage storage : allStorages) {
+            String city = storage.getCity();
+            if (city != null && !city.trim().isEmpty()) {
+                uniqueCities.add(city.trim());
+                System.out.println("Storage ID: " + storage.getStorageid() + ", City: '" + city + "' (length: "
+                        + city.length() + ")");
+            }
+        }
+        System.out.println("Unique cities from manual check: " + uniqueCities);
+
+        // Gọi query gốc
+        List<String> cities = storageRepository.findAllCities();
+        System.out.println("StorageService.findAllCities() - Found " + cities.size() + " cities");
+        System.out.println("Cities from query: " + cities);
+        return cities;
     }
 
     @Override
