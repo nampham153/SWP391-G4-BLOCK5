@@ -24,31 +24,35 @@
         <!-- Search Section -->
         <div class="search-section">
             <div class="search-card">
-                <form method="get" th:action="@{/SWP/storages}" class="search-form">
+                <form method="get" th:action="@{/SWP/storages}" class="search-form" onsubmit="return false;">
                     <div class="search-grid">
                         <div class="form-group" style="margin-left: 20px">
                             <label for="storageName">Tên kho</label>
                             <div class="input-with-button">
-                                <div class="input-with-icon">
+                                <div class="input-with-icon" style="position: relative;">
                                     <input type="text"
                                            id="storageName"
                                            name="storageName"
-                                           th:value="${param.storageName}"
-                                           placeholder="Tìm theo tên kho..."
+                                           th:value="${searchStorageName}"
+                                           placeholder="Tìm theo tên kho hoặc địa chỉ..."
                                            class="form-input"
-                                           style="width: 400px;">
+                                           style="width: 400px; padding-right: 40px;"
+                                           oninput="performRealTimeSearchSafe(this)"
+                                           onkeypress="handleEnterKey(event)"
+                                           autocomplete="off">
+                                    <div id="searchIndicator" class="search-indicator"></div>
                                 </div>
                             </div>
                         </div>
                         <div class="form-group">
                             <label for="city">Thành phố</label>
                             <div class="select-wrapper" style=" width: 300px;">
-                                <select name="city" id="city" class="form-select">
+                                <select name="city" id="city" class="form-select" onchange="performRealTimeSearch()">
                                     <option value="">Tất cả thành phố</option>
                                     <option th:each="city : ${cities}"
                                             th:value="${city}"
                                             th:text="${city}"
-                                            th:selected="${param.city != null and param.city.equals(city)}">
+                                            th:selected="${searchCity != null and searchCity.equals(city)}">
                                     </option>
                                 </select>
                             </div>
@@ -57,26 +61,14 @@
                             <label for="status">Trạng thái</label>
                             <div class="select-with-button" style="width: 800px;">
                                 <div class="select-wrapper">
-                                    <select name="status" id="status" class="form-select">
+                                    <select name="status" id="status" class="form-select" onchange="performRealTimeSearch()">
                                         <option value="">Tất cả trạng thái</option>
-                                        <option value="true" th:selected="${param.status != null and param.status.equals('true')}">Còn trống</option>
-                                        <option value="false" th:selected="${param.status != null and param.status.equals('false')}">Đang thuê</option>
+                                        <option value="true" th:selected="${searchStatus != null and searchStatus.equals('true')}">Còn trống</option>
+                                        <option value="false" th:selected="${searchStatus != null and searchStatus.equals('false')}">Đang thuê</option>
                                     </select>
                                 </div>
-                                <button type="submit" class="btn btn-primary btn-search">
-                                    <i data-lucide="search"></i>
-                                    Tìm kiếm
-                                </button>
-                                <a th:href="@{/SWP/storages}" class="btn btn-secondary btn-reset">
-                                    <i data-lucide="filter-x"></i>
-                                    Xóa bộ lọc
-                                </a>
-                                <a th:href="@{/SWP/storages/compare}" class="btn btn-secondary btn-reset">
-                                    So sánh
-                                </a>
-<!--                                <a th:href="@{/storages/compare}" class="btn-icon" title="So sánh">-->
-<!--                                    <i class="fas fa-eye"></i>-->
-<!--                                </a>-->
+                                
+
                             </div>
                         </div>
                     </div>
@@ -142,6 +134,14 @@
 
 <script>
     lucide.createIcons();
+
+    // Debug: Check if elements exist
+    console.log('Page loaded, checking elements...');
+    console.log('Storage grid:', document.getElementById('storageGrid'));
+    console.log('Storage name input:', document.getElementById('storageName'));
+    console.log('City select:', document.getElementById('city'));
+    console.log('Status select:', document.getElementById('status'));
+
     const viewButtons = document.querySelectorAll('.view-btn');
     const storageGrid = document.getElementById('storageGrid');
     viewButtons.forEach(btn => {
@@ -160,10 +160,348 @@
             });
         });
     });
+
+    // Real-time search functionality
+    let searchTimeout;
+    let lastSearchTerm = '';
+    let lastResultCount = -1;
+    let isSearching = false;
+
+    function performRealTimeSearch() {
+        // Clear previous timeout
+        clearTimeout(searchTimeout);
+
+        const storageName = document.getElementById('storageName').value;
+        const city = document.getElementById('city').value;
+        const status = document.getElementById('status').value;
+
+        // Show search indicator immediately for text input
+        const indicator = document.getElementById('searchIndicator');
+        if (storageName && storageName.trim()) {
+            indicator.textContent = '🔍';
+            indicator.classList.add('searching');
+        } else {
+            indicator.textContent = '';
+            indicator.classList.remove('searching');
+        }
+
+        // Set new timeout to avoid too many requests
+        searchTimeout = setTimeout(() => {
+            // Prevent multiple simultaneous searches
+            if (isSearching) {
+                console.log('Search already in progress, skipping...');
+                return;
+            }
+
+            // Build current search state
+            const currentSearchTerm = storageName.trim();
+            const currentCity = city.trim();
+            const currentStatus = status.trim();
+            const currentSearchState = `${currentSearchTerm}|${currentCity}|${currentStatus}`;
+
+            // Check if search state actually changed
+            const lastSearchState = `${lastSearchTerm}|${document.getElementById('city').dataset.lastValue || ''}|${document.getElementById('status').dataset.lastValue || ''}`;
+            if (currentSearchState === lastSearchState) {
+                console.log('Search state unchanged, skipping API call');
+                return;
+            }
+
+            // Set searching flag
+            isSearching = true;
+
+            // Show loading indicator
+            showSearchLoading(true);
+
+            // Build query parameters
+            const params = new URLSearchParams();
+            if (currentSearchTerm) params.append('storageName', currentSearchTerm);
+            if (currentCity) params.append('city', currentCity);
+            if (currentStatus) params.append('status', currentStatus);
+
+            // Make AJAX request
+            console.log('Making search request to:', `/SWP/storages/search?${params.toString()}`);
+            fetch(`/SWP/storages/search?${params.toString()}`)
+                .then(response => {
+                    console.log('Response status:', response.status);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.text().then(text => {
+                        console.log('Raw response:', text);
+                        try {
+                            return JSON.parse(text);
+                        } catch (e) {
+                            console.error('JSON parse error:', e);
+                            console.error('Response text:', text);
+                            throw new Error('Invalid JSON response from server');
+                        }
+                    });
+                })
+                .then(data => {
+                    console.log('Search results:', data);
+
+                    // Update the grid with results
+                    updateStorageGrid(data, currentSearchTerm);
+                    updateResultCount(data.length);
+
+                    // Update last search state
+                    lastSearchTerm = currentSearchTerm;
+                    lastResultCount = data.length;
+                    document.getElementById('city').dataset.lastValue = currentCity;
+                    document.getElementById('status').dataset.lastValue = currentStatus;
+
+                    showSearchLoading(false);
+                    isSearching = false; // Reset searching flag
+
+                    // Update search indicator
+                    if (currentSearchTerm) {
+                        indicator.textContent = `${data.length} kết quả`;
+                        indicator.classList.remove('searching');
+                    } else {
+                        indicator.textContent = '';
+                        indicator.classList.remove('searching');
+                    }
+                })
+                .catch(error => {
+                    console.error('Search error:', error);
+                    showSearchLoading(false);
+                    isSearching = false; // Reset searching flag
+
+                    // Try fallback form submission
+                    console.log('AJAX failed, trying form submission fallback...');
+                    fallbackSearch();
+
+                    // Reset search indicator
+                    indicator.textContent = '';
+                    indicator.classList.remove('searching');
+                });
+        }, 200); // Wait 200ms after user stops typing for faster response
+    }
+
+    // Safe version that preserves focus
+    function performRealTimeSearchSafe(inputElement) {
+        // Store current cursor position
+        const cursorPosition = inputElement.selectionStart;
+
+        // Perform search immediately for better responsiveness
+        performRealTimeSearch();
+
+        // Restore focus and cursor position after a short delay
+        setTimeout(() => {
+            if (document.activeElement !== inputElement) {
+                inputElement.focus();
+                inputElement.setSelectionRange(cursorPosition, cursorPosition);
+            }
+        }, 10);
+    }
+
+    // Test function to check API (removed to prevent conflicts)
+
+    // Initialize page on load
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('Page loaded, initializing...');
+
+        // Focus on search input for better user experience
+        const searchInput = document.getElementById('storageName');
+        if (searchInput) {
+            searchInput.focus();
+        }
+
+        // Prevent form submission for real-time search
+        const searchForm = document.querySelector('.search-form');
+        if (searchForm) {
+            searchForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                console.log('Form submission prevented - using AJAX search instead');
+                performRealTimeSearch();
+                return false;
+            });
+        }
+
+        // Only perform initial search if there are no storages displayed
+        const storageGrid = document.getElementById('storageGrid');
+        const existingCards = storageGrid ? storageGrid.querySelectorAll('.storage-card') : [];
+
+        if (existingCards.length === 0) {
+            console.log('No storages displayed, performing initial search...');
+            setTimeout(() => {
+                performRealTimeSearch();
+            }, 300);
+        } else {
+            console.log('Storages already displayed, skipping initial search');
+        }
+    });
+
+    // Simple test function for button
+    function testSearch() {
+        console.log('Test search button clicked');
+        const input = document.getElementById('storageName');
+        if (input) {
+            input.value = 'test';
+            input.focus();
+            // Trigger input event to activate real-time search
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+    }
+
+    // Handle Enter key press for immediate search
+    function handleEnterKey(event) {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            event.stopPropagation();
+
+            // Clear timeout to perform immediate search
+            clearTimeout(searchTimeout);
+            performRealTimeSearch();
+
+            // Keep focus on input
+            event.target.focus();
+            return false;
+        }
+    }
+
+    // Fallback: if AJAX fails, show error message instead of form submission
+    function fallbackSearch() {
+        console.log('AJAX search failed, showing error message');
+        const storageGrid = document.getElementById('storageGrid');
+        if (storageGrid) {
+            storageGrid.innerHTML = `
+                <div class="no-results" style="grid-column: 1 / -1; text-align: center; padding: 40px;">
+                    <div class="no-results-icon">
+                        <i data-lucide="wifi-off"></i>
+                    </div>
+                    <h3>Lỗi kết nối</h3>
+                    <p>Không thể tải dữ liệu. Vui lòng thử lại sau.</p>
+                    <button onclick="location.reload()" class="btn btn-primary" style="margin-top: 10px;">
+                        Tải lại trang
+                    </button>
+                </div>
+            `;
+            // Re-create icons after updating innerHTML
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        }
+    }
+
+    function updateStorageGrid(storages, searchTerm = '') {
+        console.log('Updating storage grid with:', storages.length, 'storages');
+        console.log('Search term:', searchTerm);
+
+        const storageGrid = document.getElementById('storageGrid');
+        if (!storageGrid) {
+            console.error('Storage grid element not found!');
+            return;
+        }
+
+        // Save current focus element and cursor position
+        const activeElement = document.activeElement;
+        const isInputFocused = activeElement && activeElement.id === 'storageName';
+        let cursorPosition = 0;
+        if (isInputFocused) {
+            cursorPosition = activeElement.selectionStart;
+        }
+
+        if (storages.length === 0) {
+            storageGrid.innerHTML = `
+                <div class="no-results" style="grid-column: 1 / -1; text-align: center; padding: 40px;">
+                    <div class="no-results-icon">
+                        <i data-lucide="search-x"></i>
+                    </div>
+                    <h3>Không tìm thấy kho nào</h3>
+                    <p>Thử thay đổi từ khóa tìm kiếm để xem thêm kết quả</p>
+                </div>
+            `;
+        } else {
+            storageGrid.innerHTML = storages.map(storage => {
+                // Highlight search term in storage name and address
+                const highlightedName = highlightSearchTerm(storage.storagename || 'Tên kho', searchTerm);
+                const highlightedAddress = highlightSearchTerm(storage.address || 'Địa chỉ', searchTerm);
+
+                return `
+                <div class="storage-card">
+                    <div class="card-header">
+                        <h3 class="storage-name">${highlightedName}</h3>
+                        <div class="${storage.status ? 'status-badge status-available' : 'status-badge status-rented'}">
+                            ${storage.status ? 'Còn trống' : 'Đang thuê'}
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        <div class="storage-info">
+                            <div class="info-item">
+                                <i data-lucide="map-pin"></i>
+                                <span>${highlightedAddress}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <a href="/SWP/storages/${storage.storageid}" class="btn btn-primary" style="width: 190px">
+                            <i data-lucide="eye"></i>
+                            Chi tiết
+                        </a>
+                        <button class="btn btn-wishlist btn-cart-icon"
+                                data-storage-id="${storage.storageid}"
+                                onclick="toggleWishlist(this)"
+                                style="width: 120px;">
+                            <i data-lucide="shopping-cart"></i>
+                        </button>
+                    </div>
+                </div>
+                `;
+            }).join('');
+        }
+
+        // Re-initialize Lucide icons
+        lucide.createIcons();
+
+        // Update wishlist UI
+        updateWishlistUI();
+
+        // Restore focus and cursor position
+        if (isInputFocused) {
+            const inputElement = document.getElementById('storageName');
+            if (inputElement) {
+                inputElement.focus();
+                inputElement.setSelectionRange(cursorPosition, cursorPosition);
+            }
+        }
+    }
+
+    function highlightSearchTerm(text, searchTerm) {
+        if (!searchTerm || !text) return text;
+
+        const regex = new RegExp(`(${escapeRegExp(searchTerm)})`, 'gi');
+        return text.replace(regex, '<span class="search-highlight">$1</span>');
+    }
+
+    function escapeRegExp(string) {
+        return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    function updateResultCount(count) {
+        const countElement = document.querySelector('.results-info .count');
+        if (countElement) {
+            countElement.textContent = count;
+        }
+    }
+
+    function showSearchLoading(show) {
+        const storageGrid = document.getElementById('storageGrid');
+        if (show) {
+            storageGrid.style.opacity = '0.6';
+            storageGrid.style.pointerEvents = 'none';
+        } else {
+            storageGrid.style.opacity = '1';
+            storageGrid.style.pointerEvents = 'auto';
+        }
+    }
 </script>
 <div id="toast" class="toast"></div>
 <script>
-    let wishlistItems = new Set();
+    // Check if wishlistItems already exists to avoid redeclaration
+    if (typeof wishlistItems === 'undefined') {
+        var wishlistItems = new Set();
+    }
     document.addEventListener('DOMContentLoaded', function() {
         loadWishlist();
     });
