@@ -78,11 +78,6 @@
 
         <!-- Results Section -->
         <div class="results-section">
-            <div class="results-header">
-                <div class="results-info">
-                    <h2>Tìm thấy <span class="count" th:text="${storages.size()}">0</span> kho</h2>
-                </div>
-            </div>
 
             <!-- Storage Grid -->
             <div class="storage-grid" id="storageGrid">
@@ -446,11 +441,15 @@
             }).join('');
         }
 
-        // Re-initialize Lucide icons
-        lucide.createIcons();
+        // Re-initialize Lucide icons first
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+            console.log('Lucide icons created');
+        }
 
-        // Update wishlist UI
+        // Then update wishlist UI (this will call lucide.createIcons() again)
         updateWishlistUI();
+        console.log('Wishlist UI updated');
 
         // Restore focus and cursor position
         if (isInputFocused) {
@@ -547,16 +546,28 @@
         }
     }
     function updateWishlistUI() {
-        document.querySelectorAll('.btn-wishlist').forEach(button => {
+        const wishlistButtons = document.querySelectorAll('.btn-wishlist');
+        console.log('Found', wishlistButtons.length, 'wishlist buttons');
+        console.log('Wishlist items:', wishlistItems);
+
+        wishlistButtons.forEach(button => {
             const storageId = parseInt(button.getAttribute('data-storage-id'));
             if (wishlistItems.has(storageId)) {
                 button.classList.add('in-wishlist');
                 button.innerHTML = '<i data-lucide="check"></i>';
+                console.log('Storage', storageId, 'is in wishlist');
             } else {
                 button.classList.remove('in-wishlist');
                 button.innerHTML = '<i data-lucide="shopping-cart"></i>';
+                console.log('Storage', storageId, 'is NOT in wishlist');
             }
         });
+
+        // Re-create icons after updating innerHTML
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+            console.log('Lucide icons recreated in updateWishlistUI');
+        }
     }
     function updateCartCount() {
         const count = wishlistItems.size;
