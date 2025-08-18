@@ -1,594 +1,351 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Đặt kho - QVL STORAGE</title>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
-  <link rel="stylesheet" th:href="@{/css/booking-form.css}" />
-  <style>
-    .info-card {
-      margin-bottom: 1rem;
-    }
-    .highlight {background: #f6ffe0; border-radius: 6px;}
-    .highlight-final {background: #e8f5e8; border-radius: 6px; border: 2px solid #28a745;}
-    .storage-img {
-      width: 100%;
-      max-width: 250px;
-      border-radius: 12px;
-      box-shadow: 0 2px 10px #ddd;
-      margin-bottom: 16px;
-    }
-    .voucher-discount {
-      color: #dc3545;
-      font-weight: bold;
-      display: none;
-    }
-    .voucher-applied {
-      color: #28a745;
-      font-size: 12px;
-      font-style: italic;
-      display: none;
-    }
-
-    /* Header styles */
-    .header-content {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      width: 100%;
-    }
-
-    .header-left h1 {
-      margin-left: 500px;
-      color: #2c3e50;
-    }
-
-    .header-left p {
-      margin: 0;
-      color: #6c757d;
-    }
-
-    /* Back button styles */
-    .back-btn {
-      background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      box-shadow: 0 2px 8px rgba(108, 117, 125, 0.2);
-    }
-
-    .back-btn:hover {
-      background: linear-gradient(135deg, #495057 0%, #343a40 100%);
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
-    }
-
-    .back-btn i {
-      font-size: 12px;
-    }
-
-    /* Readonly input styles */
-    .readonly-input {
-      background-color: #f8f9fa !important;
-      border-color: #e9ecef !important;
-      color: #6c757d !important;
-      cursor: not-allowed;
-    }
-
-    .readonly-input:focus {
-      box-shadow: none !important;
-      border-color: #e9ecef !important;
-    }
-
-    /* Customer note styles */
-    .customer-note {
-      background-color: #e3f2fd;
-      border: 1px solid #bbdefb;
-      border-radius: 6px;
-      padding: 12px;
-      margin-top: 15px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 14px;
-      color: #1565c0;
-    }
-
-    .customer-note i {
-      color: #1976d2;
-      font-size: 16px;
-    }
-
-    /* Error styling */
-    .error-input {
-      border-color: #dc3545 !important;
-      box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
-    }
-
-    .error-message {
-      background-color: #f8d7da;
-      border: 1px solid #f5c6cb;
-      border-radius: 4px;
-      color: #721c24;
-      padding: 8px 12px;
-      margin-top: 8px;
-      font-size: 14px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .error-message i {
-      color: #dc3545;
-      font-size: 14px;
-    }
-  </style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Đặt kho - QVL STORAGE</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+    <link rel="stylesheet" th:href="@{/css/booking-form.css}" />
+    <style>
+        .info-card {
+            margin-bottom: 1rem;
+        }
+        .highlight {background: #f6ffe0; border-radius: 6px;}
+        .highlight-final {background: #e8f5e8; border-radius: 6px; border: 2px solid #28a745;}
+        .storage-img {
+            width: 100%;
+            max-width: 250px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px #ddd;
+            margin-bottom: 16px;
+        }
+        .voucher-discount {
+            color: #dc3545;
+            font-weight: bold;
+            display: none;
+        }
+        .voucher-applied {
+            color: #28a745;
+            font-size: 12px;
+            font-style: italic;
+            display: none;
+        }
+        .error-text {
+            color: #dc3545;
+            font-size: 12px;
+            margin-top: 4px;
+        }
+    </style>
 </head>
 <body>
 <div class="page-wrapper">
-  <!-- MAIN CONTENT -->
-  <main class="main">
-    <div class="container">
-      <div class="page-header">
-        <div class="header-content">
-          <div class="header-left">
-            <h1>Đặt kho</h1>
+    <!-- NAVBAR -->
+    <div th:replace="taskbar/customer-navbar :: customerNavbar"></div>
 
-          </div>
-          <div class="header-right">
-            <button type="button" class="back-btn" onclick="goBack()">
-              <i class="fas fa-arrow-left"></i>
-              Quay lại
-            </button>
-          </div>
-        </div>
-      </div>
+    <!-- MAIN CONTENT -->
+    <main class="main">
+        <div class="container">
+            <div class="page-header">
+                <h1>Đặt kho</h1>
+                <p>Xác nhận thông tin và hoàn tất việc đặt kho</p>
+            </div>
 
-      <div class="booking-container">
-        <!-- Alerts -->
-        <div th:if="${error}" class="alert-error">
-          <i class="fas fa-exclamation-triangle"></i>
-          <span th:text="${error}"></span>
-        </div>
-
-        <div th:if="${successMessage}" class="alert-success">
-          <i class="fas fa-check-circle"></i>
-          <span th:text="${successMessage}"></span>
-        </div>
-
-        <form th:action="@{/SWP/booking/{storageId}/booking/save(storageId=${storage.storageid})}" method="post">
-          <input type="hidden" name="startDate" th:value="${startDate}" />
-          <input type="hidden" name="endDate" th:value="${endDate}" />
-          <input type="hidden" name="orderToken" th:value="${orderToken}" />
-
-          <!-- Storage Info -->
-          <div class="form-section">
-            <h3 class="section-title"><i class="fas fa-warehouse"></i> Thông tin kho</h3>
-            <div class="storage-info">
-              <!-- Ảnh kho mặc định (KHÔNG kiểm tra imageUrl) -->
-              <div class="info-card" style="text-align:center;">
-                <img
-                        th:src="${storage.imUrl != null && !storage.imUrl.isEmpty() ? storage.imUrl : 'https://img.freepik.com/premium-photo/warehouse-with-shelves-filled-with-boxes-storage-facility-ai_97167-3669.jpg'}"
-                        alt="Ảnh kho"
-                        class="storage-img"
-                        style="max-width: 100%; height: 200px; object-fit:cover; border-radius:8px; margin-bottom:10px;">
-              </div>
-              <div class="info-card">
-                <div class="info-label">TÊN KHO</div>
-                <div class="info-value" th:text="${storage.storagename}">Tên kho</div>
-                <div th:class="'status-badge ' + (${storage.status} ? 'status-available' : 'status-rented')">
-                  <span th:text="${storage.status} ? 'CÒN TRỐNG' : 'ĐANG THUÊ'">CÒN TRỐNG</span>
+            <div class="booking-container">
+                <!-- Alerts -->
+                <div th:if="${error}" class="alert-error">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span th:text="${error}"></span>
                 </div>
-              </div>
-              <div class="info-card">
-                <div class="info-label">ĐỊA CHỈ</div>
-                <div class="info-value" th:text="${storage.address}">Địa chỉ</div>
-              </div>
-              <div class="info-card">
-                <div class="info-label">GIÁ/NGÀY</div>
-                <div class="info-value" th:text="${#numbers.formatDecimal(storage.pricePerDay, 0, 'POINT', 0, 'COMMA')} + ' VNĐ/ngày'">0 VNĐ/ngày</div>
-              </div>
-              <div class="info-card">
-                <div class="info-label">DIỆN TÍCH TỔNG</div>
-                <div class="info-value" th:text="${storage.area} + ' m²'">0 m²</div>
-              </div>
-              <div class="info-card">
-                <div class="info-label">DIỆN TÍCH CÒN LẠI</div>
-                <div class="info-value" th:text="${remainArea} + ' m²'">0 m²</div>
-              </div>
-              <div class="info-card">
-                <div class="info-label">NGÀY BẮT ĐẦU</div>
-                <div class="info-value" th:text="${#temporals.format(startDate, 'dd/MM/yyyy')}">Ngày bắt đầu</div>
-              </div>
-              <div class="info-card">
-                <div class="info-label">NGÀY KẾT THÚC</div>
-                <div class="info-value" th:text="${#temporals.format(endDate, 'dd/MM/yyyy')}">Ngày kết thúc</div>
-              </div>
 
-              <!-- Tổng chi phí gốc -->
-              <div class="info-card highlight">
-                <div class="info-label">TỔNG CHI PHÍ GỐC</div>
-                <div class="info-value" id="originalCostDisplay">0 VNĐ</div>
-              </div>
+                <div th:if="${successMessage}" class="alert-success">
+                    <i class="fas fa-check-circle"></i>
+                    <span th:text="${successMessage}"></span>
+                </div>
 
-              <!-- Comment: Voucher discount display tạm thời ẩn -->
-              <!-- <div class="info-card voucher-discount" id="voucherDiscountCard">
-                <div class="info-label">GIẢM GIÁ VOUCHER</div>
-                <div class="info-value" id="voucherDiscountDisplay">- 0 VNĐ</div>
-                <div class="voucher-applied" id="voucherAppliedText">Đã áp dụng voucher</div>
-              </div> -->
+                <form th:action="@{/SWP/booking/{storageId}/booking/save(storageId=${storage.storageid})}" method="post">
+                    <input type="hidden" name="startDate" th:value="${startDate}" />
+                    <input type="hidden" name="endDate" th:value="${endDate}" />
+                    <input type="hidden" name="orderToken" th:value="${orderToken}" />
 
-              <!-- Tổng chi phí cuối cùng -->
-              <div class="info-card highlight-final">
-                <div class="info-label">TỔNG THANH TOÁN</div>
-                <div class="info-value" id="finalCostDisplay" style="font-size: 18px; color: #28a745;">0 VNĐ</div>
-              </div>
+                    <!-- Storage Info -->
+                    <div class="form-section">
+                        <h3 class="section-title"><i class="fas fa-warehouse"></i> Thông tin kho</h3>
+                        <div class="storage-info">
+                            <!-- Ảnh kho mặc định -->
+                            <div class="info-card" style="text-align:center;">
+                                <img
+                                        th:src="${storage.imUrl != null && !storage.imUrl.isEmpty() ? storage.imUrl : 'https://img.freepik.com/premium-photo/warehouse-with-shelves-filled-with-boxes-storage-facility-ai_97167-3669.jpg'}"
+                                        alt="Ảnh kho"
+                                        class="storage-img"
+                                        style="max-width: 100%; height: 200px; object-fit:cover; border-radius:8px; margin-bottom:10px;">
+                            </div>
+                            <div class="info-card">
+                                <div class="info-label">TÊN KHO</div>
+                                <div class="info-value" th:text="${storage.storagename}">Tên kho</div>
+                                <div th:class="'status-badge ' + (${storage.status} ? 'status-available' : 'status-rented')">
+                                    <span th:text="${storage.status} ? 'CÒN TRỐNG' : 'ĐANG THUÊ'">CÒN TRỐNG</span>
+                                </div>
+                            </div>
+                            <div class="info-card">
+                                <div class="info-label">ĐỊA CHỈ</div>
+                                <div class="info-value" th:text="${storage.address}">Địa chỉ</div>
+                            </div>
+                            <div class="info-card">
+                                <div class="info-label">GIÁ/NGÀY</div>
+                                <div class="info-value" th:text="${#numbers.formatDecimal(storage.pricePerDay, 0, 'POINT', 0, 'COMMA')} + ' VNĐ/ngày'">0 VNĐ/ngày</div>
+                            </div>
+                            <div class="info-card">
+                                <div class="info-label">DIỆN TÍCH TỔNG</div>
+                                <div class="info-value" th:text="${storage.area} + ' m²'">0 m²</div>
+                            </div>
+                            <div class="info-card">
+                                <div class="info-label">DIỆN TÍCH CÒN LẠI</div>
+                                <div class="info-value" th:text="${remainArea} + ' m²'">0 m²</div>
+                            </div>
+                            <div class="info-card">
+                                <div class="info-label">NGÀY BẮT ĐẦU</div>
+                                <div class="info-value" th:text="${#temporals.format(startDate, 'dd/MM/yyyy')}">Ngày bắt đầu</div>
+                            </div>
+                            <div class="info-card">
+                                <div class="info-label">NGÀY KẾT THÚC</div>
+                                <div class="info-value" th:text="${#temporals.format(endDate, 'dd/MM/yyyy')}">Ngày kết thúc</div>
+                            </div>
+
+                            <!-- Tổng chi phí gốc -->
+                            <div class="info-card highlight">
+                                <div class="info-label">TỔNG CHI PHÍ GỐC</div>
+                                <div class="info-value" id="originalCostDisplay">0 VNĐ</div>
+                            </div>
+
+                            <!-- Giảm giá từ voucher -->
+                            <div class="info-card voucher-discount" id="voucherDiscountCard">
+                                <div class="info-label">GIẢM GIÁ VOUCHER</div>
+                                <div class="info-value" id="voucherDiscountDisplay">- 0 VNĐ</div>
+                                <div class="voucher-applied" id="voucherAppliedText">Đã áp dụng voucher</div>
+                            </div>
+
+                            <!-- Tổng chi phí cuối cùng -->
+                            <div class="info-card highlight-final">
+                                <div class="info-label">TỔNG THANH TOÁN</div>
+                                <div class="info-value" id="finalCostDisplay" style="font-size: 18px; color: #28a745;">0 VNĐ</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Customer Info -->
+                    <div class="section-title" style="display: flex; justify-content: space-between; align-items: center;">
+                        <h3 style="margin: 0;"><i class="fas fa-user-edit"></i> Thông tin khách hàng</h3>
+                        <button type="button" class="voucher-btn" onclick="toggleVoucherModal()"> Voucher</button>
+                    </div>
+                    <input type="hidden" name="voucherId" id="voucherId" />
+
+                    <!-- Trường chọn diện tích thuê -->
+                    <div class="form-group">
+                        <label for="rentalArea" class="form-label">Diện tích muốn thuê (m²) *</label>
+                        <input type="number"
+                               id="rentalArea"
+                               name="rentalArea"
+                               class="form-input"
+                               min="0.01"
+                               th:attr="max=${remainArea}"
+                               th:placeholder="'Tối đa ' + ${remainArea} + ' m²'"
+                               required
+                               step="0.01"
+                               oninput="validateRentalArea(this)" />
+                        <small class="form-text" th:text="'Có thể thuê tối đa ' + ${remainArea} + ' m².'"></small>
+                        <small class="error-text" id="rentalAreaError" style="display: none;">
+                            Diện tích phải lớn hơn 0 và không vượt quá diện tích còn lại.
+                        </small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="name" class="form-label">Họ và tên *</label>
+                        <input type="text" id="name" name="name" class="form-input"
+                               th:value="${customer != null ? customer.fullname : ''}"
+                               readonly
+                               required
+                               maxlength="50" />
+                    </div>
+                    <div class="form-group">
+                        <label for="email" class="form-label">Email *</label>
+                        <input type="email" id="email" name="email" class="form-input"
+                               th:value="${customer != null ? customer.email : ''}"
+                               readonly
+                               required />
+                    </div>
+                    <div class="form-group">
+                        <label for="phone" class="form-label">Số điện thoại *</label>
+                        <input type="tel" id="phone" name="phone" class="form-input"
+                               th:value="${customer != null ? customer.phone : ''}"
+                               readonly
+                               required
+                               pattern="[0-9]{10,11}" />
+                    </div>
+                    <div class="form-group">
+                        <label for="id_citizen" class="form-label">Số CCCD *</label>
+                        <input type="text"
+                               id="id_citizen"
+                               name="id_citizen"
+                               class="form-input"
+                               maxlength="20"
+                               th:value="${customer != null ? customer.id_citizen : ''}"
+                               readonly
+                               required />
+                    </div>
+
+                    <div class="submit-section">
+                        <button type="submit" class="submit-btn">
+                            <i class="fas fa-check-circle"></i> Xác nhận đặt kho
+                        </button>
+                        <p class="terms-text">Bằng việc nhấn xác nhận, bạn đồng ý với các điều khoản sử dụng dịch vụ.</p>
+                    </div>
+                </form>
             </div>
-          </div>
+        </div>
+    </main>
 
-
-          <!-- Customer Info -->
-          <!-- ...Các thông tin kho phía trên... -->
-
-          <div class="section-title" style="display: flex; justify-content: space-between; align-items: center;">
-            <h3 style="margin: 0;"><i class="fas fa-user-edit"></i> Thông tin khách hàng</h3>
-            <!-- Comment: Voucher button tạm thời ẩn -->
-            <!-- <button type="button" class="voucher-btn" onclick="toggleVoucherModal()"> Voucher</button> -->
-          </div>
-          <!-- Comment: Voucher input tạm thời ẩn -->
-          <!-- <input type="hidden" name="voucherId" id="voucherId" /> -->
-
-          <!-- Trường chọn diện tích thuê -->
-          <div class="form-group">
-            <label for="rentalArea" class="form-label">Diện tích muốn thuê (m²) *</label>
-            <input type="number"
-                   id="rentalArea"
-                   name="rentalArea"
-                   class="form-input"
-                   min="1"
-                   th:attr="max=${remainArea}"
-                   th:placeholder="'Tối đa ' + ${remainArea} + ' m²'"
-                   value="1"
-                   required
-                   step="0.01" />
-            <small class="form-text" th:text="'Có thể thuê tối đa ' + ${remainArea} + ' m².'"></small>
-          </div>
-
-          <!-- Customer Information Section -->
-          <div class="form-section">
-            <h3 class="section-title"><i class="fas fa-user"></i> Thông tin khách hàng</h3>
-
-            <div class="form-group">
-              <label for="name" class="form-label">Họ và tên *</label>
-              <input type="text" id="name" name="name" class="form-input readonly-input"
-                     th:value="${customer != null ? customer.fullname : ''}" readonly required />
-            </div>
-
-            <div class="form-group">
-              <label for="email" class="form-label">Email *</label>
-              <input type="email" id="email" name="email" class="form-input readonly-input"
-                     th:value="${customer != null ? customer.email : ''}" readonly required />
-            </div>
-
-            <div class="form-group">
-              <label for="phone" class="form-label">Số điện thoại *</label>
-              <input type="tel" id="phone" name="phone" class="form-input readonly-input"
-                     th:value="${customer != null ? customer.phone : ''}" readonly required />
-            </div>
-
-            <div class="form-group">
-              <label for="id_citizen" class="form-label">Số CCCD *</label>
-              <input type="text" id="id_citizen" name="id_citizen" class="form-input readonly-input"
-                     th:value="${customer != null ? customer.id_citizen : ''}" readonly required />
-            </div>
-
-            <!-- Additional customer info if available -->
-            <div th:if="${customer != null && customer.address != null && !customer.address.isEmpty()}" class="form-group">
-              <label for="address" class="form-label">Địa chỉ</label>
-              <input type="text" id="address" class="form-input readonly-input"
-                     th:value="${customer.address}" readonly />
-            </div>
-
-            <div th:if="${customer != null && customer.dateOfBirth != null}" class="form-group">
-              <label for="dateOfBirth" class="form-label">Ngày sinh</label>
-              <input type="date" id="dateOfBirth" class="form-input readonly-input"
-                     th:value="${customer.dateOfBirth}" readonly />
-            </div>
-
-            <div class="customer-note">
-              <i class="fas fa-info-circle"></i>
-              <span>Thông tin khách hàng được lấy từ tài khoản đã đăng nhập và không thể chỉnh sửa.</span>
-            </div>
-          </div>
-
-
-
-
-          <div class="submit-section">
-            <button type="submit" class="submit-btn">
-              <i class="fas fa-check-circle"></i> Xác nhận đặt kho
-            </button>
-            <p class="terms-text">Bằng việc nhấn xác nhận, bạn đồng ý với các điều khoản sử dụng dịch vụ.</p>
-          </div>
-        </form>
-      </div>
+    <div id="voucherModal" class="voucher-modal" style="display: none;">
+        <div class="voucher-modal-content">
+            <span class="voucher-close" onclick="toggleVoucherModal()">&times;</span>
+            <h3>Danh sách voucher</h3>
+            <div id="voucherList"></div>
+        </div>
     </div>
-  </main>
 
-  <!-- Comment: Voucher modal tạm thời ẩn -->
-  <!-- <div id="voucherModal" class="voucher-modal" style="display: none;">
-    <div class="voucher-modal-content">
-      <span class="voucher-close" onclick="toggleVoucherModal()">&times;</span>
-      <h3>Danh sách voucher</h3>
-      <div id="voucherList"></div>
-    </div>
-  </div> -->
-
-
-  <footer class="footer">
-    <div class="container">
-      <p>© 2025 QVL Storage. Tất cả quyền được bảo lưu.</p>
-    </div>
-  </footer>
+    <footer class="footer">
+        <div class="container">
+            <p>© 2025 QVL Storage. Tất cả quyền được bảo lưu.</p>
+        </div>
+    </footer>
 </div>
-<script>
-  function changeMainImage(img) {
-    // Đổi src ảnh chính
-    document.getElementById('mainImage').src = img.src;
-    // Highlight thumbnail
-    document.querySelectorAll('.thumb-img').forEach(e => e.classList.remove('active'));
-    img.classList.add('active');
-  }
 
-  // Function to go back to previous page
-  function goBack() {
-    // Try to go back in browser history
-    if (window.history.length > 1) {
-      window.history.back();
-    } else {
-      // Fallback: redirect to storage list
-      window.location.href = '/SWP/storages';
+<script>
+    function changeMainImage(img) {
+        document.getElementById('mainImage').src = img.src;
+        document.querySelectorAll('.thumb-img').forEach(e => e.classList.remove('active'));
+        img.classList.add('active');
     }
-  }
 </script>
 
-
 <script th:inline="javascript">
-  /*<![CDATA[*/
-  // Comment: Voucher variables tạm thời ẩn
-  /*
-  const vouchers = /*[[${vouchers}]]* / [];
-  const customerPoint = /*[[${customer != null ? customer.points : 0}]]* / 0;
-  let selectedVoucher = null;
-  */
+    /*<![CDATA[*/
+    const vouchers = /*[[${vouchers}]]*/ [];
+    const customerPoint = /*[[${customer != null ? customer.points : 0}]]*/ 0;
+    const pricePerDay = /*[[${storage.pricePerDay}]]*/ 0;
+    const area = /*[[${storage.area}]]*/ 1;
+    const startDate = new Date(/*[[${startDate}]]*/);
+    const endDate = new Date(/*[[${endDate}]]*/);
+    let selectedVoucher = null;
 
-  const pricePerDay = /*[[${storage.pricePerDay}]]*/ 0;
-  const area = /*[[${storage.area}]]*/ 1;
-  const remainArea = /*[[${remainArea}]]*/ 1;
-  const startDate = new Date(/*[[${startDate}]]*/);
-  const endDate = new Date(/*[[${endDate}]]*/);
+    function toggleVoucherModal() {
+        const modal = document.getElementById('voucherModal');
+        modal.style.display = modal.style.display === 'none' ? 'flex' : 'none';
 
-  console.log('Initial data loaded:');
-  console.log('pricePerDay:', pricePerDay);
-  console.log('area:', area);
-  console.log('remainArea:', remainArea);
-  console.log('startDate:', startDate);
-  console.log('endDate:', endDate);
+        if (modal.style.display === 'flex') {
+            const list = document.getElementById('voucherList');
+            list.innerHTML = '';
 
-  // Comment: Voucher functions tạm thời ẩn
-  /*
-  function toggleVoucherModal() {
-    const modal = document.getElementById('voucherModal');
-    modal.style.display = modal.style.display === 'none' ? 'flex' : 'none';
+            vouchers.forEach(v => {
+                const usable = v.requiredPoint <= customerPoint && v.remainQuantity > 0 &&
+                    new Date(v.endDate) > new Date();
+                const div = document.createElement('div');
+                div.className = 'voucher-item ' + (usable ? 'voucher-usable' : 'voucher-disabled');
+                div.innerHTML = `<span>${v.name} - ${v.requiredPoint} điểm</span>`;
+                div.dataset.id = v.id;
 
-    if (modal.style.display === 'flex') {
-      const list = document.getElementById('voucherList');
-      list.innerHTML = '';
+                if (usable) {
+                    div.onclick = () => {
+                        document.querySelectorAll('.voucher-item').forEach(el => el.classList.remove('selected'));
+                        div.classList.add('selected');
+                        selectedVoucher = v;
+                    };
+                }
+                list.appendChild(div);
+            });
 
-      vouchers.forEach(v => {
-        const usable = v.requiredPoint <= customerPoint && v.remainQuantity > 0 &&
-                new Date(v.endDate) > new Date();
-        const div = document.createElement('div');
-        div.className = 'voucher-item ' + (usable ? 'voucher-usable' : 'voucher-disabled');
-        div.innerHTML = `<span>${v.name} - ${v.requiredPoint} điểm</span>`;
-        div.dataset.id = v.id;
-
-        if (usable) {
-          div.onclick = () => {
-            document.querySelectorAll('.voucher-item').forEach(el => el.classList.remove('selected'));
-            div.classList.add('selected');
-            selectedVoucher = v;
-          };
+            const applyBtn = document.createElement('button');
+            applyBtn.className = 'voucher-apply-btn';
+            applyBtn.textContent = 'Áp dụng';
+            applyBtn.onclick = () => applyVoucher();
+            list.appendChild(applyBtn);
         }
-        list.appendChild(div);
-      });
-
-      const applyBtn = document.createElement('button');
-      applyBtn.className = 'voucher-apply-btn';
-      applyBtn.textContent = 'Áp dụng';
-      applyBtn.onclick = () => applyVoucher();
-      list.appendChild(applyBtn);
-    }
-  }
-  */
-
-  // Validation function cho diện tích thuê
-  function validateRentalArea() {
-    const rentalAreaInput = document.getElementById('rentalArea');
-    const rentalArea = parseFloat(rentalAreaInput.value) || 0;
-    const errorElement = document.getElementById('rentalAreaError');
-
-    // Xóa error message cũ nếu có
-    if (errorElement) {
-      errorElement.remove();
     }
 
-    // Kiểm tra diện tích hợp lệ
-    if (rentalArea <= 0) {
-      showRentalAreaError('Diện tích thuê phải lớn hơn 0');
-      return false;
-    }
+    function validateRentalArea(input) {
+        const rentalArea = parseFloat(input.value);
+        const maxArea = parseFloat(input.getAttribute('max'));
+        const errorElement = document.getElementById('rentalAreaError');
 
-    if (rentalArea > remainArea) {
-      showRentalAreaError(`Diện tích thuê không được vượt quá ${remainArea} m²`);
-      return false;
-    }
-
-    // Xóa border đỏ nếu hợp lệ
-    rentalAreaInput.classList.remove('error-input');
-    return true;
-  }
-
-  // Hiển thị lỗi cho diện tích thuê
-  function showRentalAreaError(message) {
-    const rentalAreaInput = document.getElementById('rentalArea');
-    const formGroup = rentalAreaInput.closest('.form-group');
-
-    // Thêm border đỏ cho input
-    rentalAreaInput.classList.add('error-input');
-
-    // Tạo element hiển thị lỗi
-    const errorElement = document.createElement('div');
-    errorElement.id = 'rentalAreaError';
-    errorElement.className = 'error-message';
-    errorElement.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${message}`;
-
-    // Thêm error message vào form group
-    formGroup.appendChild(errorElement);
-  }
-
-  function calculateTotal() {
-    console.log('calculateTotal called');
-    console.log('pricePerDay:', pricePerDay);
-    console.log('area:', area);
-    console.log('startDate:', startDate);
-    console.log('endDate:', endDate);
-
-    const rentalAreaInput = document.getElementById('rentalArea');
-    const rentalArea = parseFloat(rentalAreaInput ? rentalAreaInput.value : 0) || 0;
-
-    console.log('rentalArea:', rentalArea);
-
-    // Validate diện tích trước khi tính toán
-    if (!validateRentalArea()) {
-      // Nếu diện tích không hợp lệ, hiển thị 0
-      const originalCostElement = document.getElementById('originalCostDisplay');
-      const finalCostElement = document.getElementById('finalCostDisplay');
-
-      if (originalCostElement) originalCostElement.innerText = '0 VNĐ';
-      if (finalCostElement) finalCostElement.innerText = '0 VNĐ';
-      return;
-    }
-
-    // Tính số ngày
-    const timeDiff = endDate.getTime() - startDate.getTime();
-    const days = Math.max(1, Math.ceil(timeDiff / (1000 * 60 * 60 * 24)));
-
-    console.log('days:', days);
-
-    // Tính tổng chi phí gốc - theo công thức trong controller
-    const originalTotal = days * pricePerDay * (rentalArea / area);
-
-    console.log('originalTotal calculation:', days, '*', pricePerDay, '*', '(', rentalArea, '/', area, ') =', originalTotal);
-
-    // Hiển thị tổng chi phí gốc
-    const originalCostElement = document.getElementById('originalCostDisplay');
-    if (originalCostElement) {
-      originalCostElement.innerText = originalTotal.toLocaleString('vi-VN') + ' VNĐ';
-      console.log('Updated originalCostDisplay:', originalTotal.toLocaleString('vi-VN') + ' VNĐ');
-    } else {
-      console.error('originalCostDisplay element not found');
-    }
-
-    // Tạm thời không có voucher, finalTotal = originalTotal
-    let finalTotal = originalTotal;
-
-    // Hiển thị tổng thanh toán cuối cùng
-    const finalCostElement = document.getElementById('finalCostDisplay');
-    if (finalCostElement) {
-      finalCostElement.innerText = finalTotal.toLocaleString('vi-VN') + ' VNĐ';
-      console.log('Updated finalCostDisplay:', finalTotal.toLocaleString('vi-VN') + ' VNĐ');
-    } else {
-      console.error('finalCostDisplay element not found');
-    }
-  }
-
-  // Comment: Voucher functions tạm thời ẩn
-  /*
-  function applyVoucher() {
-    if (!selectedVoucher) return alert('Vui lòng chọn một voucher khả dụng.');
-    document.getElementById('voucherId').value = selectedVoucher.id;
-    document.getElementById('voucherModal').style.display = 'none';
-    alert('Đã áp dụng voucher: ' + selectedVoucher.name);
-    calculateTotal();
-  }
-
-  function removeVoucher() {
-    selectedVoucher = null;
-    document.getElementById('voucherId').value = '';
-    calculateTotal();
-    alert('Đã xóa voucher');
-  }
-
-  window.onclick = function(event) {
-    const modal = document.getElementById('voucherModal');
-    if (event.target === modal) modal.style.display = 'none';
-  };
-  */
-
-  // Validation khi submit form
-  function validateForm() {
-    const isRentalAreaValid = validateRentalArea();
-
-    if (!isRentalAreaValid) {
-      alert('Vui lòng kiểm tra lại diện tích thuê!');
-      return false;
-    }
-
-    return true;
-  }
-
-  window.addEventListener('DOMContentLoaded', () => {
-    console.log('DOM loaded, setting up event listeners');
-
-    const rentalAreaInput = document.getElementById('rentalArea');
-    if (rentalAreaInput) {
-      rentalAreaInput.addEventListener('input', calculateTotal);
-      rentalAreaInput.addEventListener('change', calculateTotal);
-      rentalAreaInput.addEventListener('blur', validateRentalArea);
-      console.log('Event listeners added to rentalArea input');
-    } else {
-      console.error('rentalArea input not found');
-    }
-
-    // Thêm validation cho form submit
-    const form = document.querySelector('form');
-    if (form) {
-      form.addEventListener('submit', (event) => {
-        if (!validateForm()) {
-          event.preventDefault();
-          return false;
+        if (isNaN(rentalArea) || rentalArea <= 0 || rentalArea > maxArea) {
+            errorElement.style.display = 'block';
+            input.setCustomValidity('Diện tích không hợp lệ');
+        } else {
+            errorElement.style.display = 'none';
+            input.setCustomValidity('');
         }
-      });
-      console.log('Form validation added');
+        calculateTotal();
     }
 
-    // Gọi calculateTotal() sau khi DOM đã load hoàn toàn
-    setTimeout(() => {
-      console.log('Calling calculateTotal() after DOM load');
-      calculateTotal();
-    }, 100);
-  });
-  /*]]>*/
+    function calculateTotal() {
+        const rentalArea = parseFloat(document.getElementById('rentalArea').value) || 0;
+        const days = Math.max(1, Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)));
+        const originalTotal = (days * pricePerDay * rentalArea / area);
+
+        document.getElementById('originalCostDisplay').innerText = originalTotal.toLocaleString('vi-VN') + ' VNĐ';
+
+        let finalTotal = originalTotal;
+        const voucherDiscountCard = document.getElementById('voucherDiscountCard');
+        const voucherAppliedText = document.getElementById('voucherAppliedText');
+
+        if (selectedVoucher && selectedVoucher.discountAmount) {
+            const discountAmount = selectedVoucher.discountAmount;
+            finalTotal = Math.max(0, originalTotal - discountAmount);
+
+            document.getElementById('voucherDiscountDisplay').innerText = '- ' + discountAmount.toLocaleString('vi-VN') + ' VNĐ';
+            voucherDiscountCard.style.display = 'block';
+            voucherAppliedText.style.display = 'block';
+        } else {
+            voucherDiscountCard.style.display = 'none';
+            voucherAppliedText.style.display = 'none';
+        }
+
+        document.getElementById('finalCostDisplay').innerText = finalTotal.toLocaleString('vi-VN') + ' VNĐ';
+    }
+
+    function applyVoucher() {
+        if (!selectedVoucher) return alert('Vui lòng chọn một voucher khả dụng.');
+        document.getElementById('voucherId').value = selectedVoucher.id;
+        document.getElementById('voucherModal').style.display = 'none';
+        alert('Đã áp dụng voucher: ' + selectedVoucher.name);
+        calculateTotal();
+    }
+
+    function removeVoucher() {
+        selectedVoucher = null;
+        document.getElementById('voucherId').value = '';
+        calculateTotal();
+        alert('Đã xóa voucher');
+    }
+
+    window.onclick = function(event) {
+        const modal = document.getElementById('voucherModal');
+        if (event.target === modal) modal.style.display = 'none';
+    };
+
+    window.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('rentalArea').addEventListener('input', calculateTotal);
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const rentalAreaInput = document.getElementById('rentalArea');
+            validateRentalArea(rentalAreaInput);
+
+            if (!this.checkValidity()) {
+                e.preventDefault();
+                alert('Vui lòng kiểm tra lại thông tin nhập vào.');
+            }
+        });
+        calculateTotal();
+    });
+    /*]]>*/
 </script>
 </body>
 </html>
