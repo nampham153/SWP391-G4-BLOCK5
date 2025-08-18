@@ -34,16 +34,52 @@
                 </a>
             </li>
 
-            <!-- User Profile -->
+
             <li class="profile-menu" style="position:relative;">
-                <a href="#profile" title="Tài khoản" style="color:white;">
+                <a href="javascript:void(0);" id="profileMenuBtn" title="Tài khoản" style="color:white;">
                     <i class="fa fa-user-circle" style="font-size: 1.8rem;"></i>
                 </a>
-                <ul class="profile-dropdown" style="position:absolute;right:0;top:40px;background:white;padding:0;border-radius:10px;box-shadow:0 4px 12px rgba(0,0,0,0.2);z-index:999;width:200px;">
-                    <li style="border-bottom: 1px solid #eee;"><a href="#profile-info" style="display:block;padding:10px 16px;text-decoration:none;color:#333;"><i class="fa fa-id-card"></i> Thông tin cá nhân</a></li>
-                    <li style="border-bottom: 1px solid #eee;"><a href="#profile-update" style="display:block;padding:10px 16px;text-decoration:none;color:#333;"><i class="fa fa-edit"></i> Cập nhật thông tin</a></li>
-                    <li style="border-bottom: 1px solid #eee;"><a href="#profile-forgot" style="display:block;padding:10px 16px;text-decoration:none;color:#333;"><i class="fa fa-unlock-alt"></i> Quên mật khẩu</a></li>
-                    <li style="border-bottom: 1px solid #eee;"><a href="#logout" style="display:block;padding:10px 16px;text-decoration:none;color:#333;"><i class="fa fa-sign-out-alt"></i> Đăng xuất</a></li>
+                <ul class="profile-dropdown" id="profileDropdown"
+                    style="display:none;position:absolute;right:0;top:40px;background:white;
+           padding:0;border-radius:10px;box-shadow:0 4px 12px rgba(0,0,0,0.2);
+           z-index:999;width:200px;">
+
+                    <!-- Nếu đã đăng nhập -->
+                    <li sec:authorize="isAuthenticated()" style="border-bottom: 1px solid #eee;">
+                        <a th:href="@{/profile(tab='info')}"
+                           style="display:block;padding:10px 16px;text-decoration:none;color:#333;">
+                            <i class="fa fa-id-card"></i> Thông tin cá nhân
+                        </a>
+                    </li>
+                    <li sec:authorize="isAuthenticated()" style="border-bottom: 1px solid #eee;">
+                        <a th:href="@{/profile(tab='update')}"
+                           style="display:block;padding:10px 16px;text-decoration:none;color:#333;">
+                            <i class="fa fa-edit"></i> Cập nhật thông tin
+                        </a>
+                    </li>
+                    <li sec:authorize="isAuthenticated()">
+                        <form th:action="@{/api/logout}" method="get" style="margin:0;">
+                            <button type="submit"
+                                    style="background:none;border:none;padding:10px 16px;
+                           width:100%;text-align:left;color:#333;cursor:pointer;">
+                                <i class="fa fa-sign-out-alt"></i> Đăng xuất
+                            </button>
+                        </form>
+                    </li>
+
+                    <!-- Nếu chưa đăng nhập -->
+                    <li sec:authorize="isAnonymous()" style="border-bottom: 1px solid #eee;">
+                        <a th:href="@{/api/login}"
+                           style="display:block;padding:10px 16px;text-decoration:none;color:#333;">
+                            <i class="fa fa-sign-in-alt"></i> Đăng nhập
+                        </a>
+                    </li>
+                    <li sec:authorize="isAnonymous()">
+                        <a th:href="@{/register}"
+                           style="display:block;padding:10px 16px;text-decoration:none;color:#333;">
+                            <i class="fa fa-user-plus"></i> Đăng ký
+                        </a>
+                    </li>
                 </ul>
             </li>
         </ul>
@@ -204,6 +240,21 @@
 <footer style="background:#333;color:white;padding:20px;text-align:center;">
     <p>&copy; 2025 QVL Storage. All rights reserved.</p>
 </footer>
-
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+      const btn = document.getElementById("profileMenuBtn");
+      const dropdown = document.getElementById("profileDropdown");
+      btn.addEventListener("click", function(e) {
+        e.preventDefault();
+        dropdown.style.display = (dropdown.style.display === "block") ? "none" : "block";
+      });
+      // Đóng menu khi click ngoài vùng
+      window.addEventListener("click", function(event) {
+        if (!btn.contains(event.target) && !dropdown.contains(event.target)) {
+          dropdown.style.display = "none";
+        }
+      });
+    });
+</script>
 </body>
 </html>

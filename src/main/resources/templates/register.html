@@ -188,7 +188,7 @@
         messageDiv.className = 'message';
 
         try {
-            const response = await fetch('/api/auth/register', {
+            const response = await fetch('/api/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(registerData)
@@ -200,7 +200,7 @@
                 messageDiv.textContent = text || 'Đăng ký thành công!';
                 // Sau 1-2s chuyển qua trang login
                 setTimeout(() => {
-                    window.location.href = "login.html";
+                    window.location.href = "/api/login";
                 }, 1500);
             } else {
                 messageDiv.className = 'message error';
