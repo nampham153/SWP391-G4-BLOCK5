@@ -504,6 +504,80 @@
             color: #007bff;
         }
 
+        /* Search and Sort Button Styles */
+        .search-container {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .search-container input {
+            flex: 1;
+            min-width: 250px;
+        }
+        .btn-search, .btn-clear {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+        .btn-search {
+            background: #007bff;
+            color: white;
+        }
+        .btn-search:hover {
+            background: #0056b3;
+        }
+        .btn-clear {
+            background: #6c757d;
+            color: white;
+        }
+        .btn-clear:hover {
+            background: #545b62;
+        }
+        .sort-container {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .btn-sort {
+            padding: 8px 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.2s;
+            color: #495057;
+        }
+        .btn-sort:hover {
+            border-color: #007bff;
+            color: #007bff;
+        }
+        .btn-sort.active {
+            background: #007bff;
+            border-color: #007bff;
+            color: white;
+        }
+        .filter-group {
+            margin-bottom: 15px;
+        }
+        .filter-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #495057;
+        }
+
         /* Mobile Responsive */
         @media (max-width: 768px) {
             .sidebar {
@@ -574,21 +648,48 @@
         <!-- Page Header -->
         <div class="page-header">
             <h2 class="page-title">Cơ sở dữ liệu khách hàng</h2>
-            <div class="page-actions">
-                <button class="btn-secondary btn-back">
-                    <i class="fas fa-arrow-left"></i>
-                    Về trang chủ
-                </button>
-                <button class="btn-primary">
-                    <i class="fas fa-plus"></i>
-                    Thêm khách hàng mới
-                </button>
-            </div>
+<!--            <div class="page-actions">-->
+<!--                <button class="btn-secondary btn-back">-->
+<!--                    <a href="/admin" style="color: inherit; text-decoration: none;">-->
+<!--                        <i class="fas fa-arrow-left"></i>-->
+<!--                        Về trang chủ-->
+<!--                    </a>-->
+<!--                </button>-->
+<!--                -->
+<!--            </div>-->
         </div>
 
         <div class="filter-section">
             <div class="filter-group">
-                <input type="text" id="searchInput" placeholder="Nhập ID hoặc tên khách hàng..." class="filter-select">
+                <label for="searchInput">Tìm theo ID hoặc tên:</label>
+                <div class="search-container">
+                    <input type="text" id="searchInput" placeholder="Nhập ID hoặc tên khách hàng..." class="filter-select">
+                    <button type="button" id="searchBtn" class="btn-search">
+                        <i class="fas fa-search"></i>
+                        Tìm kiếm
+                    </button>
+                    <button type="button" id="clearBtn" class="btn-clear">
+                        <i class="fas fa-times"></i>
+                        Xóa
+                    </button>
+                </div>
+            </div>
+            <div class="filter-group">
+                <label>Sắp xếp theo tên:</label>
+                <div class="sort-container">
+                    <button type="button" id="sortAscBtn" class="btn-sort">
+                        <i class="fas fa-sort-alpha-down"></i>
+                        A-Z
+                    </button>
+                    <button type="button" id="sortDescBtn" class="btn-sort">
+                        <i class="fas fa-sort-alpha-up"></i>
+                        Z-A
+                    </button>
+                    <button type="button" id="sortResetBtn" class="btn-sort active">
+                        <i class="fas fa-sort"></i>
+                        Mặc định
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -683,8 +784,11 @@
     let allRows = [];
     let filteredRows = [];
 
-    // Tìm kiếm realtime theo ID hoặc tên
-    function filterRows() {
+    // Sorting variables
+    let sortOrder = 'none'; // 'none', 'asc', 'desc'
+
+    // Tìm kiếm theo ID hoặc tên
+    function performSearch() {
         const inputElement = document.getElementById('searchInput');
         if (!inputElement) return;
         const searchTerm = inputElement.value.trim().toLowerCase();
@@ -705,10 +809,83 @@
             }
         });
 
+        // Apply current sort order to filtered results
+        applySortOrder();
+
         // Reset to first page when filtering
         currentPage = 1;
         showPage(currentPage);
         updateTotalCount();
+    }
+
+    // Apply current sort order to filtered results
+    function applySortOrder() {
+        if (sortOrder !== 'none') {
+            filteredRows.sort((a, b) => {
+                const nameA = a.querySelector('.customer-name').textContent.trim().toLowerCase();
+                const nameB = b.querySelector('.customer-name').textContent.trim().toLowerCase();
+
+                if (sortOrder === 'asc') {
+                    return nameA.localeCompare(nameB, 'vi', { sensitivity: 'base' });
+                } else {
+                    return nameB.localeCompare(nameA, 'vi', { sensitivity: 'base' });
+                }
+            });
+        }
+    }
+
+    // Sort functions
+    function sortAscending() {
+        sortOrder = 'asc';
+        updateSortButtons();
+        applySortOrder();
+        currentPage = 1;
+        showPage(currentPage);
+    }
+
+    function sortDescending() {
+        sortOrder = 'desc';
+        updateSortButtons();
+        applySortOrder();
+        currentPage = 1;
+        showPage(currentPage);
+    }
+
+    function resetSort() {
+        sortOrder = 'none';
+        updateSortButtons();
+        // Re-filter to get original order
+        performSearch();
+    }
+
+    // Update sort button states
+    function updateSortButtons() {
+        const sortAscBtn = document.getElementById('sortAscBtn');
+        const sortDescBtn = document.getElementById('sortDescBtn');
+        const sortResetBtn = document.getElementById('sortResetBtn');
+
+        // Remove active class from all buttons
+        [sortAscBtn, sortDescBtn, sortResetBtn].forEach(btn => {
+            if (btn) btn.classList.remove('active');
+        });
+
+        // Add active class to current sort button
+        if (sortOrder === 'asc' && sortAscBtn) {
+            sortAscBtn.classList.add('active');
+        } else if (sortOrder === 'desc' && sortDescBtn) {
+            sortDescBtn.classList.add('active');
+        } else if (sortResetBtn) {
+            sortResetBtn.classList.add('active');
+        }
+    }
+
+    // Clear search
+    function clearSearch() {
+        const inputElement = document.getElementById('searchInput');
+        if (inputElement) {
+            inputElement.value = '';
+        }
+        performSearch();
     }
 
     // Show specific page
@@ -857,9 +1034,46 @@
     }
 
     // Event listeners
-    const searchInputEl = document.getElementById('searchInput');
-    if (searchInputEl) {
-        searchInputEl.addEventListener('input', filterRows);
+    function setupEventListeners() {
+        // Search input - realtime search as user types
+        const searchInputEl = document.getElementById('searchInput');
+        if (searchInputEl) {
+            searchInputEl.addEventListener('input', performSearch);
+            // Also search on Enter key
+            searchInputEl.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    performSearch();
+                }
+            });
+        }
+
+        // Search button
+        const searchBtn = document.getElementById('searchBtn');
+        if (searchBtn) {
+            searchBtn.addEventListener('click', performSearch);
+        }
+
+        // Clear button
+        const clearBtn = document.getElementById('clearBtn');
+        if (clearBtn) {
+            clearBtn.addEventListener('click', clearSearch);
+        }
+
+        // Sort buttons
+        const sortAscBtn = document.getElementById('sortAscBtn');
+        if (sortAscBtn) {
+            sortAscBtn.addEventListener('click', sortAscending);
+        }
+
+        const sortDescBtn = document.getElementById('sortDescBtn');
+        if (sortDescBtn) {
+            sortDescBtn.addEventListener('click', sortDescending);
+        }
+
+        const sortResetBtn = document.getElementById('sortResetBtn');
+        if (sortResetBtn) {
+            sortResetBtn.addEventListener('click', resetSort);
+        }
     }
 
     // Thu gọn sidebar cho mobile
@@ -876,9 +1090,11 @@
             if (menu) menu.classList.add('active');
         }
 
-        // Initialize pagination
+        // Initialize pagination and event listeners
         setTimeout(() => {
             initializePagination();
+            setupEventListeners();
+            updateSortButtons(); // Set initial button states
         }, 100);
     };
 </script>
