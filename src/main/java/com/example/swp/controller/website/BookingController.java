@@ -185,8 +185,15 @@ public class BookingController {
             return "redirect:/SWP/booking/" + storageId + "/booking?startDate=" + startDate + "&endDate=" + endDate;
         }
 
-        if (rentalArea <= 0 || rentalArea > storage.getArea()) {
-            redirectAttributes.addFlashAttribute("error", "Diện tích thuê không hợp lệ.");
+        if (rentalArea <= 0) {
+            redirectAttributes.addFlashAttribute("error", "Diện tích thuê phải lớn hơn 0.");
+            return "redirect:/SWP/booking/" + storageId + "/booking?startDate=" + startDate + "&endDate=" + endDate;
+        }
+
+        if (rentalArea > storage.getArea()) {
+            redirectAttributes.addFlashAttribute("error",
+                    "Diện tích thuê (" + rentalArea + " m²) không được vượt quá diện tích kho (" + storage.getArea()
+                            + " m²).");
             return "redirect:/SWP/booking/" + storageId + "/booking?startDate=" + startDate + "&endDate=" + endDate;
         }
 

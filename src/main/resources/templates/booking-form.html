@@ -107,6 +107,30 @@
       color: #1976d2;
       font-size: 16px;
     }
+
+    /* Error styling */
+    .error-input {
+      border-color: #dc3545 !important;
+      box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
+    }
+
+    .error-message {
+      background-color: #f8d7da;
+      border: 1px solid #f5c6cb;
+      border-radius: 4px;
+      color: #721c24;
+      padding: 8px 12px;
+      margin-top: 8px;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .error-message i {
+      color: #dc3545;
+      font-size: 14px;
+    }
   </style>
 </head>
 <body>
@@ -349,12 +373,14 @@
 
   const pricePerDay = /*[[${storage.pricePerDay}]]*/ 0;
   const area = /*[[${storage.area}]]*/ 1;
+  const remainArea = /*[[${remainArea}]]*/ 1;
   const startDate = new Date(/*[[${startDate}]]*/);
   const endDate = new Date(/*[[${endDate}]]*/);
 
   console.log('Initial data loaded:');
   console.log('pricePerDay:', pricePerDay);
   console.log('area:', area);
+  console.log('remainArea:', remainArea);
   console.log('startDate:', startDate);
   console.log('endDate:', endDate);
 
@@ -395,6 +421,51 @@
   }
   */
 
+  // Validation function cho diện tích thuê
+  function validateRentalArea() {
+    const rentalAreaInput = document.getElementById('rentalArea');
+    const rentalArea = parseFloat(rentalAreaInput.value) || 0;
+    const errorElement = document.getElementById('rentalAreaError');
+
+    // Xóa error message cũ nếu có
+    if (errorElement) {
+      errorElement.remove();
+    }
+
+    // Kiểm tra diện tích hợp lệ
+    if (rentalArea <= 0) {
+      showRentalAreaError('Diện tích thuê phải lớn hơn 0');
+      return false;
+    }
+
+    if (rentalArea > remainArea) {
+      showRentalAreaError(`Diện tích thuê không được vượt quá ${remainArea} m²`);
+      return false;
+    }
+
+    // Xóa border đỏ nếu hợp lệ
+    rentalAreaInput.classList.remove('error-input');
+    return true;
+  }
+
+  // Hiển thị lỗi cho diện tích thuê
+  function showRentalAreaError(message) {
+    const rentalAreaInput = document.getElementById('rentalArea');
+    const formGroup = rentalAreaInput.closest('.form-group');
+
+    // Thêm border đỏ cho input
+    rentalAreaInput.classList.add('error-input');
+
+    // Tạo element hiển thị lỗi
+    const errorElement = document.createElement('div');
+    errorElement.id = 'rentalAreaError';
+    errorElement.className = 'error-message';
+    errorElement.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${message}`;
+
+    // Thêm error message vào form group
+    formGroup.appendChild(errorElement);
+  }
+
   function calculateTotal() {
     console.log('calculateTotal called');
     console.log('pricePerDay:', pricePerDay);
@@ -406,6 +477,17 @@
     const rentalArea = parseFloat(rentalAreaInput ? rentalAreaInput.value : 0) || 0;
 
     console.log('rentalArea:', rentalArea);
+
+    // Validate diện tích trước khi tính toán
+    if (!validateRentalArea()) {
+      // Nếu diện tích không hợp lệ, hiển thị 0
+      const originalCostElement = document.getElementById('originalCostDisplay');
+      const finalCostElement = document.getElementById('finalCostDisplay');
+
+      if (originalCostElement) originalCostElement.innerText = '0 VNĐ';
+      if (finalCostElement) finalCostElement.innerText = '0 VNĐ';
+      return;
+    }
 
     // Tính số ngày
     const timeDiff = endDate.getTime() - startDate.getTime();
@@ -463,6 +545,18 @@
   };
   */
 
+  // Validation khi submit form
+  function validateForm() {
+    const isRentalAreaValid = validateRentalArea();
+
+    if (!isRentalAreaValid) {
+      alert('Vui lòng kiểm tra lại diện tích thuê!');
+      return false;
+    }
+
+    return true;
+  }
+
   window.addEventListener('DOMContentLoaded', () => {
     console.log('DOM loaded, setting up event listeners');
 
@@ -470,9 +564,22 @@
     if (rentalAreaInput) {
       rentalAreaInput.addEventListener('input', calculateTotal);
       rentalAreaInput.addEventListener('change', calculateTotal);
+      rentalAreaInput.addEventListener('blur', validateRentalArea);
       console.log('Event listeners added to rentalArea input');
     } else {
       console.error('rentalArea input not found');
+    }
+
+    // Thêm validation cho form submit
+    const form = document.querySelector('form');
+    if (form) {
+      form.addEventListener('submit', (event) => {
+        if (!validateForm()) {
+          event.preventDefault();
+          return false;
+        }
+      });
+      console.log('Form validation added');
     }
 
     // Gọi calculateTotal() sau khi DOM đã load hoàn toàn
