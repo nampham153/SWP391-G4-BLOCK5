@@ -325,7 +325,7 @@
                             </svg>
                         </button>
                     </div>
-                    <form th:action="@{/SWP/booking/{storageId}/booking(storageId=${storage.storageid})}" method="get" class="space-y-4">
+                    <form th:action="@{/SWP/booking/{storageId}/booking(storageId=${storage.storageid})}" method="post" class="space-y-4">
                         <div>
                             <label class="block text-sm font-medium mb-1 text-gray-700">Ngày bắt đầu</label>
                             <input type="date" id="startDate" name="startDate" required

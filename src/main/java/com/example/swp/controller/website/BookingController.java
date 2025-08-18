@@ -43,7 +43,60 @@ public class BookingController {
      */
 
     /**
-     * Hiển thị form booking với thông tin kho và khách hàng
+     * Xử lý POST request từ modal chọn ngày và chuyển đến form booking
+     */
+    @PostMapping("/booking/{storageId}/booking")
+    public String processDateSelection(@PathVariable int storageId,
+            @RequestParam("startDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam("endDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            Model model,
+            HttpSession session,
+            RedirectAttributes redirectAttributes) {
+
+        // Kiểm tra storage có tồn tại không
+        Optional<Storage> optionalStorage = storageService.findByID(storageId);
+        if (optionalStorage.isEmpty()) {
+            return "redirect:/SWP/storages";
+        }
+
+        Storage storage = optionalStorage.get();
+
+        // Kiểm tra ngày hợp lệ
+        if (!endDate.isAfter(startDate)) {
+            redirectAttributes.addFlashAttribute("error", "Ngày kết thúc phải sau ngày bắt đầu");
+            return "redirect:/SWP/storages/" + storageId;
+        }
+
+        // Kiểm tra kho có còn trống không
+        if (!storage.isStatus()) {
+            redirectAttributes.addFlashAttribute("error", "Kho này hiện đang được thuê");
+            return "redirect:/SWP/storages/" + storageId;
+        }
+
+        // Lấy thông tin khách hàng từ session
+        Customer customer = (Customer) session.getAttribute("loggedInCustomer");
+
+        // Tính diện tích còn lại (giả sử toàn bộ diện tích đều có thể thuê)
+        double remainArea = storage.getArea();
+
+        // Tạo order token để bảo mật
+        String orderToken = UUID.randomUUID().toString();
+        session.setAttribute("orderToken", orderToken);
+
+        // Thêm attributes vào model
+        model.addAttribute("storage", storage);
+        model.addAttribute("customer", customer);
+        model.addAttribute("startDate", startDate);
+        model.addAttribute("endDate", endDate);
+        model.addAttribute("remainArea", remainArea);
+        model.addAttribute("orderToken", orderToken);
+
+        return "booking-form";
+    }
+
+    /**
+     * Hiển thị form booking với thông tin kho và khách hàng (GET method - để
+     * backward compatibility)
      */
     @GetMapping("/booking/{storageId}/booking")
     public String showBookingForm(@PathVariable int storageId,

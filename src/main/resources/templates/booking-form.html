@@ -30,19 +30,103 @@
       font-style: italic;
       display: none;
     }
+
+    /* Header styles */
+    .header-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+    }
+
+    .header-left h1 {
+      margin-left: 500px;
+      color: #2c3e50;
+    }
+
+    .header-left p {
+      margin: 0;
+      color: #6c757d;
+    }
+
+    /* Back button styles */
+    .back-btn {
+      background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 2px 8px rgba(108, 117, 125, 0.2);
+    }
+
+    .back-btn:hover {
+      background: linear-gradient(135deg, #495057 0%, #343a40 100%);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+    }
+
+    .back-btn i {
+      font-size: 12px;
+    }
+
+    /* Readonly input styles */
+    .readonly-input {
+      background-color: #f8f9fa !important;
+      border-color: #e9ecef !important;
+      color: #6c757d !important;
+      cursor: not-allowed;
+    }
+
+    .readonly-input:focus {
+      box-shadow: none !important;
+      border-color: #e9ecef !important;
+    }
+
+    /* Customer note styles */
+    .customer-note {
+      background-color: #e3f2fd;
+      border: 1px solid #bbdefb;
+      border-radius: 6px;
+      padding: 12px;
+      margin-top: 15px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      color: #1565c0;
+    }
+
+    .customer-note i {
+      color: #1976d2;
+      font-size: 16px;
+    }
   </style>
 </head>
 <body>
 <div class="page-wrapper">
-  <!-- NAVBAR -->
-  <div th:replace="taskbar/customer-navbar :: customerNavbar"></div>
-
   <!-- MAIN CONTENT -->
   <main class="main">
     <div class="container">
       <div class="page-header">
-        <h1>Đặt kho</h1>
-        <p>Xác nhận thông tin và hoàn tất việc đặt kho</p>
+        <div class="header-content">
+          <div class="header-left">
+            <h1>Đặt kho</h1>
+
+          </div>
+          <div class="header-right">
+            <button type="button" class="back-btn" onclick="goBack()">
+              <i class="fas fa-arrow-left"></i>
+              Quay lại
+            </button>
+          </div>
+        </div>
       </div>
 
       <div class="booking-container">
@@ -154,30 +238,51 @@
             <small class="form-text" th:text="'Có thể thuê tối đa ' + ${remainArea} + ' m².'"></small>
           </div>
 
-          <div class="form-group">
-            <label for="name" class="form-label">Họ và tên *</label>
-            <input type="text" id="name" name="name" class="form-input"
-                   th:value="${customer != null ? customer.fullname : ''}" required maxlength="50" />
-          </div>
-          <div class="form-group">
-            <label for="email" class="form-label">Email *</label>
-            <input type="email" id="email" name="email" class="form-input"
-                   th:value="${customer != null ? customer.email : ''}" required />
-          </div>
-          <div class="form-group">
-            <label for="phone" class="form-label">Số điện thoại *</label>
-            <input type="tel" id="phone" name="phone" class="form-input"
-                   th:value="${customer != null ? customer.phone : ''}" required pattern="[0-9]{10,11}" />
-          </div>
-          <div class="form-group">
-            <label for="id_citizen" class="form-label">Số CCCD *</label>
-            <input type="text"
-                   id="id_citizen"
-                   name="id_citizen"
-                   class="form-input"
-                   maxlength="20"
-                   th:value="${customer != null ? customer.id_citizen : ''}"
-                   required />
+          <!-- Customer Information Section -->
+          <div class="form-section">
+            <h3 class="section-title"><i class="fas fa-user"></i> Thông tin khách hàng</h3>
+
+            <div class="form-group">
+              <label for="name" class="form-label">Họ và tên *</label>
+              <input type="text" id="name" name="name" class="form-input readonly-input"
+                     th:value="${customer != null ? customer.fullname : ''}" readonly required />
+            </div>
+
+            <div class="form-group">
+              <label for="email" class="form-label">Email *</label>
+              <input type="email" id="email" name="email" class="form-input readonly-input"
+                     th:value="${customer != null ? customer.email : ''}" readonly required />
+            </div>
+
+            <div class="form-group">
+              <label for="phone" class="form-label">Số điện thoại *</label>
+              <input type="tel" id="phone" name="phone" class="form-input readonly-input"
+                     th:value="${customer != null ? customer.phone : ''}" readonly required />
+            </div>
+
+            <div class="form-group">
+              <label for="id_citizen" class="form-label">Số CCCD *</label>
+              <input type="text" id="id_citizen" name="id_citizen" class="form-input readonly-input"
+                     th:value="${customer != null ? customer.id_citizen : ''}" readonly required />
+            </div>
+
+            <!-- Additional customer info if available -->
+            <div th:if="${customer != null && customer.address != null && !customer.address.isEmpty()}" class="form-group">
+              <label for="address" class="form-label">Địa chỉ</label>
+              <input type="text" id="address" class="form-input readonly-input"
+                     th:value="${customer.address}" readonly />
+            </div>
+
+            <div th:if="${customer != null && customer.dateOfBirth != null}" class="form-group">
+              <label for="dateOfBirth" class="form-label">Ngày sinh</label>
+              <input type="date" id="dateOfBirth" class="form-input readonly-input"
+                     th:value="${customer.dateOfBirth}" readonly />
+            </div>
+
+            <div class="customer-note">
+              <i class="fas fa-info-circle"></i>
+              <span>Thông tin khách hàng được lấy từ tài khoản đã đăng nhập và không thể chỉnh sửa.</span>
+            </div>
           </div>
 
 
@@ -217,6 +322,17 @@
     // Highlight thumbnail
     document.querySelectorAll('.thumb-img').forEach(e => e.classList.remove('active'));
     img.classList.add('active');
+  }
+
+  // Function to go back to previous page
+  function goBack() {
+    // Try to go back in browser history
+    if (window.history.length > 1) {
+      window.history.back();
+    } else {
+      // Fallback: redirect to storage list
+      window.location.href = '/SWP/storages';
+    }
   }
 </script>
 
