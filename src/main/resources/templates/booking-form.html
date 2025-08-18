@@ -233,6 +233,7 @@
                    min="1"
                    th:attr="max=${remainArea}"
                    th:placeholder="'Tối đa ' + ${remainArea} + ' m²'"
+                   value="1"
                    required
                    step="0.01" />
             <small class="form-text" th:text="'Có thể thuê tối đa ' + ${remainArea} + ' m².'"></small>
@@ -351,6 +352,12 @@
   const startDate = new Date(/*[[${startDate}]]*/);
   const endDate = new Date(/*[[${endDate}]]*/);
 
+  console.log('Initial data loaded:');
+  console.log('pricePerDay:', pricePerDay);
+  console.log('area:', area);
+  console.log('startDate:', startDate);
+  console.log('endDate:', endDate);
+
   // Comment: Voucher functions tạm thời ẩn
   /*
   function toggleVoucherModal() {
@@ -389,37 +396,48 @@
   */
 
   function calculateTotal() {
-    const rentalArea = parseFloat(document.getElementById('rentalArea').value) || 0;
-    const days = Math.max(1, Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)));
-    const originalTotal = (days * pricePerDay * rentalArea / area);
+    console.log('calculateTotal called');
+    console.log('pricePerDay:', pricePerDay);
+    console.log('area:', area);
+    console.log('startDate:', startDate);
+    console.log('endDate:', endDate);
+
+    const rentalAreaInput = document.getElementById('rentalArea');
+    const rentalArea = parseFloat(rentalAreaInput ? rentalAreaInput.value : 0) || 0;
+
+    console.log('rentalArea:', rentalArea);
+
+    // Tính số ngày
+    const timeDiff = endDate.getTime() - startDate.getTime();
+    const days = Math.max(1, Math.ceil(timeDiff / (1000 * 60 * 60 * 24)));
+
+    console.log('days:', days);
+
+    // Tính tổng chi phí gốc - theo công thức trong controller
+    const originalTotal = days * pricePerDay * (rentalArea / area);
+
+    console.log('originalTotal calculation:', days, '*', pricePerDay, '*', '(', rentalArea, '/', area, ') =', originalTotal);
 
     // Hiển thị tổng chi phí gốc
-    document.getElementById('originalCostDisplay').innerText = originalTotal.toLocaleString('vi-VN') + ' VNĐ';
-
-    // Comment: Voucher calculation tạm thời ẩn
-    /*
-    let finalTotal = originalTotal;
-    const voucherDiscountCard = document.getElementById('voucherDiscountCard');
-    const voucherAppliedText = document.getElementById('voucherAppliedText');
-
-    if (selectedVoucher && selectedVoucher.discountAmount) {
-      const discountAmount = selectedVoucher.discountAmount;
-      finalTotal = Math.max(0, originalTotal - discountAmount);
-
-      document.getElementById('voucherDiscountDisplay').innerText = '- ' + discountAmount.toLocaleString('vi-VN') + ' VNĐ';
-      voucherDiscountCard.style.display = 'block';
-      voucherAppliedText.style.display = 'block';
+    const originalCostElement = document.getElementById('originalCostDisplay');
+    if (originalCostElement) {
+      originalCostElement.innerText = originalTotal.toLocaleString('vi-VN') + ' VNĐ';
+      console.log('Updated originalCostDisplay:', originalTotal.toLocaleString('vi-VN') + ' VNĐ');
     } else {
-      voucherDiscountCard.style.display = 'none';
-      voucherAppliedText.style.display = 'none';
+      console.error('originalCostDisplay element not found');
     }
-    */
 
     // Tạm thời không có voucher, finalTotal = originalTotal
     let finalTotal = originalTotal;
 
     // Hiển thị tổng thanh toán cuối cùng
-    document.getElementById('finalCostDisplay').innerText = finalTotal.toLocaleString('vi-VN') + ' VNĐ';
+    const finalCostElement = document.getElementById('finalCostDisplay');
+    if (finalCostElement) {
+      finalCostElement.innerText = finalTotal.toLocaleString('vi-VN') + ' VNĐ';
+      console.log('Updated finalCostDisplay:', finalTotal.toLocaleString('vi-VN') + ' VNĐ');
+    } else {
+      console.error('finalCostDisplay element not found');
+    }
   }
 
   // Comment: Voucher functions tạm thời ẩn
@@ -446,8 +464,22 @@
   */
 
   window.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('rentalArea').addEventListener('input', calculateTotal);
-    calculateTotal();
+    console.log('DOM loaded, setting up event listeners');
+
+    const rentalAreaInput = document.getElementById('rentalArea');
+    if (rentalAreaInput) {
+      rentalAreaInput.addEventListener('input', calculateTotal);
+      rentalAreaInput.addEventListener('change', calculateTotal);
+      console.log('Event listeners added to rentalArea input');
+    } else {
+      console.error('rentalArea input not found');
+    }
+
+    // Gọi calculateTotal() sau khi DOM đã load hoàn toàn
+    setTimeout(() => {
+      console.log('Calling calculateTotal() after DOM load');
+      calculateTotal();
+    }, 100);
   });
   /*]]>*/
 </script>
