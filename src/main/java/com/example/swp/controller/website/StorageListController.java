@@ -1,13 +1,17 @@
 package com.example.swp.controller.website;
 
+import com.example.swp.entity.Manager;
+import com.example.swp.entity.Staff;
 import com.example.swp.entity.Storage;
 import com.example.swp.service.StorageService;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.MediaType;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,7 +28,25 @@ public class StorageListController {
             @RequestParam(required = false) String storageName,
             @RequestParam(required = false) String city,
             @RequestParam(required = false) String status,
-            Model model) {
+            Model model,
+            HttpSession session,
+            RedirectAttributes redirectAttributes) {
+
+        // Kiểm tra xem có phải staff hoặc manager đang truy cập không
+        Staff staff = (Staff) session.getAttribute("loggedInStaff");
+        Manager manager = (Manager) session.getAttribute("loggedInManager");
+
+        if (staff != null) {
+            redirectAttributes.addFlashAttribute("error",
+                    "Trang này chỉ dành cho khách hàng. Bạn đã được chuyển về trang quản lý khách hàng.");
+            return "redirect:/SWP/customers";
+        }
+
+        if (manager != null) {
+            redirectAttributes.addFlashAttribute("error",
+                    "Trang này chỉ dành cho khách hàng. Bạn đã được chuyển về trang quản lý khách hàng.");
+            return "redirect:/admin/manager-customer-list";
+        }
         try {
             // Lấy tất cả storage từ database
             List<Storage> allStorages = storageService.getAll();
