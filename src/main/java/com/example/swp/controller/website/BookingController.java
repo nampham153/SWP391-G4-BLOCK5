@@ -3,6 +3,7 @@ package com.example.swp.controller.website;
 import com.example.swp.entity.Storage;
 import com.example.swp.entity.Customer;
 import com.example.swp.service.StorageService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -30,6 +31,40 @@ public class BookingController {
     @Autowired
     private StorageService storageService;
 
+    /**
+     * Helper method để kiểm tra và lấy customer từ session
+     */
+    private Customer getLoggedInCustomer(HttpSession session) {
+        Customer customer = (Customer) session.getAttribute("loggedInCustomer");
+        System.out.println("DEBUG - Session ID: " + session.getId());
+        System.out.println("DEBUG - Customer from session: " + (customer != null ? customer.getEmail() : "null"));
+        System.out.println("DEBUG - Email from session: " + session.getAttribute("email"));
+        System.out.println("DEBUG - All session attributes:");
+        session.getAttributeNames().asIterator()
+                .forEachRemaining(name -> System.out.println("  " + name + " = " + session.getAttribute(name)));
+        return customer;
+    }
+
+    /**
+     * Test endpoint để kiểm tra session
+     */
+    @GetMapping("/test-session")
+    @ResponseBody
+    public String testSession(HttpSession session) {
+        Customer customer = getLoggedInCustomer(session);
+        return "Customer: " + (customer != null ? customer.getEmail() : "null");
+    }
+
+    /**
+     * Test page để kiểm tra session
+     */
+    @GetMapping("/session-test")
+    public String sessionTestPage(HttpSession session, Model model) {
+        Customer customer = getLoggedInCustomer(session);
+        model.addAttribute("customer", customer);
+        return "session-test";
+    }
+
     // Comment: Các service khác tạm thời ẩn vì chưa implement đầy đủ
     /*
      * @Autowired
@@ -53,6 +88,14 @@ public class BookingController {
             HttpSession session,
             RedirectAttributes redirectAttributes) {
 
+        // Kiểm tra customer đã đăng nhập chưa
+        Customer customer = getLoggedInCustomer(session);
+        if (customer == null) {
+            redirectAttributes.addFlashAttribute("error",
+                    "Bạn cần đăng nhập bằng tài khoản khách hàng để đặt thuê kho");
+            return "redirect:/api/login";
+        }
+
         // Kiểm tra storage có tồn tại không
         Optional<Storage> optionalStorage = storageService.findByID(storageId);
         if (optionalStorage.isEmpty()) {
@@ -72,9 +115,6 @@ public class BookingController {
             redirectAttributes.addFlashAttribute("error", "Kho này hiện đang được thuê");
             return "redirect:/SWP/storages/" + storageId;
         }
-
-        // Lấy thông tin khách hàng từ session
-        Customer customer = (Customer) session.getAttribute("loggedInCustomer");
 
         // Tính diện tích còn lại (giả sử toàn bộ diện tích đều có thể thuê)
         double remainArea = storage.getArea();
@@ -105,6 +145,12 @@ public class BookingController {
             Model model,
             HttpSession session) {
 
+        // Kiểm tra customer đã đăng nhập chưa
+        Customer customer = getLoggedInCustomer(session);
+        if (customer == null) {
+            return "redirect:/api/login?error=Bạn cần đăng nhập bằng tài khoản khách hàng để đặt thuê kho";
+        }
+
         // Kiểm tra storage có tồn tại không
         Optional<Storage> optionalStorage = storageService.findByID(storageId);
         if (optionalStorage.isEmpty()) {
@@ -117,9 +163,6 @@ public class BookingController {
         if (!endDate.isAfter(startDate)) {
             return "redirect:/SWP/storages/" + storageId + "?error=Ngày kết thúc phải sau ngày bắt đầu";
         }
-
-        // Lấy thông tin khách hàng từ session
-        Customer customer = (Customer) session.getAttribute("loggedInCustomer");
 
         // Comment: Voucher functionality tạm thời ẩn
         /*
@@ -162,6 +205,14 @@ public class BookingController {
             Model model,
             HttpSession session,
             RedirectAttributes redirectAttributes) {
+
+        // Kiểm tra customer đã đăng nhập chưa
+        Customer customer = getLoggedInCustomer(session);
+        if (customer == null) {
+            redirectAttributes.addFlashAttribute("error",
+                    "Bạn cần đăng nhập bằng tài khoản khách hàng để đặt thuê kho");
+            return "redirect:/api/login";
+        }
 
         // Kiểm tra order token để bảo mật
         String sessionToken = (String) session.getAttribute("orderToken");
