@@ -20,6 +20,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
 
+// ... phần đầu giữ nguyên
 
 @Configuration
 @EnableMethodSecurity(prePostEnabled = true)
@@ -63,13 +64,6 @@ public class WebSecurityConfig {
                 )
                 .sessionManagement(session -> session
                         .maximumSessions(1)
-                )
-                .formLogin(form -> form
-                        .loginPage("/api/login")
-                        .loginProcessingUrl("/api/login")
-                        .defaultSuccessUrl("/index", true)
-                        .failureUrl("/api/login?error=true")
-                        .permitAll()
                 )
                 .logout(logout -> logout
                         .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
