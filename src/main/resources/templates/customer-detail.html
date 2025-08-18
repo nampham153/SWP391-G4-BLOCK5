@@ -70,9 +70,11 @@
             </div>
             <div class="card-body">
                 <div class="action-buttons-detail">
-                    <form th:action="@{/SWP/customers/delete/{id}(id=${customer.id})}" method="post">
-                        <button type="submit" class="btn-action btn-danger">
-                            Ngưng hoạt động khách hàng
+                    <form th:action="@{/SWP/customers/delete/{id}(id=${customer.id})}" method="post"
+                          th:onsubmit="return confirm('Bạn có chắc chắn muốn ' + ((${#strings.toUpperCase(customer.getRoleName())} == 'BLOCKED') ? 'mở khóa' : 'khóa') + ' tài khoản khách hàng này?')">
+                        <button type="submit" class="btn-action btn-danger"
+                                th:text="${#strings.toUpperCase(customer.getRoleName())} == 'BLOCKED' ? 'Mở khóa tài khoản' : 'Khóa tài khoản'">
+                            Khóa tài khoản
                         </button>
                     </form>
                 </div>

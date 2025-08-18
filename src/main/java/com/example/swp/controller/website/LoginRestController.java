@@ -126,7 +126,7 @@ public class LoginRestController {
         } catch (Exception e) {
             e.printStackTrace(); // debug
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Đã xảy ra lỗi khi đăng nhập.");
+                    .body("Tài khoản của bạn đã bị khóa");
         }
     }
 

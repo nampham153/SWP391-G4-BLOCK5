@@ -38,4 +38,7 @@ public interface CustomerService {
 
     boolean existsByPhone(String phone);
 
+    // Khóa/mở khóa tài khoản
+    void toggleAccountStatus(int customerId);
+
 }

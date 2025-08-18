@@ -86,4 +86,19 @@ public class CustomerServiceImpl implements CustomerService {
         return customerRepository.existsByPhone(phone);
     }
 
+    @Override
+    public void toggleAccountStatus(int customerId) {
+        Customer customer = customerRepository.findById(customerId).orElse(null);
+        if (customer != null) {
+            if (customer.getRoleName() == RoleName.BLOCKED) {
+                // Mở khóa: chuyển về CUSTOMER
+                customer.setRoleName(RoleName.CUSTOMER);
+            } else {
+                // Khóa: chuyển thành BLOCKED
+                customer.setRoleName(RoleName.BLOCKED);
+            }
+            customerRepository.save(customer);
+        }
+    }
+
 }
