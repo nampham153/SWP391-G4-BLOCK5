@@ -1,8 +1,11 @@
 package com.example.swp.controller.website;
 
 import com.example.swp.entity.Customer;
+import com.example.swp.entity.Staff;
+import com.example.swp.entity.Manager;
 import com.example.swp.enums.RoleName;
 import com.example.swp.service.CustomerService;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -23,7 +26,32 @@ public class CustomerListController {
             @RequestParam(value = "role", required = false, defaultValue = "ALL") String role,
             @RequestParam(value = "name", required = false) String name,
             @RequestParam(value = "customerId", required = false) Integer customerId,
-            Model model) {
+            Model model,
+            HttpSession session,
+            RedirectAttributes redirectAttributes) {
+        
+        // Kiểm tra quyền truy cập - chỉ staff mới được vào
+        Staff staff = (Staff) session.getAttribute("loggedInStaff");
+        Manager manager = (Manager) session.getAttribute("loggedInManager");
+        Customer customer = (Customer) session.getAttribute("loggedInCustomer");
+        
+        if (customer != null) {
+            redirectAttributes.addFlashAttribute("error", 
+                "Bạn không có quyền truy cập trang này. Trang này chỉ dành cho nhân viên.");
+            return "redirect:/SWP";
+        }
+        
+        if (manager != null) {
+            redirectAttributes.addFlashAttribute("error", 
+                "Bạn không có quyền truy cập trang này. Trang này chỉ dành cho nhân viên.");
+            return "redirect:/admin/manager-customer-list";
+        }
+        
+        if (staff == null) {
+            redirectAttributes.addFlashAttribute("error", 
+                "Vui lòng đăng nhập với tài khoản nhân viên để truy cập trang này.");
+            return "redirect:/api/login";
+        }
         List<Customer> customers;
         if (customerId != null) {
             Customer found = customerService.getCustomer(customerId);
@@ -44,28 +72,74 @@ public class CustomerListController {
     }
 
     @GetMapping("/customers/{id}")
-    public String customerDetail(@PathVariable int id, Model model) {
-        Customer customer = customerService.getCustomer(id);
-        if (customer == null) {
+    public String customerDetail(@PathVariable int id, Model model, HttpSession session, RedirectAttributes redirectAttributes) {
+        
+        // Kiểm tra quyền truy cập - chỉ staff mới được vào
+        Staff staff = (Staff) session.getAttribute("loggedInStaff");
+        Manager manager = (Manager) session.getAttribute("loggedInManager");
+        Customer customer = (Customer) session.getAttribute("loggedInCustomer");
+        
+        if (customer != null) {
+            redirectAttributes.addFlashAttribute("error", 
+                "Bạn không có quyền truy cập trang này. Trang này chỉ dành cho nhân viên.");
+            return "redirect:/SWP";
+        }
+        
+        if (manager != null) {
+            redirectAttributes.addFlashAttribute("error", 
+                "Bạn không có quyền truy cập trang này. Trang này chỉ dành cho nhân viên.");
+            return "redirect:/admin/manager-customer-list";
+        }
+        
+        if (staff == null) {
+            redirectAttributes.addFlashAttribute("error", 
+                "Vui lòng đăng nhập với tài khoản nhân viên để truy cập trang này.");
+            return "redirect:/api/login";
+        }
+        Customer foundCustomer = customerService.getCustomer(id);
+        if (foundCustomer == null) {
             return "redirect:/SWP/customers";
         }
-        model.addAttribute("customer", customer);
+        model.addAttribute("customer", foundCustomer);
         return "customer-detail";
     }
 
     @PostMapping("/customers/delete/{id}")
-    public String toggleCustomerAccountStatus(@PathVariable int id, RedirectAttributes redirectAttributes) {
+    public String toggleCustomerAccountStatus(@PathVariable int id, RedirectAttributes redirectAttributes, HttpSession session) {
+        
+        // Kiểm tra quyền truy cập - chỉ staff mới được thực hiện
+        Staff staff = (Staff) session.getAttribute("loggedInStaff");
+        Manager manager = (Manager) session.getAttribute("loggedInManager");
+        Customer customer = (Customer) session.getAttribute("loggedInCustomer");
+        
+        if (customer != null) {
+            redirectAttributes.addFlashAttribute("error", 
+                "Bạn không có quyền thực hiện hành động này.");
+            return "redirect:/SWP";
+        }
+        
+        if (manager != null) {
+            redirectAttributes.addFlashAttribute("error", 
+                "Bạn không có quyền thực hiện hành động này.");
+            return "redirect:/admin";
+        }
+        
+        if (staff == null) {
+            redirectAttributes.addFlashAttribute("error", 
+                "Vui lòng đăng nhập với tài khoản nhân viên để thực hiện hành động này.");
+            return "redirect:/api/login";
+        }
         try {
-            Customer customer = customerService.getCustomer(id);
-            if (customer == null) {
+            Customer targetCustomer = customerService.getCustomer(id);
+            if (targetCustomer == null) {
                 redirectAttributes.addFlashAttribute("error", "Không tìm thấy khách hàng!");
                 return "redirect:/admin/manager-customer-list";
             }
 
-            String action = customer.getRoleName() == RoleName.BLOCKED ? "mở khóa" : "khóa";
+            String action = targetCustomer.getRoleName() == RoleName.BLOCKED ? "mở khóa" : "khóa";
             customerService.toggleAccountStatus(id);
             redirectAttributes.addFlashAttribute("success",
-                    "Đã " + action + " tài khoản khách hàng " + customer.getFullname() + " thành công!");
+                    "Đã " + action + " tài khoản khách hàng " + targetCustomer.getFullname() + " thành công!");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Có lỗi xảy ra: " + e.getMessage());
         }

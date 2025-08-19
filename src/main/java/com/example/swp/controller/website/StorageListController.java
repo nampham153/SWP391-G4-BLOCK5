@@ -1,5 +1,6 @@
 package com.example.swp.controller.website;
 
+import com.example.swp.entity.Customer;
 import com.example.swp.entity.Manager;
 import com.example.swp.entity.Staff;
 import com.example.swp.entity.Storage;
@@ -40,20 +41,27 @@ public class StorageListController {
             HttpSession session,
             RedirectAttributes redirectAttributes) {
 
-        // Kiểm tra xem có phải staff hoặc manager đang truy cập không
+        // Kiểm tra quyền truy cập - chỉ customer mới được vào
         Staff staff = (Staff) session.getAttribute("loggedInStaff");
         Manager manager = (Manager) session.getAttribute("loggedInManager");
+        Customer customer = (Customer) session.getAttribute("loggedInCustomer");
 
         if (staff != null) {
             redirectAttributes.addFlashAttribute("error",
-                    "Trang này chỉ dành cho khách hàng. Bạn đã được chuyển về trang quản lý khách hàng.");
+                    "Trang này chỉ dành cho khách hàng. Bạn đã được chuyển về trang nhân viên.");
             return "redirect:/SWP/customers";
         }
 
         if (manager != null) {
             redirectAttributes.addFlashAttribute("error",
-                    "Trang này chỉ dành cho khách hàng. Bạn đã được chuyển về trang quản lý khách hàng.");
+                    "Trang này chỉ dành cho khách hàng. Bạn đã được chuyển về trang quản lý.");
             return "redirect:/admin/manager-customer-list";
+        }
+        
+        if (customer == null) {
+            redirectAttributes.addFlashAttribute("error",
+                    "Vui lòng đăng nhập với tài khoản khách hàng để truy cập trang này.");
+            return "redirect:/api/login";
         }
         try {
             // Tạo Sort object
