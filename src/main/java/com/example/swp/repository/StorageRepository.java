@@ -1,6 +1,8 @@
 package com.example.swp.repository;
 
 import com.example.swp.entity.Storage;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -50,5 +52,19 @@ public interface StorageRepository extends JpaRepository<Storage, Integer> {
 
   @Query("SELECT DISTINCT s.city FROM Storage s WHERE s.city IS NOT NULL AND s.city != '' ORDER BY s.city ASC")
   List<String> findAllCities();
+
+  // Pagination methods with filters
+  @Query("""
+          SELECT s FROM Storage s
+          WHERE (:storageName IS NULL OR :storageName = '' OR LOWER(s.storagename) LIKE LOWER(CONCAT('%', :storageName, '%')))
+            AND (:city IS NULL OR :city = '' OR s.city = :city)
+            AND (:status IS NULL OR s.status = :status)
+      """)
+  Page<Storage> findStoragesWithFilters(
+      @Param("storageName") String storageName,
+      @Param("city") String city,
+      @Param("status") Boolean status,
+      Pageable pageable
+  );
 
 }

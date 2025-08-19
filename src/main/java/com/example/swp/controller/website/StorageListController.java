@@ -6,6 +6,10 @@ import com.example.swp.entity.Storage;
 import com.example.swp.service.StorageService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -28,6 +32,10 @@ public class StorageListController {
             @RequestParam(required = false) String storageName,
             @RequestParam(required = false) String city,
             @RequestParam(required = false) String status,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "12") int size,
+            @RequestParam(defaultValue = "storagename") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDir,
             Model model,
             HttpSession session,
             RedirectAttributes redirectAttributes) {
@@ -48,22 +56,40 @@ public class StorageListController {
             return "redirect:/admin/manager-customer-list";
         }
         try {
-            // Lấy tất cả storage từ database
-            List<Storage> allStorages = storageService.getAll();
-            System.out.println("All storages from database: " + allStorages.size());
-
-            // Filter storages based on search criteria
-            List<Storage> filteredStorages = filterStorages(allStorages, storageName, city, status);
-            System.out.println("Filtered storages: " + filteredStorages.size());
+            // Tạo Sort object
+            Sort sort = sortDir.equalsIgnoreCase("desc") ? 
+                Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
+            
+            // Tạo Pageable object
+            Pageable pageable = PageRequest.of(page, size, sort);
+            
+            // Lấy dữ liệu với phân trang và sắp xếp
+            Page<Storage> storagePage;
+            if ((storageName != null && !storageName.trim().isEmpty()) ||
+                (city != null && !city.trim().isEmpty()) ||
+                (status != null && !status.trim().isEmpty())) {
+                storagePage = storageService.getStoragesWithFilters(storageName, city, status, pageable);
+            } else {
+                storagePage = storageService.getAllStorages(pageable);
+            }
+            
+            System.out.println("Total storages: " + storagePage.getTotalElements());
+            System.out.println("Current page: " + storagePage.getNumber());
+            System.out.println("Total pages: " + storagePage.getTotalPages());
 
             // Lấy danh sách cities để hiển thị trong dropdown
             List<String> cities = storageService.findAllCities();
-            System.out.println("Cities found: " + cities.size());
-            System.out.println("Cities list: " + cities);
 
             // Thêm vào model
-            model.addAttribute("storages", filteredStorages);
+            model.addAttribute("storages", storagePage.getContent());
+            model.addAttribute("storagePage", storagePage);
             model.addAttribute("cities", cities);
+            model.addAttribute("currentPage", page);
+            model.addAttribute("totalPages", storagePage.getTotalPages());
+            model.addAttribute("totalElements", storagePage.getTotalElements());
+            model.addAttribute("size", size);
+            model.addAttribute("sortBy", sortBy);
+            model.addAttribute("sortDir", sortDir);
 
             // Keep search parameters for form persistence
             model.addAttribute("searchStorageName", storageName);

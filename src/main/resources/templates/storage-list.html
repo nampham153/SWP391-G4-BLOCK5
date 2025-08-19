@@ -2,14 +2,418 @@
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Danh sách kho</title>
     <link rel="stylesheet" th:href="@{/css/storage-list.css}">
     <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* General Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f4f7fa;
+            color: #333;
+        }
+
+        .page-wrapper {
+            max-width: 1900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Hero Section */
+        .hero-section {
+            color: white;
+            padding: 60px 20px;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .hero-content h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .hero-content p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        /* Container */
+        .container {
+            padding: 20px;
+        }
+
+        /* Search Section */
+        .search-section {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+
+        .search-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            align-items: end;
+        }
+
+        .form-group {
+            margin: 0;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #444;
+        }
+
+        .form-input, .form-select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-input:focus, .form-select:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
+        }
+
+        .input-with-icon {
+            position: relative;
+        }
+
+        .search-indicator {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        /* Controls Section */
+        .controls-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .sort-controls, .page-size-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sort-controls label, .page-size-controls label {
+            font-weight: 600;
+            color: #444;
+        }
+
+        /* Results Info */
+        .results-info {
+            margin-bottom: 20px;
+            font-size: 1rem;
+            color: #555;
+            text-align: center;
+        }
+
+        /* Storage Grid */
+        .storage-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .storage-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .storage-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: #f8f9fa;
+        }
+
+        .storage-name {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .status-available {
+            background: #e6f4ea;
+            color: #28a745;
+        }
+
+        .status-rented {
+            background: #f8d7da;
+            color: #dc3545;
+        }
+
+        .card-content {
+            padding: 20px;
+        }
+
+        .storage-info .info-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            font-size: 1rem;
+            color: #555;
+        }
+
+        .card-footer {
+            padding: 15px 20px;
+            display: flex;
+            gap: 10px;
+            justify-content: space-between;
+            border-top: 1px solid #eee;
+        }
+
+        /* Button Styles */
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            text-align: center;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            border: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #007bff, #00c4ff);
+            color: white;
+            box-shadow: 0 2px 6px rgba(0, 123, 255, 0.3);
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #0056b3, #0096cc);
+            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .btn-wishlist {
+            background: #f1f3f5;
+            color: #333;
+            border: 1px solid #ddd;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-wishlist:hover {
+            background: #e9ecef;
+            border-color: #ccc;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .btn-wishlist.in-wishlist {
+            background: linear-gradient(135deg, #28a745, #34c759);
+            color: white;
+            border: none;
+            box-shadow: 0 2px 6px rgba(40, 167, 69, 0.3);
+        }
+
+        .btn-wishlist.in-wishlist:hover {
+            background: linear-gradient(135deg, #218838, #2ba84a);
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.5);
+            transform: translateY(-2px);
+        }
+
+        /* Pagination */
+        .pagination-section {
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        .pagination-nav {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .pagination {
+            list-style: none;
+            display: flex;
+            gap: 8px;
+        }
+
+        .page-item {
+            display: inline-block;
+        }
+
+        .page-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            border-radius: 8px;
+            background: #fff;
+            border: 1px solid #ddd;
+            color: #007bff;
+            text-decoration: none;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .page-link:hover {
+            background: linear-gradient(135deg, #007bff, #00c4ff);
+            color: white;
+            border-color: transparent;
+            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .page-item.active .page-link, .page-link.current {
+            background: linear-gradient(135deg, #007bff, #00c4ff);
+            color: white;
+            border-color: transparent;
+            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.5);
+            cursor: default;
+        }
+
+        .page-item.disabled .page-link {
+            background: #f5f5f5;
+            color: #aaa;
+            border-color: #ddd;
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+
+        /* No Results */
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .no-results-icon {
+            font-size: 2.5rem;
+            color: #dc3545;
+            margin-bottom: 15px;
+        }
+
+        .no-results h3 {
+            font-size: 1.5rem;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .no-results p {
+            color: #666;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 8px;
+            color: white;
+            font-size: 1rem;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            opacity: 1;
+        }
+
+        .toast.success {
+            background: #28a745;
+        }
+
+        .toast.error {
+            background: #dc3545;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .hero-content h1 {
+                font-size: 1.8rem;
+            }
+
+            .search-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .controls-section {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .storage-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-input, .form-select {
+                width: 100%;
+            }
+
+            .card-footer {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
 </head>
 <body>
 <div class="page-wrapper">
     <!-- Navigation Bar -->
-    <div th:replace="taskbar/customer-navbar :: customerNavbar"></div>
+    <div th:replace="~{taskbar/customer-navbar :: customerNavbar}"></div>
 
     <!-- Hero Section -->
     <div class="hero-section">
@@ -26,17 +430,16 @@
             <div class="search-card">
                 <form method="get" th:action="@{/SWP/storages}" class="search-form" onsubmit="return false;">
                     <div class="search-grid">
-                        <div class="form-group" style="margin-left: 20px">
+                        <div class="form-group">
                             <label for="storageName">Tên kho</label>
                             <div class="input-with-button">
-                                <div class="input-with-icon" style="position: relative;">
+                                <div class="input-with-icon">
                                     <input type="text"
                                            id="storageName"
                                            name="storageName"
                                            th:value="${searchStorageName}"
                                            placeholder="Tìm theo tên kho..."
                                            class="form-input"
-                                           style="width: 400px; padding-right: 40px;"
                                            oninput="performRealTimeSearchSafe(this)"
                                            onkeypress="handleEnterKey(event)"
                                            autocomplete="off">
@@ -46,7 +449,7 @@
                         </div>
                         <div class="form-group">
                             <label for="city">Thành phố</label>
-                            <div class="select-wrapper" style=" width: 300px;">
+                            <div class="select-wrapper">
                                 <select name="city" id="city" class="form-select" onchange="performRealTimeSearch()">
                                     <option value="">Tất cả thành phố</option>
                                     <option th:each="city : ${cities}"
@@ -59,16 +462,12 @@
                         </div>
                         <div class="form-group">
                             <label for="status">Trạng thái</label>
-                            <div class="select-with-button" style="width: 800px;">
-                                <div class="select-wrapper">
-                                    <select name="status" id="status" class="form-select" onchange="performRealTimeSearch()">
-                                        <option value="">Tất cả trạng thái</option>
-                                        <option value="true" th:selected="${searchStatus != null and searchStatus.equals('true')}">Còn trống</option>
-                                        <option value="false" th:selected="${searchStatus != null and searchStatus.equals('false')}">Đang thuê</option>
-                                    </select>
-                                </div>
-                                
-
+                            <div class="select-wrapper">
+                                <select name="status" id="status" class="form-select" onchange="performRealTimeSearch()">
+                                    <option value="">Tất cả trạng thái</option>
+                                    <option value="true" th:selected="${searchStatus != null and searchStatus.equals('true')}">Còn trống</option>
+                                    <option value="false" th:selected="${searchStatus != null and searchStatus.equals('false')}">Đang thuê</option>
+                                </select>
                             </div>
                         </div>
                     </div>
@@ -78,6 +477,37 @@
 
         <!-- Results Section -->
         <div class="results-section">
+            <!-- Sort and Pagination Controls -->
+            <div class="controls-section">
+                <div class="sort-controls">
+                    <label for="sortBy">Sắp xếp theo:</label>
+                    <select id="sortBy" name="sortBy" class="form-select" onchange="updateSort()">
+                        <option value="storagename" th:selected="${sortBy == 'storagename'}">Tên kho</option>
+                    </select>
+                    <select id="sortDir" name="sortDir" class="form-select" onchange="updateSort()">
+                        <option value="asc" th:selected="${sortDir == 'asc'}">Tăng dần</option>
+                        <option value="desc" th:selected="${sortDir == 'desc'}">Giảm dần</option>
+                    </select>
+                </div>
+                <div class="page-size-controls">
+                    <label for="pageSize">Hiển thị:</label>
+                    <select id="pageSize" name="size" class="form-select" onchange="updatePageSize()">
+                        <option value="6" th:selected="${size == 6}">6 kho/trang</option>
+                        <option value="12" th:selected="${size == 12}">12 kho/trang</option>
+                        <option value="24" th:selected="${size == 24}">24 kho/trang</option>
+                        <option value="48" th:selected="${size == 48}">48 kho/trang</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Results Info -->
+            <div class="results-info">
+                <span th:if="${totalElements > 0}">
+                    Hiển thị [[${currentPage * size + 1}]] - [[${(currentPage + 1) * size > totalElements ? totalElements : (currentPage + 1) * size}]]
+                    trong tổng số [[${totalElements}]] kho
+                </span>
+                <span th:if="${totalElements == 0}">Không tìm thấy kho nào</span>
+            </div>
 
             <!-- Storage Grid -->
             <div class="storage-grid" id="storageGrid">
@@ -98,14 +528,12 @@
                         </div>
                     </div>
                     <div class="card-footer">
-                        <a th:href="@{'/SWP/storages/' + ${storage.storageid}}" class="btn btn-primary" style="width: 190px">
-                            <i data-lucide="eye"></i>
-                            Chi tiết
+                        <a th:href="@{'/SWP/storages/' + ${storage.storageid}}" class="btn btn-primary">
+                            <i data-lucide="eye"></i> Chi tiết
                         </a>
                         <button class="btn btn-wishlist btn-cart-icon"
                                 th:attr="data-storage-id=${storage.storageid}"
-                                onclick="toggleWishlist(this)"
-                                style="width: 120px;">
+                                onclick="toggleWishlist(this)">
                             <i data-lucide="shopping-cart"></i>
                         </button>
                     </div>
@@ -120,11 +548,47 @@
                 <h3>Không tìm thấy kho nào</h3>
                 <p>Thử thay đổi bộ lọc tìm kiếm để xem thêm kết quả</p>
             </div>
+
+            <!-- Pagination -->
+            <div th:if="${totalPages > 1}" class="pagination-section">
+                <nav class="pagination-nav">
+                    <ul class="pagination">
+                        <li th:class="${currentPage == 0} ? 'page-item disabled' : 'page-item'">
+                            <a th:if="${currentPage > 0}"
+                               th:href="@{/SWP/storages(page=${currentPage - 1}, size=${size}, sortBy=${sortBy}, sortDir=${sortDir}, storageName=${searchStorageName}, city=${searchCity}, status=${searchStatus})}"
+                               class="page-link">
+                                <i data-lucide="chevron-left"></i> Trước
+                            </a>
+                            <span th:if="${currentPage == 0}" class="page-link disabled">
+                                <i data-lucide="chevron-left"></i> Trước
+                            </span>
+                        </li>
+                        <li th:each="pageNum : ${#numbers.sequence(0, totalPages - 1)}"
+                            th:if="${pageNum >= currentPage - 2 and pageNum <= currentPage + 2}"
+                            th:class="${pageNum == currentPage} ? 'page-item active' : 'page-item'">
+                            <a th:if="${pageNum != currentPage}"
+                               th:href="@{/SWP/storages(page=${pageNum}, size=${size}, sortBy=${sortBy}, sortDir=${sortDir}, storageName=${searchStorageName}, city=${searchCity}, status=${searchStatus})}"
+                               class="page-link" th:text="${pageNum + 1}">1</a>
+                            <span th:if="${pageNum == currentPage}" class="page-link current" th:text="${pageNum + 1}">1</span>
+                        </li>
+                        <li th:class="${currentPage >= totalPages - 1} ? 'page-item disabled' : 'page-item'">
+                            <a th:if="${currentPage < totalPages - 1}"
+                               th:href="@{/SWP/storages(page=${currentPage + 1}, size=${size}, sortBy=${sortBy}, sortDir=${sortDir}, storageName=${searchStorageName}, city=${searchCity}, status=${searchStatus})}"
+                               class="page-link">
+                                Sau <i data-lucide="chevron-right"></i>
+                            </a>
+                            <span th:if="${currentPage >= totalPages - 1}" class="page-link disabled">
+                                Sau <i data-lucide="chevron-right"></i>
+                            </span>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
         </div>
     </div>
 
     <!-- Footer -->
-    <div th:replace="taskbar/customer-footer :: customerFooter"></div>
+    <div th:replace="~{taskbar/customer-footer :: customerFooter}"></div>
 </div>
 
 <script>
@@ -290,8 +754,6 @@
         }, 10);
     }
 
-    // Test function to check API (removed to prevent conflicts)
-
     // Initialize page on load
     document.addEventListener('DOMContentLoaded', function() {
         console.log('Page loaded, initializing...');
@@ -425,14 +887,12 @@
                         </div>
                     </div>
                     <div class="card-footer">
-                        <a href="/SWP/storages/${storage.storageid}" class="btn btn-primary" style="width: 190px">
-                            <i data-lucide="eye"></i>
-                            Chi tiết
+                        <a href="/SWP/storages/${storage.storageid}" class="btn btn-primary">
+                            <i data-lucide="eye"></i> Chi tiết
                         </a>
                         <button class="btn btn-wishlist btn-cart-icon"
                                 data-storage-id="${storage.storageid}"
-                                onclick="toggleWishlist(this)"
-                                style="width: 120px;">
+                                onclick="toggleWishlist(this)">
                             <i data-lucide="shopping-cart"></i>
                         </button>
                     </div>
@@ -461,8 +921,6 @@
         }
     }
 
-    // Removed highlight functions as they are no longer needed
-
     function updateResultCount(count) {
         const countElement = document.querySelector('.results-info .count');
         if (countElement) {
@@ -480,9 +938,48 @@
             storageGrid.style.pointerEvents = 'auto';
         }
     }
-</script>
-<div id="toast" class="toast"></div>
-<script>
+
+    // Pagination and sorting functions
+    function updateSort() {
+        const sortBy = document.getElementById('sortBy').value;
+        const sortDir = document.getElementById('sortDir').value;
+        const storageName = document.getElementById('storageName').value;
+        const city = document.getElementById('city').value;
+        const status = document.getElementById('status').value;
+        const size = document.getElementById('pageSize').value;
+
+        const params = new URLSearchParams();
+        params.append('page', '0'); // Reset to first page when sorting
+        params.append('size', size);
+        params.append('sortBy', sortBy);
+        params.append('sortDir', sortDir);
+        if (storageName) params.append('storageName', storageName);
+        if (city) params.append('city', city);
+        if (status) params.append('status', status);
+
+        window.location.href = `/SWP/storages?${params.toString()}`;
+    }
+
+    function updatePageSize() {
+        const size = document.getElementById('pageSize').value;
+        const sortBy = document.getElementById('sortBy').value;
+        const sortDir = document.getElementById('sortDir').value;
+        const storageName = document.getElementById('storageName').value;
+        const city = document.getElementById('city').value;
+        const status = document.getElementById('status').value;
+
+        const params = new URLSearchParams();
+        params.append('page', '0'); // Reset to first page when changing page size
+        params.append('size', size);
+        params.append('sortBy', sortBy);
+        params.append('sortDir', sortDir);
+        if (storageName) params.append('storageName', storageName);
+        if (city) params.append('city', city);
+        if (status) params.append('status', status);
+
+        window.location.href = `/SWP/storages?${params.toString()}`;
+    }
+
     // Check if wishlistItems already exists to avoid redeclaration
     if (typeof wishlistItems === 'undefined') {
         var wishlistItems = new Set();
@@ -597,5 +1094,6 @@
         }
     }
 </script>
+<div id="toast" class="toast"></div>
 </body>
 </html>
