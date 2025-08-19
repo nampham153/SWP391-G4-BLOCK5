@@ -25,6 +25,7 @@
     </properties>
 
     <dependencies>
+        
         <!-- Validation -->
         <dependency>
             <groupId>jakarta.validation</groupId>
