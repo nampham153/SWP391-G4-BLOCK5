@@ -43,7 +43,7 @@ public class CustomerListController {
         return "customer-list";
     }
 
-    @GetMapping("/customers/{id}")
+    @GetMapping("/manager/customers/{id}")
     public String customerDetail(@PathVariable int id, Model model) {
         Customer customer = customerService.getCustomer(id);
         if (customer == null) {
