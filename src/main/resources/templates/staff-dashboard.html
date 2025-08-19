@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Dashboard</title>
+    <link rel="stylesheet" th:href="@{/css/staff-dashboard.css}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 10px;
+        }
+        .pagination button {
+            background: #fff;
+            border: 1px solid #ccc;
+            margin: 2px;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .pagination button.active {
+            background: #6366f1;
+            color: #fff;
+            border: 1px solid #6366f1;
+        }
+    </style>
+</head>
+<body>
+<!-- Sidebar -->
+<div th:replace="taskbar/staff-taskbar :: staffTaskbar"></div>
+
+<main class="main-content">
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <button class="sidebar-toggle">
+                <i class="fas fa-bars"></i>
+            </button>
+            <h1>Staff Dashboard</h1>
+        </div>
+
+        <div class="header-right">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Search storage units, items...">
+            </div>
+        </div>
+    </header>
+<!-- Dashboard Content -->
+<div class="page-content">
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+        <div class="stat-card" href="/SWP/staff/staff-all-storage">
+            <div class="stat-icon storage">
+                <i class="fas fa-warehouse"></i>
+            </div>
+            <div class="stat-info">
+                <h3>Tổng số kho</h3>
+                <p class="stat-number" th:text="${totalStorages}">0</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon capacity">
+                <i class="fas fa-chart-pie"></i>
+            </div>
+            <div class="stat-info">
+                <h3>Tổng khách hàng</h3>
+                <p class="stat-number" th:text="${totalUser}"></p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon items">
+                <i class="fas fa-cube"></i>
+            </div>
+            <div class="stat-info">
+                <h3>Tổng Feedback</h3>
+                <p class="stat-number" th:text="${totalFeedback}"></p>
+            </div>
+        </div>
+        <div class="stat-card voucher-card">
+            <div class="stat-icon voucher">
+                <i class="fas fa-ticket-alt"></i>
+            </div>
+            <div class="stat-info">
+                <h3>Tổng số voucher</h3>
+                <p class="stat-number" th:text="${totalVouchers}">0</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon revenue">
+                <i class="fas fa-dollar-sign"></i>
+            </div>
+            <div class="stat-info">
+                <h3>Doanh thu</h3>
+                <p class="stat-number"
+                   th:text="${#numbers.formatDecimal(allRevenue, 0, 'COMMA', 2, 'POINT')} + ' VNĐ'">0 VNĐ</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts and Tables Section -->
+    <div class="content-grid">
+        <!-- Storage Utilization Chart -->
+        <div class="card chart-card" style="width: 75%;">
+            <div class="card-header">
+                <h3>Biểu đồ doanh thu</h3>
+            </div>
+            <div class="chart-container">
+                <div class="chart-placeholder">
+                    <canvas id="revenueChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="card chart-card" style="width: 150%; margin-left: -255px;">
+            <div class="card-header">
+                <h3>Doanh thu hàng tháng</h3>
+            </div>
+            <div class="chart-container">
+                <div class="chart-placeholder">
+                    <canvas id="monthlyRevenueChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pie Charts Section: Trạng thái kho, đơn hàng, voucher -->
+    <div class="content-grid"
+         style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 20px;">
+
+        <!-- Storage Status Pie Chart -->
+        <div class="card chart-card">
+            <div class="card-header">
+                <h3>Trạng thái kho</h3>
+            </div>
+            <div class="chart-container" style="width: 100%; height: 400px; margin-left: 50px; margin-top: -50px;">
+                <canvas id="storagePieChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Order Status Pie Chart -->
+        <div class="card chart-card">
+            <div class="card-header">
+                <h3>Trạng thái đơn hàng</h3>
+            </div>
+            <div class="chart-container" style="width: 100%; height: 400px; margin-left: 50px; margin-top: -50px;">
+                <canvas id="orderPieChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Voucher Status Pie Chart -->
+        <div class="card chart-card">
+            <div class="card-header">
+                <h3>Trạng thái voucher</h3>
+            </div>
+            <div class="chart-container" style="width: 100%; height: 400px; margin-left: 50px; margin-top: -50px;">
+                <canvas id="voucherPieChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Storage Units Table -->
+    <div class="card table-card">
+        <div class="card-header">
+            <h3>Tổng quan kho hàng</h3>
+            <div class="card-actions">
+                <a href="/SWP/staff/staff-all-storage" class="btn-secondary" style="margin-left: 10px;">
+                    Xem Tất Cả
+                </a>
+                <a href="/SWP/addstorage" class="btn-primary">
+                    <i class="fas fa-plus"></i>
+                    Thêm Kho
+                </a>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table class="data-table" id="storageTable">
+                <thead>
+                <tr>
+                    <th class="table-small-col">Storage ID</th>
+                    <th class="table-medium-col">Tên Kho</th>
+                    <th class="table-medium-col">Giá thuê theo ngày</th>
+                    <th class="table-medium-col">Tình Trạng Kho</th>
+                    <th class="table-action-col">Hành Động</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="storage, iterStat : ${storages}" th:if="${iterStat.index < 5}">
+                    <td class="table-small-col" th:text="${storage.getStorageid()}"></td>
+                    <td class="table-medium-col" th:text="${storage.getStoragename()}"></td>
+                    <td class="table-medium-col" th:text="${storage.getPricePerDay()}"></td>
+                    <td class="table-medium-col">
+            <span th:class="${storage.isStatus()} ? 'status-badge active' : 'status-badge warning'"
+                  th:text="${storage.isStatus()} ? 'Còn trống' : 'Đang thuê'"></span>
+                    </td>
+                    <td>
+                        <div class="action-buttons">
+                            <!-- Nút xem -->
+                            <a th:href="@{'/SWP/staff/storages/' + ${storage.getStorageid()} + '/detail'}" class="btn-icon" title="View Details">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <!-- Nút xoá -->
+                            <form th:action="@{'/SWP/storages/' + ${storage.getStorageid()} + '/delete'}" method="post" onsubmit="return confirm('Bạn có chắc muốn xoá kho này không?');">
+                                <input type="hidden" name="_method" value="delete"/>
+                                <button type="submit" class="btn-icon danger" title="Delete">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Feedback Overview Table -->
+    <div class="card table-card">
+        <div class="card-header">
+            <h3>Tổng quan Feedback</h3>
+            <div class="card-actions">
+                <a href="/SWP/feedbacks" class="btn-secondary" style="margin-left: 10px;">
+                    Xem Tất Cả
+                </a>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                <tr>
+                    <th class="table-small-col">Feedback ID</th>
+                    <th class="table-medium-col">Nội dung</th>
+                    <th class="table-small-col">Đánh giá</th>
+                    <th class="table-medium-col">Khách hàng</th>
+                    <th class="table-medium-col">Kho</th>
+                    <th class="table-action-col">Hành động</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="fb, iterStat : ${feedbacks}" th:if="${iterStat.index < 5}">
+                    <td class="table-small-col" th:text="${fb.id}"></td>
+                    <td class="table-medium-col" th:text="${fb.content}"></td>
+                    <td class="table-small-col" th:text="${fb.rating}"></td>
+                    <td class="table-medium-col" th:text="${fb.customer != null ? fb.customer.fullname : 'Ẩn'}"></td>
+                    <td class="table-medium-col" th:text="${fb.storage != null ? fb.storage.storagename : 'Ẩn'}"></td>
+                    <td class="table-action-col">
+                        <div class="action-buttons">
+                            <a th:href="@{'/SWP/feedbacks/' + ${fb.id}}" class="btn-icon" title="View Feedback">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Order Units Table -->
+    <div class="card table-card">
+        <div class="card-header">
+            <h3>Tổng quan đơn hàng</h3>
+            <div class="card-actions">
+                <a href="/SWP/orders" class="btn-secondary" style="margin-left: 10px;">
+                    Xem Tất Cả
+                </a>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                <tr>
+                    <th class="table-small-col">Mã đơn hàng</th>
+                    <th class="table-medium-col">Tổng tiền</th>
+                    <th class="table-medium-col">Trạng thái</th>
+                    <th class="table-action-col">Hành động</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="order, iterStat : ${orders}" th:if="${iterStat.index < 5}">
+                    <td class="table-small-col">
+                        <span class="order-id" th:text="'#' + ${order.id}"></span>
+                    </td>
+                    <td class="table-medium-col">
+                        <span class="total-amount" th:text="'$' + ${#numbers.formatDecimal(order.totalAmount, 0, 2)}"></span>
+                    </td>
+                    <td class="table-medium-col">
+                    <span th:class="'status-badge ' + ${order.status.toLowerCase()}"
+                          th:text="${order.status}">
+                    </span>
+                    </td>
+                    <td class="table-action-col">
+                        <div class="action-buttons">
+                            <a th:href="@{/SWP/orders/{id}(id=${order.getId()})}" class="btn-icon" title="View Details">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!--Voucher Overview-->
+    <div class="card table-card">
+        <div class="card-header">
+            <h3>Voucher gần đây</h3>
+            <div class="card-actions">
+                <a href="/SWP/staff/vouchers" class="btn-secondary" style="margin-left: 10px;">
+                    Xem Tất Cả
+                </a>
+                <a href="/SWP/staff/addvoucher" class="btn-primary">
+                    <i class="fas fa-plus"></i>
+                    Thêm Voucher
+                </a>
+            </div>
+        </div>
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                <tr>
+                    <th class="table-small-col">ID</th>
+                    <th class="table-medium-col">Tên voucher</th>
+                    <th class="table-small-col">Điểm đổi</th>
+                    <th class="table-small-col">Giảm giá</th>
+                    <th class="table-small-col">Số lượng còn</th>
+                    <th class="table-small-col">Trạng thái</th>
+                    <th class="table-small-col">Hành động</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="voucher : ${latestVouchers}">
+                    <td class="table-small-col" th:text="${voucher.id}"></td>
+                    <td class="table-medium-col" th:text="${voucher.name}"></td>
+                    <td class="table-small-col" th:text="${voucher.requiredPoint}"></td>
+                    <td class="table-small-col" th:text="${#numbers.formatDecimal(voucher.discountAmount, 0, 2)}"></td>
+                    <td class="table-small-col" th:text="${voucher.remainQuantity}"></td>
+                    <td class="table-small-col">
+                <span th:text="${voucher.status}"
+                      th:class="'status-badge ' + ${voucher.status.toString().toLowerCase()}"></span>
+                    </td>
+                    <td class="table-small-col">
+                        <div class="action-buttons">
+                            <a th:href="@{'/SWP/vouchers/' + ${voucher.id} + '/detail'}" class="btn-icon" title="View Details">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a th:href="@{'/SWP/staff/vouchers/' + ${voucher.id} + '/edit'}" class="btn-icon">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <form th:action="@{'/SWP/vouchers/' + ${voucher.id} + '/delete'}" method="post"
+                                  onsubmit="return confirm('Bạn có chắc muốn xoá voucher này không?');">
+                                <input type="hidden" name="_method" value="delete"/>
+                                <button type="submit" class="btn-icon danger" title="Delete">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    const labels = /*[[${revenueLabels}]]*/ [];
+    const revenueData = /*[[${revenueValues}]]*/ [];
+
+    console.log("Revenue Chart Labels:", labels);
+    console.log("Revenue Chart Data:", revenueData);
+
+    if (labels.length && revenueData.length) {
+        const ctx = document.getElementById('revenueChart')?.getContext('2d');
+        if (ctx) {
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Doanh thu (VNĐ)',
+                        data: revenueData,
+                        backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1,
+                        borderRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: true, position: 'top' },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' +
+                                        Number(context.raw).toLocaleString('vi-VN') + ' VNĐ';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toLocaleString('vi-VN') + ' VNĐ';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    }
+
+    const monthlyLabels = ['Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6', 'Tháng 7'];
+    const monthlyRevenueData = [5000000, 7000000, 9000000, 8500000, 10000000, 11000000, 9500000];
+
+    const monthlyCtx = document.getElementById('monthlyRevenueChart')?.getContext('2d');
+    if (monthlyCtx) {
+        new Chart(monthlyCtx, {
+            type: 'line',
+            data: {
+                labels: monthlyLabels,
+                datasets: [{
+                    label: 'Doanh thu theo tháng (VNĐ)',
+                    data: monthlyRevenueData,
+                    fill: false,
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.3)',
+                    tension: 0.3
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: true },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': ' +
+                                    Number(context.raw).toLocaleString('vi-VN') + ' VNĐ';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return value.toLocaleString('vi-VN') + ' VNĐ';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // ===== Voucher Status Pie Chart =====
+    const voucherCtx = document.getElementById('voucherPieChart')?.getContext('2d');
+    if (voucherCtx) {
+        new Chart(voucherCtx, {
+            type: 'pie',
+            data: {
+                labels: ['Còn hiệu lực', 'Tạm ngưng', 'Hết hạn'],
+                datasets: [{
+                    label: 'Voucher',
+                    data: [
+                        [[${activeVoucherCount}]],
+                        [[${pausedVoucherCount}]],
+                        [[${expiredVoucherCount}]]
+                    ],
+                    backgroundColor: ['#83C75D', '#F9F400', '#E54646'],
+                    borderColor: ['#166534', '#facc15', '#b91c1c'],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                plugins: {
+                    title: {
+                        display: true,
+                    },
+                    legend: {
+                        position: 'right'
+                    }
+                }
+            }
+        });
+    }
+
+    // ===== Order Status Pie Chart =====
+    const orderCtx = document.getElementById('orderPieChart')?.getContext('2d');
+    if (orderCtx) {
+        new Chart(orderCtx, {
+            type: 'pie',
+            data: {
+                labels: ['Đã thanh toán', 'Chờ thanh toán', 'Từ chối', 'Đã duyệt'],
+                datasets: [{
+                    label: 'Đơn hàng',
+                    data: [
+                        /*[[${orderPaidCount}]]*/ 0,
+                        /*[[${orderPendingCount}]]*/ 0,
+                        /*[[${orderRejectedCount}]]*/ 0,
+                        /*[[${orderAcceptedCount}]]*/ 0
+                    ],
+                    backgroundColor: ['#83C75D', '#4682B4', '#ef4444', '#facc15'],
+                    borderColor: ['#15803d', '#1e3a8a', '#991b1b', '#b45309'],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                plugins: {
+                    title: {
+                        display: true,
+                    },
+                    legend: {
+                        position: 'right'
+                    }
+                }
+            }
+        });
+    }
+
+    // ===== Storage Status Pie Chart =====
+    const storageCtx = document.getElementById('storagePieChart')?.getContext('2d');
+    if (storageCtx) {
+        new Chart(storageCtx, {
+            type: 'pie',
+            data: {
+                labels: ['Kho còn trống', 'Kho đã cho thuê'],
+                datasets: [{
+                    label: 'Kho',
+                    data: [
+                        /*[[${availableStorages}]]*/ 0,
+                        /*[[${rentedStorages}]]*/ 0
+                    ],
+                    backgroundColor: ['#83C75D', '#4682B4'],
+                    borderColor: ['#15803d', '#1e3a8a'],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                plugins: {
+                    title: {
+                        display: true,
+                    },
+                    legend: {
+                        position: 'right'
+                    }
+                }
+            }
+        });
+    }
+    /*]]>*/
+</script>
+</body>
+</html>
