@@ -100,5 +100,180 @@
     min-width: 120px;
     display: inline-block;
 }
+/* === New radically different layout === */
+
+:root{
+    --ink:#1f2937;            /* text */
+    --muted:#6b7280;          /* subtext */
+    --line:#e5e7eb;           /* borders */
+    --bg:#f8fafc;             /* page */
+    --card:#ffffff;           /* card */
+    --chip:#f1f5f9;           /* chip bg */
+    --accent:#2563eb;         /* primary */
+    --success:#16a34a;
+    --warn:#f59e0b;
+}
+
+body{
+    background: var(--bg);
+    color: var(--ink);
+}
+
+/* container for the whole page content */
+.detail-shell{
+    max-width: 960px;
+    margin: 32px auto;
+    padding: 0 16px;
+}
+
+/* top identity card */
+.identity-card{
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 20px;
+    align-items: center;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.05);
+}
+
+.avatar-lg{
+    width: 84px;
+    height: 84px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 2px solid var(--line);
+    background: #e2e8f0;
+}
+.avatar-lg img{
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.identity-meta .person-name{
+    margin: 0 0 6px 0;
+    font-size: 22px;
+    font-weight: 700;
+}
+
+.chips{
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.role-chip{
+    padding: 4px 10px;
+    background: var(--chip);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .2px;
+    text-transform: uppercase;
+}
+
+/* color accents by role text */
+.role-chip.staff     { background: #ecfeff; border-color:#a5f3fc; color:#0e7490; }
+.role-chip.manager   { background: #eef2ff; border-color:#c7d2fe; color:#3730a3; }
+.role-chip.blocked   { background: #fff1f2; border-color:#fecdd3; color:#be123c; }
+
+.id-chip{
+    padding: 4px 10px;
+    background: var(--chip);
+    border: 1px dashed var(--line);
+    border-radius: 8px;
+    font-size: 12px;
+    color: var(--muted);
+}
+
+.back-link{
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--accent);
+    text-decoration: none;
+    border: 1px solid var(--line);
+    background: #f8fafc;
+    padding: 8px 12px;
+    border-radius: 10px;
+    transition: .15s ease;
+}
+.back-link:hover{
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(37,99,235,.12);
+}
+
+/* card with read-only fields */
+.readonly-card{
+    margin-top: 18px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 18px;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.05);
+}
+
+.section-title{
+    margin: 0 0 16px 0;
+    font-size: 16px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--ink);
+}
+
+.form-grid{
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0,1fr));
+    gap: 14px 18px;
+}
+@media (max-width: 700px){
+    .identity-card{ grid-template-columns: auto 1fr; }
+    .form-grid{ grid-template-columns: 1fr; }
+}
+
+.field{
+    display: grid;
+    gap: 6px;
+}
+
+.field-label{
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.ro-input{
+    width: 100%;
+    padding: 12px 12px;
+    border: 1.5px solid var(--line);
+    border-radius: 10px;
+    background: #f9fafb;
+    color: var(--ink);
+    font-size: 14px;
+    line-height: 1.3;
+}
+.ro-input[readonly]{
+    cursor: text;              /* allow copy */
+}
+.ro-input:focus{
+    outline: none;
+    border-color: #c7d2fe;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, .15);
+}
+
+/* minimalist ghost button (already used by back-link) */
+.btn-ghost{
+    font-weight: 600;
+}
 
 

@@ -523,6 +523,28 @@ body {
     box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
 }
 
+/* Unavailable Notice Styles */
+.unavailable-notice {
+    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+    border: 2px solid #fca5a5;
+    border-radius: 12px;
+    padding: 1rem 1.5rem;
+    color: #dc2626;
+    font-weight: 500;
+    box-shadow: 0 4px 15px rgba(220, 38, 38, 0.1);
+    transition: all 0.2s ease;
+}
+
+.unavailable-notice:hover {
+    box-shadow: 0 6px 20px rgba(220, 38, 38, 0.15);
+    transform: translateY(-1px);
+}
+
+.unavailable-notice svg {
+    flex-shrink: 0;
+    color: #dc2626;
+}
+
 .contact-btn {
     display: flex;
     align-items: center;
