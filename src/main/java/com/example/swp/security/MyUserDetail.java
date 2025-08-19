@@ -68,28 +68,23 @@ public class MyUserDetail implements UserDetails {
         return null;
     }
 
-    @Override
-    public boolean isAccountNonExpired() {
-        return true;
-    }
-
-    @Override
-    public boolean isAccountNonLocked() {
-        return true;
-    }
-
-    @Override
-    public boolean isCredentialsNonExpired() {
-        return true;
-    }
-
+    @Override public boolean isAccountNonExpired() { return true; }
+    @Override public boolean isAccountNonLocked() { return true; }
+    @Override public boolean isCredentialsNonExpired() { return true; }
     @Override
     public boolean isEnabled() {
+        String role = null;
+
         if (user instanceof Customer) {
-            return ((Customer) user).isEnabled();
+            role = ((Customer) user).getRoleName().name();
+        } else if (user instanceof Staff) {
+            role = ((Staff) user).getRoleName().name();
+        } else if (user instanceof Manager) {
+            role = ((Manager) user).getRoleName().name();
         }
-        return true;
+        return !"BLOCKED".equalsIgnoreCase(role);
     }
+
 
     public Customer getCustomer() {
         if (user instanceof Customer customer) {

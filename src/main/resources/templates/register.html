@@ -157,58 +157,96 @@
         <button type="submit">Đăng ký</button>
     </form>
     <div id="registerMessage" class="message"></div>
+    <!-- OTP Form -->
+    <div id="otpContainer" style="display:none; margin-top:20px;">
+        <h3>Xác thực OTP</h3>
+        <input type="text" id="otpInput" placeholder="Nhập OTP">
+        <button id="verifyOtpBtn">Xác thực</button>
+        <div id="otpMessage" class="message"></div>
+    </div>
     <div class="links-container">
         <a href="/api/login">Đã có tài khoản? Đăng nhập</a>
     </div>
 </div>
 
 <script>
-    document.getElementById('registerForm').addEventListener('submit', async (e) => {
+    const registerForm = document.getElementById('registerForm');
+    const otpContainer = document.getElementById('otpContainer');
+    const verifyOtpBtn = document.getElementById('verifyOtpBtn');
+    const registerMessage = document.getElementById('registerMessage');
+    const otpInput = document.getElementById('otpInput');
+    const otpMessage = document.getElementById('otpMessage');
+
+    let currentEmail = '';
+
+    registerForm.addEventListener('submit', async (e) => {
         e.preventDefault();
+        registerMessage.textContent = '';
+        registerMessage.className = 'message';
 
-        // Lấy dữ liệu từ form
-        const fullname = document.getElementById('regFullName').value.trim();
-        const password = document.getElementById('regPassword').value.trim();
-        const email = document.getElementById('regEmail').value.trim();
-        const address = document.getElementById('regAddress').value.trim();
-        const phone = document.getElementById('regPhone').value.trim();
-        const id_citizen = document.getElementById('regIdCitizen').value.trim();
-
-        const registerData = {
-            fullname: fullname,
-            password,
-            email,
-            address,
-            phone,
-            id_citizen
+        const data = {
+            fullname: document.getElementById('regFullName').value.trim(),
+            password: document.getElementById('regPassword').value.trim(),
+            email: document.getElementById('regEmail').value.trim(),
+            address: document.getElementById('regAddress').value.trim(),
+            phone: document.getElementById('regPhone').value.trim(),
+            id_citizen: document.getElementById('regIdCitizen').value.trim()
         };
-
-        const messageDiv = document.getElementById('registerMessage');
-        messageDiv.textContent = '';
-        messageDiv.className = 'message';
 
         try {
             const response = await fetch('/api/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(registerData)
+                body: JSON.stringify(data)
             });
-
             const text = await response.text();
+
             if (response.ok) {
-                messageDiv.className = 'message success';
-                messageDiv.textContent = text || 'Đăng ký thành công!';
-                // Sau 1-2s chuyển qua trang login
-                setTimeout(() => {
-                    window.location.href = "/api/login";
-                }, 1500);
+                registerMessage.className = 'message success';
+                registerMessage.textContent = 'Đăng ký thành công! Vui lòng nhập OTP để xác thực.';
+                otpContainer.style.display = 'block';
+                currentEmail = data.email;
             } else {
-                messageDiv.className = 'message error';
-                messageDiv.textContent = text || 'Đăng ký thất bại!';
+                registerMessage.className = 'message error';
+                registerMessage.textContent = text || 'Đăng ký thất bại!';
             }
-        } catch (error) {
-            messageDiv.className = 'message error';
-            messageDiv.textContent = 'Không kết nối được máy chủ!';
+        } catch (err) {
+            registerMessage.className = 'message error';
+            registerMessage.textContent = 'Không kết nối được máy chủ!';
+        }
+    });
+
+    verifyOtpBtn.addEventListener('click', async () => {
+        otpMessage.textContent = '';
+        otpMessage.className = 'message';
+
+        const otpValue = otpInput.value.trim();
+        if (!otpValue) {
+            otpMessage.className = 'message error';
+            otpMessage.textContent = 'Vui lòng nhập OTP!';
+            return;
+        }
+
+        try {
+            const params = new URLSearchParams({ email: currentEmail, otp: otpValue });
+            const response = await fetch('/api/verify-otp', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: params.toString()
+            });
+            const text = await response.text();
+
+            if (response.ok) {
+                otpMessage.className = 'message success';
+                otpMessage.textContent = text || 'Xác thực thành công!';
+                setTimeout(() => { window.location.href = '/api/login'; }, 1500);
+            } else {
+                otpMessage.className = 'message error';
+                otpMessage.textContent = text || 'OTP không đúng!';
+            }
+        } catch (err) {
+            otpMessage.className = 'message error';
+            otpMessage.textContent = 'Không kết nối được máy chủ!';
         }
     });
 </script>
