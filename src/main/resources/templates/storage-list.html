@@ -531,11 +531,10 @@
                         <a th:href="@{'/SWP/storages/' + ${storage.storageid}}" class="btn btn-primary">
                             <i data-lucide="eye"></i> Chi tiết
                         </a>
-                        <button class="btn btn-wishlist btn-cart-icon"
-                                th:attr="data-storage-id=${storage.storageid}"
-                                onclick="toggleWishlist(this)">
+                        <button class="btn btn-wishlist btn-cart-icon">
                             <i data-lucide="shopping-cart"></i>
                         </button>
+
                     </div>
                 </div>
             </div>
