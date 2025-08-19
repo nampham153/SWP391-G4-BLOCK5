@@ -15,10 +15,10 @@
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
             max-width: inherit; /* Inherit max-width from parent container */
-            box-sizing: border-box; /* Ensure padding doesn't affect width */
-            width: 1400px;
-            margin-left: 230px;
-            margin-top: 30px;
+        box-sizing: border-box; /* Ensure padding doesn't affect width */
+        width: 1400px;
+        margin-left: 230px;
+        margin-top: 30px;
         }
 
         /* Feedback Section Title */
@@ -196,23 +196,11 @@
     </div>
 
     <div class="detail-container">
-<!--        &lt;!&ndash; Image Gallery Section &ndash;&gt;-->
-<!--        <div class="image-section">-->
-<!--            <div class="main-image-container">-->
-<!--                <img th:src="${storage.imUrl}" alt="Ảnh kho" class="storage-image">-->
-<!--            </div>-->
-
-<!--            <div class="image-gallery">-->
-<!--            </div>-->
-<!--        </div>-->
-
         <!-- Storage Information Section -->
         <div class="info-section">
             <div class="storage-header">
                 <div class="details-header">
                     <h1 class="storage-title" th:text="${storage.getStoragename()}"></h1>
-
-
                     <a href="/SWP/storages" class="back-btn-nav">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="m12 19-7-7 7-7"/>
@@ -234,7 +222,6 @@
                     </div>
 
                     <div class="rating-container">
-
                         <div class="location">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
@@ -300,40 +287,70 @@
             </div>
 
             <div class="action-buttons flex gap-4 mt-4">
-                <button type="button" class="booking-btn flex items-center gap-2" onclick="openModal()">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                        <line x1="16" y1="2" x2="16" y2="6"/>
-                        <line x1="8" y1="2" x2="8" y2="6"/>
-                        <line x1="3" y1="10" x2="21" y2="10"/>
-                    </svg>
-                    Đặt thuê ngay
-                </button>
+                <!-- Hiển thị nút đặt thuê khi kho còn trống -->
+                <div th:if="${storage.isStatus()}">
+                    <button type="button" class="booking-btn flex items-center gap-2" onclick="openModal()">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                            <line x1="16" y1="2" x2="16" y2="6"/>
+                            <line x1="8" y1="2" x2="8" y2="6"/>
+                            <line x1="3" y1="10" x2="21" y2="10"/>
+                        </svg>
+                        Đặt thuê ngay
+                    </button>
+                </div>
+
+                <!-- Hiển thị thông báo khi kho đang được thuê -->
+                <div th:unless="${storage.isStatus()}">
+                    <div class="unavailable-notice flex items-center gap-2 bg-red-50 text-red-700 px-4 py-3 rounded-lg border border-red-200">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path d="M15 9l-6 6"/>
+                            <path d="M9 9l6 6"/>
+                        </svg>
+                        <span class="font-medium">Kho này hiện đang được thuê và không thể đặt thêm</span>
+                    </div>
+                </div>
             </div>
 
-            <script>
-                    document.addEventListener('DOMContentLoaded', function () {
-                        const today = new Date().toISOString().split('T')[0];
-                        const startInput = document.getElementById('startDate');
-                        const endInput = document.getElementById('endDate');
-
-                        startInput.setAttribute('min', today);
-                        endInput.setAttribute('min', today);
-
-                        startInput.addEventListener('change', function () {
-                            endInput.setAttribute('min', startInput.value);
-                        });
-                    });
-
-
-                </script>
-
-
+            <!-- Modal chọn ngày -->
+            <div id="bookingModal" class="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center hidden z-50">
+                <div class="bg-white rounded-lg p-6 w-full max-w-md">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold text-gray-800">Chọn ngày thuê</h3>
+                        <button onclick="closeModal()" class="text-gray-500 hover:text-gray-700">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M18 6L6 18"/>
+                                <path d="M6 6l12 12"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <form th:action="@{/SWP/booking/{storageId}/booking(storageId=${storage.storageid})}" method="post" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-1 text-gray-700">Ngày bắt đầu</label>
+                            <input type="date" id="startDate" name="startDate" required
+                                   class="w-full border border-gray-300 rounded px-3 py-2 focus:ring-green-500 focus:border-green-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1 text-gray-700">Ngày kết thúc</label>
+                            <input type="date" id="endDate" name="endDate" required
+                                   class="w-full border border-gray-300 rounded px-3 py-2 focus:ring-green-500 focus:border-green-500">
+                        </div>
+                        <div class="flex justify-end gap-2">
+                            <button type="button" onclick="closeModal()"
+                                    class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded font-semibold">
+                                Hủy
+                            </button>
+                            <button type="submit"
+                                    class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded font-semibold">
+                                Tiếp tục
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
-</div>
-
 
     <!-- Thông báo -->
     <div th:if="${message}" class="message success">
@@ -349,14 +366,12 @@
         <div th:if="${!hasFeedbacked}">
             <form th:action="@{/SWP/feedbacks/submit}" method="post" class="space-y-4">
                 <input type="hidden" name="storageId" th:value="${storage.storageid}" />
-
                 <div>
                     <label class="block text-sm font-medium mb-1">Nội dung</label>
                     <textarea name="content" rows="3" required
                               class="w-full border border-gray-300 rounded px-3 py-2 focus:ring-green-500 focus:border-green-500"
                               placeholder="Chia sẻ trải nghiệm của bạn..."></textarea>
                 </div>
-
                 <div>
                     <label class="block text-sm font-medium mb-1">Số sao</label>
                     <select name="rating" required class="border border-gray-300 rounded px-3 py-2">
@@ -366,66 +381,77 @@
                                 th:text="${i} + ' sao'"></option>
                     </select>
                 </div>
-
                 <button type="submit"
                         class="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded font-semibold">
                     Gửi đánh giá
                 </button>
             </form>
         </div>
-
         <!-- Nếu đã đánh giá -->
         <div th:if="${hasFeedbacked}" class="feedbacked-message">
             Bạn đã gửi đánh giá cho kho này. Xin cảm ơn!
         </div>
     </div>
 
-
-</section>
-
-<!-- ==== FEEDBACK LIST ==== -->
-<section class="feedback-list-section">
-    <h3 class="text-lg font-semibold text-gray-800 mb-4">Đánh giá từ khách hàng khác</h3>
-
-    <div th:if="${feedbacks != null and !feedbacks.isEmpty()}" class="space-y-4">
-        <div th:each="fb : ${feedbacks}" class="feedback-item">
-            <div class="flex items-center justify-between mb-2">
-                <span class="font-semibold text-gray-700" th:text="${fb.customer.fullname}">Tên khách</span>
-                <!-- Sao hiển thị đúng số lượng -->
-                <div class="flex text-yellow-400 text-sm" th:attr="data-rating=${fb.rating}">
-                    <i class="fas fa-star mr-1" th:each="i : ${#numbers.sequence(1, fb.rating)}"></i>
-                </div>
-            </div>
-            <p class="content text-gray-600 text-sm" th:text="${fb.content}">Nội dung đánh giá</p>
-        </div>
-    </div>
-
-    <div th:if="${feedbacks == null or feedbacks.isEmpty()}" class="no-feedback">
-        Chưa có đánh giá nào cho kho này.
-    </div>
-</section> -->
+    
+</div>
 
 <!-- Footer -->
 <div th:replace="taskbar/customer-footer :: customerFooter"></div>
-<!-- Scripts -->
-<script th:inline="javascript">
 
-</script>
+<!-- Scripts -->
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const today = new Date().toISOString().split('T')[0];
         const startInput = document.getElementById('startDate');
         const endInput = document.getElementById('endDate');
 
+        // Đặt giá trị tối thiểu cho ngày bắt đầu và ngày kết thúc
         startInput.setAttribute('min', today);
         endInput.setAttribute('min', today);
 
+        // Cập nhật ngày tối thiểu của ngày kết thúc khi ngày bắt đầu thay đổi
         startInput.addEventListener('change', function () {
             endInput.setAttribute('min', startInput.value);
         });
     });
 
-    lucide.createIcons();
+    // Hàm mở modal
+    function openModal() {
+        const modal = document.getElementById('bookingModal');
+        modal.classList.remove('hidden');
+    }
 
-    
+    // Hàm đóng modal
+    function closeModal() {
+        const modal = document.getElementById('bookingModal');
+        modal.classList.add('hidden');
+    }
+
+    // Đóng modal khi nhấn ra ngoài nội dung modal
+    document.getElementById('bookingModal').addEventListener('click', function (event) {
+        if (event.target === this) {
+            closeModal();
+        }
+    });
+
+    // Validation form trước khi submit
+    document.querySelector('#bookingModal form').addEventListener('submit', function(event) {
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+
+        if (!startDate || !endDate) {
+            event.preventDefault();
+            alert('Vui lòng chọn đầy đủ ngày bắt đầu và ngày kết thúc.');
+            return;
+        }
+
+        if (new Date(endDate) <= new Date(startDate)) {
+            event.preventDefault();
+            alert('Ngày kết thúc phải sau ngày bắt đầu.');
+            return;
+        }
+    });
 </script>
+</body>
+</html>

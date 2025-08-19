@@ -1,8 +1,11 @@
 package com.example.swp.repository;
 
-import com.example.swp.entity.Customer;
 import com.example.swp.entity.Order;
+import com.example.swp.entity.Storage;
+import org.springframework.cglib.core.Local;
 import org.springframework.data.jpa.repository.JpaRepository;
+import com.example.swp.entity.Customer;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

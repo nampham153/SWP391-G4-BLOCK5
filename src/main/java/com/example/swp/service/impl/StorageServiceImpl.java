@@ -7,6 +7,8 @@ import com.example.swp.service.StorageService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
@@ -149,5 +151,25 @@ public class StorageServiceImpl implements StorageService {
 
             storageRepository.save(storage);
         }
+    }
+
+    @Override
+    public Page<Storage> getAllStorages(Pageable pageable) {
+        return storageRepository.findAll(pageable);
+    }
+
+    @Override
+    public Page<Storage> getStoragesWithFilters(String storageName, String city, String status, Pageable pageable) {
+        Boolean statusBoolean = null;
+        if (status != null && !status.trim().isEmpty()) {
+            statusBoolean = Boolean.parseBoolean(status);
+        }
+        
+        return storageRepository.findStoragesWithFilters(
+            storageName != null && !storageName.trim().isEmpty() ? storageName.trim() : null,
+            city != null && !city.trim().isEmpty() ? city.trim() : null,
+            statusBoolean,
+            pageable
+        );
     }
 }

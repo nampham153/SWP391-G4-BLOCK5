@@ -20,6 +20,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
 
+// ... phần đầu giữ nguyên
 
 @Configuration
 @EnableMethodSecurity(prePostEnabled = true)

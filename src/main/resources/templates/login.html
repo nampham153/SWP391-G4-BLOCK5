@@ -106,9 +106,21 @@
         </div>
     </form>
     <p id="error"></p>
+
+    <!-- Hiển thị thông báo lỗi từ flash attribute -->
+    <div th:if="${error}" style="margin-top: 12px; font-size: 15px; color: #d32f2f; text-align: center;">
+        <span th:text="${error}"></span>
+    </div>
 </div>
 
 <script>
+    // Hiển thị lỗi từ URL parameter nếu có
+    const urlParams = new URLSearchParams(window.location.search);
+    const errorParam = urlParams.get('error');
+    if (errorParam) {
+        document.getElementById("error").innerText = decodeURIComponent(errorParam);
+    }
+
     document.getElementById("loginForm").addEventListener("submit", async function (e) {
         e.preventDefault();
 

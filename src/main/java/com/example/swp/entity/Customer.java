@@ -121,7 +121,8 @@ public class Customer implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return true;
+        // Tài khoản bị khóa nếu role là BLOCKED
+        return roleName != RoleName.BLOCKED;
     }
 
     // Explicit getter method for id field that is causing compilation errors
