@@ -13,10 +13,7 @@ import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AnonymousAuthenticationToken;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.authentication.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
@@ -75,7 +72,8 @@ public class LoginRestController {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body("Tài khoản hoặc mật khẩu không chính xác.");
             }
-
+            // Lấy role của người dùng
+            String role = authentication.getAuthorities().iterator().next().getAuthority();
             // Ghi nhận vào Spring Security Context
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
@@ -83,8 +81,6 @@ public class LoginRestController {
             session.setMaxInactiveInterval(6000); // 10 phút
             session.setAttribute("email", loginRequest.getEmail());
 
-            // Lấy role của người dùng
-            String role = authentication.getAuthorities().iterator().next().getAuthority();
             String redirectUrl = "/home-page"; // mặc định
 
             switch (role) {
@@ -125,6 +121,9 @@ public class LoginRestController {
         } catch (BadCredentialsException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body("Email hoặc mật khẩu không chính xác.");
+        } catch (DisabledException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body("Tài khoản của bạn đang bị khóa. Vui lòng liên hệ Staff.");
         } catch (Exception e) {
             e.printStackTrace(); // debug
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
