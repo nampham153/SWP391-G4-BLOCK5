@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chi tiết đơn hàng</title>
+    <link rel="stylesheet" th:href="@{/css/booking-detail.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+<div class="page-wrapper">
+    <!-- Navigation -->
+    <div th:replace="taskbar/customer-navbar :: customerNavbar"></div>
+
+    <!-- Hero section -->
+    <div class="hero-section">
+        <div class="hero-content">
+            <h1>Chi tiết đơn hàng</h1>
+            <p th:text="'Thông tin chi tiết đơn hàng #' + ${order.id}"></p>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container">
+        <div class="content-section">
+            <div class="section-header">
+                <div class="header-info">
+                    <h2>
+                        <i class="fas fa-file-invoice"></i>
+                        Thông tin đơn hàng
+                    </h2>
+                    <p>Chi tiết đầy đủ về đơn hàng của bạn</p>
+                </div>
+                <div class="header-actions">
+                    <!-- Comment: Ẩn chức năng "Hàng trong kho" vì chưa cần thiết -->
+                    <!--
+                    <a th:href="@{'/customer/storage-items/' + ${order.id}}" class="btn btn-primary">
+                        <i class="fas fa-boxes"></i>
+                        Hàng trong kho
+                    </a>
+                    -->
+
+                    <a href="/SWP/storages" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i>
+                        Về danh sách kho
+                    </a>
+                </div>
+
+            </div>
+
+            <div class="order-container">
+                <div class="order-card">
+                    <div class="card-header">
+                        <div class="order-id">
+                            <span class="id-badge" th:text="'#' + ${order.id}"></span>
+                        </div>
+                        <div class="order-status">
+                            <span th:if="${order.status == 'CANCELLED'}"
+                                  class="status-badge status-cancelled"
+                                  th:text="${order.status}"></span>
+                            <span th:if="${order.status == 'CONFIRMED'}"
+                                  class="status-badge status-confirmed"
+                                  th:text="${order.status}"></span>
+                            <span th:if="${order.status == 'PENDING'}"
+                                  class="status-badge status-pending"
+                                  th:text="${order.status}"></span>
+                        </div>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <div class="info-label">
+                                    <i class="fas fa-warehouse"></i>
+                                    Tên kho
+                                </div>
+                                <div class="info-value" th:text="${order.storage.storagename}"></div>
+                            </div>
+
+                            <div class="info-item">
+                                <div class="info-label">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    Địa chỉ kho
+                                </div>
+                                <div class="info-value" th:text="${order.storage.address}"></div>
+                            </div>
+
+                            <div class="info-label">
+                                <i class="fas fa-expand-arrows-alt"></i>
+                                Diện tích đã đặt
+                            </div>
+                            <div class="info-value" th:text="${order.rentalArea} + ' m²'"></div>
+
+
+                            <div class="info-item">
+                                <div class="info-label">
+                                    <i class="fas fa-calendar-alt"></i>
+                                    Ngày bắt đầu
+                                </div>
+                                <div class="info-value" th:text="${#temporals.format(order.startDate, 'dd/MM/yyyy')}"></div>
+                            </div>
+
+                            <div class="info-item">
+                                <div class="info-label">
+                                    <i class="fas fa-calendar-check"></i>
+                                    Ngày kết thúc
+                                </div>
+                                <div class="info-value" th:text="${#temporals.format(order.endDate, 'dd/MM/yyyy')}"></div>
+                            </div>
+
+                            <div class="info-item">
+                                <div class="info-label">
+                                    <i class="fas fa-money-bill-wave"></i>
+                                    Tổng tiền
+                                </div>
+                                <div class="info-value amount-highlight"
+                                     th:text="${#numbers.formatDecimal(order.totalAmount, 0, 'POINT', 2, 'COMMA')} + ' VNĐ'"></div>
+
+                            </div>
+                        </div>
+
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <!-- Footer -->
+    <div th:replace="taskbar/customer-footer :: customerFooter"></div>
+</div>
+
+<script>
+    
+</script>
+</body>
+</html>
