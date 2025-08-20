@@ -3,7 +3,7 @@
     position: fixed;
     left: 0;
     top: 0;
-    width: 260px;
+    width: 280px;
     height: 100vh;
     background: #2c3e50;
     color: white;
@@ -14,13 +14,17 @@
 }
 
 .sidebar-header {
-    padding: 20px;
+    height: 64px; /* fixed to match dashboard */
+    padding: 0 20px; /* align text vertically centered */
+    display: flex;
+    align-items: center;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .logo {
     display: flex;
     align-items: center;
+    gap: 0; /* keep icon and text close, override other css */
     font-size: 1.5rem;
     font-weight: bold;
 }
@@ -33,7 +37,7 @@
 .sidebar-menu {
     flex: 1;
     list-style: none;
-    padding: 20px 0;
+    padding: 12px 0; /* reduce top/bottom gap */
 }
 
 .menu-item {
@@ -48,6 +52,7 @@
     text-decoration: none;
     transition: all 0.3s ease;
     border-left: 3px solid transparent;
+    gap: 0; /* keep icon-text spacing tight and consistent */
 }
 
 .menu-item a:hover,
@@ -58,19 +63,23 @@
 }
 
 .menu-item i {
-    margin-right: 12px;
+    margin-right: 12px; /* icon-text spacing */
     width: 20px;
     text-align: center;
 }
 
 .sidebar-footer {
-    padding: 20px;
+    height: 88px; /* fixed to match dashboard footer block */
+    padding: 0 20px; /* vertically center */
+    display: flex;
+    align-items: center;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .user-info {
     display: flex;
     align-items: center;
+    gap: 0; /* override any global gaps to match dashboard */
 }
 
 .user-avatar {
@@ -92,9 +101,11 @@
 .user-name {
     font-weight: 600;
     font-size: 0.9rem;
+    margin: 0;
 }
 
 .user-role {
     font-size: 0.8rem;
     opacity: 0.7;
+    margin: 0;
 }
