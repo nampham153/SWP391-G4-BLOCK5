@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cài đặt - Manager</title>
+    <link rel="stylesheet" href="/css/manager-taskbar.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <style>
+        .main-content {
+            margin-left: 250px;
+            padding: 20px;
+        }
+        .settings-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-top: 20px;
+        }
+        .settings-header {
+            border-bottom: 1px solid #eee;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+        .settings-header h2 {
+            color: #333;
+            margin: 0;
+        }
+        .settings-section {
+            margin-bottom: 30px;
+        }
+        .settings-section h3 {
+            color: #555;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 10px;
+        }
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #0056b3;
+        }
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background: #545b62;
+        }
+        .user-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .user-info h4 {
+            margin: 0 0 10px 0;
+            color: #333;
+        }
+        .user-info p {
+            margin: 5px 0;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div th:replace="taskbar/manager-taskbar :: managerTaskbar"></div>
+
+    <main class="main-content">
+        <div class="settings-container">
+            <div class="settings-header">
+                <h2><i class="fas fa-cog"></i> Cài đặt hệ thống</h2>
+            </div>
+            
+            <!-- Thông tin người dùng -->
+            <div class="user-info">
+                <h4><i class="fas fa-user"></i> Thông tin người dùng</h4>
+                <p><strong>Tên:</strong> <span th:text="${user}">Manager Name</span></p>
+                <p><strong>Email:</strong> <span th:text="${userName}">manager@example.com</span></p>
+                <p><strong>Vai trò:</strong> <span th:text="${userRole}">MANAGER</span></p>
+            </div>
+            
+            <!-- Cài đặt thông báo -->
+            <div class="settings-section">
+                <h3><i class="fas fa-bell"></i> Cài đặt thông báo</h3>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" checked> Thông báo đơn hàng mới
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" checked> Thông báo phản hồi khách hàng
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox"> Thông báo qua email
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" checked> Thông báo qua hệ thống
+                    </label>
+                </div>
+            </div>
+            
+            <!-- Cài đặt bảo mật -->
+            <div class="settings-section">
+                <h3><i class="fas fa-shield-alt"></i> Cài đặt bảo mật</h3>
+                <div class="form-group">
+                    <label for="currentPassword">Mật khẩu hiện tại</label>
+                    <input type="password" id="currentPassword" placeholder="Nhập mật khẩu hiện tại">
+                </div>
+                <div class="form-group">
+                    <label for="newPassword">Mật khẩu mới</label>
+                    <input type="password" id="newPassword" placeholder="Nhập mật khẩu mới">
+                </div>
+                <div class="form-group">
+                    <label for="confirmPassword">Xác nhận mật khẩu mới</label>
+                    <input type="password" id="confirmPassword" placeholder="Nhập lại mật khẩu mới">
+                </div>
+                <button class="btn btn-primary" onclick="changePassword()">Đổi mật khẩu</button>
+            </div>
+            
+            <!-- Cài đặt giao diện -->
+            <div class="settings-section">
+                <h3><i class="fas fa-palette"></i> Cài đặt giao diện</h3>
+                <div class="form-group">
+                    <label for="theme">Chủ đề</label>
+                    <select id="theme">
+                        <option value="light">Sáng</option>
+                        <option value="dark">Tối</option>
+                        <option value="auto">Tự động</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="language">Ngôn ngữ</label>
+                    <select id="language">
+                        <option value="vi">Tiếng Việt</option>
+                        <option value="en">English</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary" onclick="saveInterfaceSettings()">Lưu cài đặt</button>
+            </div>
+            
+            <!-- Cài đặt hệ thống -->
+            <div class="settings-section">
+                <h3><i class="fas fa-server"></i> Cài đặt hệ thống</h3>
+                <div class="form-group">
+                    <label for="sessionTimeout">Thời gian timeout phiên làm việc (phút)</label>
+                    <input type="number" id="sessionTimeout" value="30" min="5" max="120">
+                </div>
+                <div class="form-group">
+                    <label for="backupFrequency">Tần suất sao lưu dữ liệu</label>
+                    <select id="backupFrequency">
+                        <option value="daily">Hàng ngày</option>
+                        <option value="weekly">Hàng tuần</option>
+                        <option value="monthly">Hàng tháng</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary" onclick="saveSystemSettings()">Lưu cài đặt</button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function changePassword() {
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (!currentPassword || !newPassword || !confirmPassword) {
+                alert('Vui lòng điền đầy đủ thông tin!');
+                return;
+            }
+            
+            if (newPassword !== confirmPassword) {
+                alert('Mật khẩu xác nhận không khớp!');
+                return;
+            }
+            
+            // Gửi request đổi mật khẩu
+            alert('Đổi mật khẩu thành công!');
+            document.getElementById('currentPassword').value = '';
+            document.getElementById('newPassword').value = '';
+            document.getElementById('confirmPassword').value = '';
+        }
+        
+        function saveInterfaceSettings() {
+            const theme = document.getElementById('theme').value;
+            const language = document.getElementById('language').value;
+            
+            // Lưu cài đặt giao diện
+            alert('Đã lưu cài đặt giao diện!');
+        }
+        
+        function saveSystemSettings() {
+            const sessionTimeout = document.getElementById('sessionTimeout').value;
+            const backupFrequency = document.getElementById('backupFrequency').value;
+            
+            // Lưu cài đặt hệ thống
+            alert('Đã lưu cài đặt hệ thống!');
+        }
+    </script>
+</body>
+</html>

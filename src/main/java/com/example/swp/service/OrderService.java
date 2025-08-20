@@ -53,5 +53,8 @@ public interface OrderService {
 
     boolean canCustomerFeedback(int customerId, int storageId);
     void markOrderAsPaid(int orderId);
+    
+    List<Order> findActiveOrdersByCustomerAndStorage(int customerId, int storageId);
+    void cancelExistingOrdersForCustomerAndStorage(int customerId, int storageId, String reason);
 
 }

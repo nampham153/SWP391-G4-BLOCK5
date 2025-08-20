@@ -146,15 +146,15 @@
                                id="rentalArea"
                                name="rentalArea"
                                class="form-input"
-                               min="0.01"
+                               min="1"
                                th:attr="max=${remainArea}"
-                               th:placeholder="'Tối đa ' + ${remainArea} + ' m²'"
+                               th:placeholder="'Tối đa ' + ${remainArea} + ' m² '"
                                required
-                               step="0.01"
-                               oninput="validateRentalArea(this)" />
+                               step="1"
+                               oninput="validateIntegerRentalArea(this)" />
                         <small class="form-text" th:text="'Có thể thuê tối đa ' + ${remainArea} + ' m².'"></small>
                         <small class="error-text" id="rentalAreaError" style="display: none;">
-                            Diện tích phải lớn hơn 0 và không vượt quá diện tích còn lại.
+                            Diện tích phải là số nguyên từ 1 đến diện tích còn lại.
                         </small>
                     </div>
 
@@ -271,13 +271,24 @@
         }
     }
 
-    function validateRentalArea(input) {
-        const rentalArea = parseFloat(input.value);
-        const maxArea = parseFloat(input.getAttribute('max'));
+    function validateIntegerRentalArea(input) {
+        const value = input.value;
+        const rentalArea = parseInt(value);
+        const maxArea = parseInt(input.getAttribute('max'));
         const errorElement = document.getElementById('rentalAreaError');
 
-        if (isNaN(rentalArea) || rentalArea <= 0 || rentalArea > maxArea) {
+        // Kiểm tra xem có phải số nguyên không (không có dấu chấm)
+        if (value.includes('.') || value.includes(',')) {
             errorElement.style.display = 'block';
+            errorElement.textContent = 'Chỉ được nhập số nguyên, không được nhập số thập phân.';
+            input.setCustomValidity('Chỉ được nhập số nguyên');
+            return;
+        }
+
+        // Kiểm tra giá trị hợp lệ
+        if (isNaN(rentalArea) || rentalArea < 1 || rentalArea > maxArea || rentalArea !== parseFloat(value)) {
+            errorElement.style.display = 'block';
+            errorElement.textContent = 'Diện tích phải là số nguyên từ 1 đến ' + maxArea + ' m².';
             input.setCustomValidity('Diện tích không hợp lệ');
         } else {
             errorElement.style.display = 'none';
@@ -336,7 +347,7 @@
         document.getElementById('rentalArea').addEventListener('input', calculateTotal);
         document.querySelector('form').addEventListener('submit', function(e) {
             const rentalAreaInput = document.getElementById('rentalArea');
-            validateRentalArea(rentalAreaInput);
+            validateIntegerRentalArea(rentalAreaInput);
 
             if (!this.checkValidity()) {
                 e.preventDefault();

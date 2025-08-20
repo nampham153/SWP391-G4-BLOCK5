@@ -1,5 +1,25 @@
 package com.example.swp.controller.website;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+
 import com.example.swp.annotation.LogActivity;
 import com.example.swp.dto.LoginRequest;
 import com.example.swp.entity.Customer;
@@ -9,19 +29,8 @@ import com.example.swp.service.CustomerService;
 import com.example.swp.service.EmailService;
 import com.example.swp.service.ManagerService;
 import com.example.swp.service.StaffService;
-import jakarta.servlet.http.HttpSession;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.*;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
-import java.util.Map;
+import jakarta.servlet.http.HttpSession;
 
 @Controller
 @RequestMapping("/api")
@@ -45,7 +54,7 @@ public class LoginRestController {
     @Autowired
     protected StaffService staffService;
 
-    @GetMapping({ "/login", "/api/login" })
+    @GetMapping({"/login", "/api/login"})
     public String returnLoginPage(Model model) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth != null && auth.isAuthenticated() && !(auth instanceof AnonymousAuthenticationToken)) {
@@ -54,7 +63,7 @@ public class LoginRestController {
         model.addAttribute("sessionId", session.getId());
         return "login";
 
-    }
+}
 
     @LogActivity(action = "Người dùng đăng nhập vào hệ thống")
     @PostMapping("/login")
@@ -64,14 +73,15 @@ public class LoginRestController {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
                             loginRequest.getEmail(),
-                            loginRequest.getPassword()));
+                            loginRequest.getPassword()
+                    )
+            );
 
             if (authentication == null || !authentication.isAuthenticated()) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body("Tài khoản hoặc mật khẩu không chính xác.");
             }
-            // Lấy role của người dùng
-            String role = authentication.getAuthorities().iterator().next().getAuthority();
+
             // Ghi nhận vào Spring Security Context
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
@@ -79,6 +89,8 @@ public class LoginRestController {
             session.setMaxInactiveInterval(6000); // 10 phút
             session.setAttribute("email", loginRequest.getEmail());
 
+            // Lấy role của người dùng
+            String role = authentication.getAuthorities().iterator().next().getAuthority();
             String redirectUrl = "/home-page"; // mặc định
 
             switch (role) {
@@ -99,10 +111,10 @@ public class LoginRestController {
                 case "STAFF":
                     String email = loginRequest.getEmail();
                     Staff staff = staffService.findByEmail(email).orElse(null);
-                    if (staff != null) {
+                        if(staff != null) {
                         session.setAttribute("loggedInStaff", staff);
-                    }
-                    redirectUrl = "/staff/dashboard";
+                        }
+                    redirectUrl = "/admin/manager-dashboard";
                     break;
                 default:
                     break;
@@ -119,15 +131,13 @@ public class LoginRestController {
         } catch (BadCredentialsException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body("Email hoặc mật khẩu không chính xác.");
-        } catch (DisabledException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body("Tài khoản của bạn đang bị khóa. Vui lòng liên hệ Staff.");
         } catch (Exception e) {
             e.printStackTrace(); // debug
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Tài khoản của bạn đã bị khóa");
+                    .body("Đã xảy ra lỗi khi đăng nhập.");
         }
     }
+
 
     @LogActivity(action = "Người dùng đăng xuất khỏi hệ thống")
     @GetMapping("/logout")
@@ -137,23 +147,15 @@ public class LoginRestController {
         return "redirect:/api/login"; // Chuyển về trang login
     }
 
+
     @GetMapping("/check-session")
     @ResponseBody
     public ResponseEntity<String> checkSession() {
         Object email = session.getAttribute("email");
-        Customer customer = (Customer) session.getAttribute("loggedInCustomer");
-
-        StringBuilder response = new StringBuilder();
-        response.append("Session ID: ").append(session.getId()).append("\n");
-        response.append("Email: ").append(email != null ? email : "null").append("\n");
-        response.append("Customer: ").append(customer != null ? customer.getEmail() : "null").append("\n");
-
         if (email != null) {
-            response.append("Status: Đang đăng nhập");
+            return ResponseEntity.ok("Đang đăng nhập với email: " + email);
         } else {
-            response.append("Status: Chưa đăng nhập hoặc session đã hết hạn");
+            return ResponseEntity.ok("Chưa đăng nhập hoặc session đã hết hạn.");
         }
-
-        return ResponseEntity.ok(response.toString());
     }
 }

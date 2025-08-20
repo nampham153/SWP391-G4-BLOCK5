@@ -2,7 +2,9 @@ package com.example.swp.controller.website;
 
 import com.example.swp.entity.Storage;
 import com.example.swp.entity.Customer;
+import com.example.swp.entity.Order;
 import com.example.swp.service.StorageService;
+import com.example.swp.service.OrderService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +16,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -30,6 +33,9 @@ public class BookingController {
 
     @Autowired
     private StorageService storageService;
+
+    @Autowired
+    private OrderService orderService;
 
     /**
      * Helper method để kiểm tra và lấy customer từ session
@@ -164,13 +170,7 @@ public class BookingController {
             return "redirect:/SWP/storages/" + storageId + "?error=Ngày kết thúc phải sau ngày bắt đầu";
         }
 
-        // Comment: Voucher functionality tạm thời ẩn
-        /*
-         * List<Voucher> vouchers = voucherService.getAllActiveVouchers();
-         * model.addAttribute("vouchers", vouchers);
-         */
 
-        // Tính diện tích còn lại (giả sử toàn bộ diện tích đều có thể thuê)
         double remainArea = storage.getArea();
 
         // Tạo order token để bảo mật
@@ -241,6 +241,12 @@ public class BookingController {
             return "redirect:/SWP/booking/" + storageId + "/booking?startDate=" + startDate + "&endDate=" + endDate;
         }
 
+        // Kiểm tra diện tích phải là số nguyên
+        if (rentalArea != Math.floor(rentalArea)) {
+            redirectAttributes.addFlashAttribute("error", "Diện tích thuê phải là số nguyên, không được nhập số thập phân.");
+            return "redirect:/SWP/booking/" + storageId + "/booking?startDate=" + startDate + "&endDate=" + endDate;
+        }
+
         if (rentalArea > storage.getArea()) {
             redirectAttributes.addFlashAttribute("error",
                     "Diện tích thuê (" + rentalArea + " m²) không được vượt quá diện tích kho (" + storage.getArea()
@@ -249,61 +255,176 @@ public class BookingController {
         }
 
         try {
+            // Hủy các đơn hàng cũ của khách hàng cho cùng kho này (nếu có)
+            orderService.cancelExistingOrdersForCustomerAndStorage(
+                customer.getId(), 
+                storageId, 
+                "Khách hàng đặt lại cùng kho - Hủy đơn hàng cũ tự động"
+            );
+
             // Tính toán chi phí
             long days = ChronoUnit.DAYS.between(startDate, endDate);
             double pricePerDay = storage.getPricePerDay();
             double totalCost = days * pricePerDay * (rentalArea / storage.getArea());
 
-            // Comment: Voucher processing tạm thời ẩn
-            /*
-             * double discountAmount = 0;
-             * if (voucherId != null) {
-             * Optional<Voucher> voucherOpt = voucherService.getVoucherById(voucherId);
-             * if (voucherOpt.isPresent()) {
-             * Voucher voucher = voucherOpt.get();
-             * discountAmount = voucher.getDiscountAmount();
-             * totalCost = Math.max(0, totalCost - discountAmount);
-             * }
-             * }
-             */
+            // Tạo và lưu đơn hàng vào database
+            Order order = new Order();
+            order.setStorage(storage);
+            order.setCustomer(customer);
+            order.setStartDate(startDate);
+            order.setEndDate(endDate);
+            order.setOrderDate(LocalDate.now());
+            order.setTotalAmount(totalCost);
+            order.setStatus("PENDING");
+            order.setRentalArea(rentalArea);
 
-            // Comment: Order creation tạm thời ẩn vì Order entity chưa có đủ fields
-            /*
-             * Order order = new Order();
-             * order.setStorage(storage);
-             * order.setStartDate(startDate);
-             * order.setEndDate(endDate);
-             * order.setOrderDate(LocalDate.now());
-             * order.setTotalAmount(totalCost);
-             * order.setStatus("PENDING");
-             * order.setCustomerName(name);
-             * order.setCustomerEmail(email);
-             * order.setCustomerPhone(phone);
-             * order.setRentalArea(rentalArea);
-             * 
-             * orderService.save(order);
-             * 
-             * redirectAttributes.addFlashAttribute("successMessage",
-             * "Đặt kho thành công! Mã đơn hàng: #" + order.getId() +
-             * ". Tổng chi phí: " + String.format("%,.0f", totalCost) + " VNĐ");
-             */
+            // Lưu đơn hàng vào database
+            Order savedOrder = orderService.save(order);
 
-            // Tạm thời chỉ hiển thị thông báo thành công
+            // Lưu ID đơn hàng vào session để hiển thị trong booking detail
+            session.setAttribute("latestOrderId", savedOrder.getId());
+
+            // Thông báo thành công
             redirectAttributes.addFlashAttribute("successMessage",
-                    "Thông tin đặt kho đã được ghi nhận! " +
-                            "Tên: " + name + ", Email: " + email + ", Phone: " + phone +
-                            ", Diện tích: " + rentalArea + " m², " +
-                            "Từ " + startDate + " đến " + endDate +
-                            ". Tổng chi phí: " + String.format("%,.0f", totalCost) + " VNĐ");
+                    "Đặt kho thành công! Mã đơn hàng: #" + savedOrder.getId() + 
+                    ". Tổng chi phí: " + String.format("%,.0f", totalCost) + " VNĐ");
 
             // Xóa order token khỏi session
             session.removeAttribute("orderToken");
 
-            return "redirect:/SWP/storages/" + storageId;
+            // Chuyển đến trang booking detail
+            return "redirect:/SWP/booking/detail";
 
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Có lỗi xảy ra khi đặt kho: " + e.getMessage());
             return "redirect:/SWP/booking/" + storageId + "/booking?startDate=" + startDate + "&endDate=" + endDate;
         }
+    }
+
+    /**
+     * Hiển thị trang booking detail sau khi đặt kho thành công
+     */
+    @GetMapping("/booking/detail")
+    public String showBookingDetail(
+            @RequestParam(value = "orderId", required = false) Integer orderId,
+            Model model, 
+            HttpSession session) {
+
+        // Kiểm tra customer đã đăng nhập chưa
+        Customer customer = getLoggedInCustomer(session);
+        if (customer == null) {
+            return "redirect:/api/login";
+        }
+
+        // Lấy ID đơn hàng từ parameter hoặc session
+        Integer targetOrderId = orderId;
+        if (targetOrderId == null) {
+            targetOrderId = (Integer) session.getAttribute("latestOrderId");
+        }
+        
+        if (targetOrderId == null) {
+            return "redirect:/SWP/customers/my-bookings";
+        }
+
+        // Lấy đơn hàng từ database
+        Optional<Order> optionalOrder = orderService.findOrderById(targetOrderId);
+        if (optionalOrder.isEmpty()) {
+            return "redirect:/SWP/customers/my-bookings";
+        }
+
+        Order order = optionalOrder.get();
+
+        // Kiểm tra xem đơn hàng có thuộc về customer hiện tại không
+        if (order.getCustomer().getId() != customer.getId()) {
+            return "redirect:/SWP/customers/my-bookings";
+        }
+
+        // Thêm attributes vào model
+        model.addAttribute("order", order);
+        model.addAttribute("customer", customer);
+
+        return "booking-detail";
+    }
+
+    /**
+     * Hiển thị danh sách đơn hàng của khách hàng
+     */
+    @GetMapping("/customers/my-bookings")
+    public String myBookings(Model model, HttpSession session) {
+        
+        // Kiểm tra customer đã đăng nhập chưa
+        Customer customer = getLoggedInCustomer(session);
+        if (customer == null) {
+            return "redirect:/api/login";
+        }
+
+        // Lấy danh sách đơn hàng của khách hàng (loại trừ đơn hàng đã hủy)
+        List<Order> allOrders = orderService.findOrdersByCustomer(customer);
+        List<Order> orders = allOrders.stream()
+                .filter(order -> !"CANCELLED".equals(order.getStatus()))
+                .collect(java.util.stream.Collectors.toList());
+        
+        // Tính tổng giá trị đơn hàng (chỉ tính đơn hàng không bị hủy)
+        double totalAmount = orders.stream()
+                .mapToDouble(Order::getTotalAmount)
+                .sum();
+
+        // Thêm attributes vào model
+        model.addAttribute("orders", orders);
+        model.addAttribute("customer", customer);
+        model.addAttribute("totalAmount", totalAmount);
+
+        return "my-bookings";
+    }
+
+    /**
+     * Hủy đơn hàng
+     */
+    @PostMapping("/customers/cancel-order/{orderId}")
+    public String cancelOrder(@PathVariable int orderId, 
+                             HttpSession session, 
+                             RedirectAttributes redirectAttributes) {
+        
+        // Kiểm tra customer đã đăng nhập chưa
+        Customer customer = getLoggedInCustomer(session);
+        if (customer == null) {
+            return "redirect:/api/login";
+        }
+
+        // Lấy đơn hàng từ database
+        Optional<Order> optionalOrder = orderService.findOrderById(orderId);
+        if (optionalOrder.isEmpty()) {
+            redirectAttributes.addFlashAttribute("error", "Không tìm thấy đơn hàng");
+            return "redirect:/SWP/customers/my-bookings";
+        }
+
+        Order order = optionalOrder.get();
+
+        // Kiểm tra xem đơn hàng có thuộc về customer hiện tại không
+        if (order.getCustomer().getId() != customer.getId()) {
+            redirectAttributes.addFlashAttribute("error", "Bạn không có quyền hủy đơn hàng này");
+            return "redirect:/SWP/customers/my-bookings";
+        }
+
+        // Chỉ cho phép hủy đơn hàng có trạng thái PENDING
+        if (!"PENDING".equals(order.getStatus())) {
+            redirectAttributes.addFlashAttribute("error", "Chỉ có thể hủy đơn hàng đang chờ xử lý");
+            return "redirect:/SWP/customers/my-bookings";
+        }
+
+        try {
+            // Cập nhật trạng thái đơn hàng thành CANCELLED
+            order.setStatus("CANCELLED");
+            order.setCancelReason("Khách hàng hủy đơn");
+            orderService.save(order);
+
+            redirectAttributes.addFlashAttribute("successMessage", 
+                "Đã hủy đơn hàng #" + orderId + " thành công");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", 
+                "Có lỗi xảy ra khi hủy đơn hàng: " + e.getMessage());
+        }
+
+        return "redirect:/SWP/customers/my-bookings";
     }
 }
