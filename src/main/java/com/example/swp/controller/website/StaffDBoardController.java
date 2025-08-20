@@ -1,24 +1,41 @@
 package com.example.swp.controller.website;
 
-import com.cloudinary.Cloudinary;
-import com.example.swp.enums.VoucherStatus;
-
-import com.example.swp.dto.StorageRequest;
-import com.example.swp.entity.*;
-import com.example.swp.service.*;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import com.cloudinary.Cloudinary;
+import com.example.swp.dto.StorageRequest;
+import com.example.swp.entity.Customer;
+import com.example.swp.entity.Feedback;
+import com.example.swp.entity.Order;
+import com.example.swp.entity.RecentActivity;
+import com.example.swp.entity.Storage;
+import com.example.swp.entity.Voucher;
+import com.example.swp.enums.VoucherStatus;
+import com.example.swp.service.CloudinaryService;
+import com.example.swp.service.CustomerService;
+import com.example.swp.service.FeedbackService;
+import com.example.swp.service.OrderService;
+import com.example.swp.service.RecentActivityService;
+import com.example.swp.service.StorageService;
+import com.example.swp.service.StorageTransactionService;
+import com.example.swp.service.VoucherService;
+
 
 @Controller
-@RequestMapping("/SWP/staff")
+@RequestMapping("/staff")
 public class StaffDBoardController {
 
     @Autowired
