@@ -64,6 +64,11 @@
             color: #f8d7da;
         }
         
+        .status-paid {
+            background: rgba(40, 167, 69, 0.2);
+            color: #d4edda;
+        }
+        
         .order-body {
             padding: 25px;
         }
@@ -133,6 +138,39 @@
             background: #545b62;
         }
         
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #c82333;
+        }
+        
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #218838;
+        }
+        
+        .total-summary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .total-amount {
+            font-size: 24px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        
         .empty-state {
             text-align: center;
             padding: 60px 20px;
@@ -183,12 +221,14 @@
                 <div class="header-actions">
                     <a href="/SWP/storages" class="btn btn-primary">
                         <i class="fas fa-plus"></i>
-                        Đặt kho mới
+                        Đặt kho
                     </a>
                 </div>
             </div>
 
             <div class="orders-container">
+
+                
                 <!-- Hiển thị khi có đơn hàng -->
                 <div th:if="${orders != null and !orders.empty}">
                     <div th:each="order : ${orders}" class="order-card">
@@ -205,6 +245,9 @@
                                       th:text="${order.status}"></span>
                                 <span th:if="${order.status == 'PENDING'}"
                                       class="status-pending"
+                                      th:text="${order.status}"></span>
+                                <span th:if="${order.status == 'PAID'}"
+                                      class="status-paid"
                                       th:text="${order.status}"></span>
                             </div>
                         </div>
@@ -259,9 +302,34 @@
                                     <i class="fas fa-eye"></i>
                                     Xem chi tiết
                                 </a>
+                                <!-- Nút hủy đơn chỉ hiển thị cho đơn hàng PENDING -->
+                                <form th:if="${order.status == 'PENDING'}" 
+                                      th:action="@{'/SWP/customers/cancel-order/' + ${order.id}}" 
+                                      method="post" 
+                                      style="display: inline;"
+                                      onsubmit="return confirm('Bạn có chắc chắn muốn hủy đơn hàng này?')">
+                                    <button type="submit" class="btn btn-danger">
+                                        <i class="fas fa-times"></i>
+                                        Hủy đơn
+                                    </button>
+                                </form>
                             </div>
                         </div>
                     </div>
+
+                    <!-- Tổng kết đơn hàng -->
+                    <div th:if="${orders != null and !orders.empty}" class="total-summary">
+                        <h3><i class="fas fa-chart-line"></i> Tổng kết đơn hàng</h3>
+                        <div class="total-amount">
+                            Tổng giá trị: <span th:text="${#numbers.formatDecimal(totalAmount, 0, 'POINT', 2, 'COMMA')} + ' VNĐ'"></span>
+                        </div>
+                        <p th:text="'Số đơn hàng: ' + ${orders.size()}"></p>
+                        <button class="btn btn-success" style="margin-top: 15px; font-size: 16px; padding: 12px 24px;">
+                            <i class="fas fa-credit-card"></i>
+                            Thanh toán
+                        </button>
+                    </div>
+
                 </div>
 
                 <!-- Hiển thị khi không có đơn hàng -->

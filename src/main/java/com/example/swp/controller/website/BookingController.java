@@ -264,7 +264,7 @@ public class BookingController {
             order.setEndDate(endDate);
             order.setOrderDate(LocalDate.now());
             order.setTotalAmount(totalCost);
-            order.setStatus("CONFIRMED");
+            order.setStatus("PENDING");
             order.setRentalArea(rentalArea);
 
             // Lưu đơn hàng vào database
@@ -347,13 +347,73 @@ public class BookingController {
             return "redirect:/api/login";
         }
 
-        // Lấy danh sách đơn hàng của khách hàng
-        List<Order> orders = orderService.findOrdersByCustomer(customer);
+        // Lấy danh sách đơn hàng của khách hàng (loại trừ đơn hàng đã hủy)
+        List<Order> allOrders = orderService.findOrdersByCustomer(customer);
+        List<Order> orders = allOrders.stream()
+                .filter(order -> !"CANCELLED".equals(order.getStatus()))
+                .collect(java.util.stream.Collectors.toList());
+        
+        // Tính tổng giá trị đơn hàng (chỉ tính đơn hàng không bị hủy)
+        double totalAmount = orders.stream()
+                .mapToDouble(Order::getTotalAmount)
+                .sum();
 
         // Thêm attributes vào model
         model.addAttribute("orders", orders);
         model.addAttribute("customer", customer);
+        model.addAttribute("totalAmount", totalAmount);
 
         return "my-bookings";
+    }
+
+    /**
+     * Hủy đơn hàng
+     */
+    @PostMapping("/customers/cancel-order/{orderId}")
+    public String cancelOrder(@PathVariable int orderId, 
+                             HttpSession session, 
+                             RedirectAttributes redirectAttributes) {
+        
+        // Kiểm tra customer đã đăng nhập chưa
+        Customer customer = getLoggedInCustomer(session);
+        if (customer == null) {
+            return "redirect:/api/login";
+        }
+
+        // Lấy đơn hàng từ database
+        Optional<Order> optionalOrder = orderService.findOrderById(orderId);
+        if (optionalOrder.isEmpty()) {
+            redirectAttributes.addFlashAttribute("error", "Không tìm thấy đơn hàng");
+            return "redirect:/SWP/customers/my-bookings";
+        }
+
+        Order order = optionalOrder.get();
+
+        // Kiểm tra xem đơn hàng có thuộc về customer hiện tại không
+        if (order.getCustomer().getId() != customer.getId()) {
+            redirectAttributes.addFlashAttribute("error", "Bạn không có quyền hủy đơn hàng này");
+            return "redirect:/SWP/customers/my-bookings";
+        }
+
+        // Chỉ cho phép hủy đơn hàng có trạng thái PENDING
+        if (!"PENDING".equals(order.getStatus())) {
+            redirectAttributes.addFlashAttribute("error", "Chỉ có thể hủy đơn hàng đang chờ xử lý");
+            return "redirect:/SWP/customers/my-bookings";
+        }
+
+        try {
+            // Cập nhật trạng thái đơn hàng thành CANCELLED
+            order.setStatus("CANCELLED");
+            order.setCancelReason("Khách hàng hủy đơn");
+            orderService.save(order);
+
+            redirectAttributes.addFlashAttribute("successMessage", 
+                "Đã hủy đơn hàng #" + orderId + " thành công");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", 
+                "Có lỗi xảy ra khi hủy đơn hàng: " + e.getMessage());
+        }
+
+        return "redirect:/SWP/customers/my-bookings";
     }
 }
