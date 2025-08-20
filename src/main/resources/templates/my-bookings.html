@@ -157,6 +157,34 @@
             background: #218838;
         }
 
+        .btn-success:disabled {
+            background: #6c757d;
+            color: white;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .contract-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 12px;
+            text-transform: uppercase;
+        }
+
+        .contract-signed {
+            background: rgba(40, 167, 69, 0.2);
+            color: #28a745;
+        }
+
+        .contract-pending {
+            background: rgba(255, 193, 7, 0.2);
+            color: #ffc107;
+        }
+
         .total-summary {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
@@ -304,6 +332,12 @@
                                 <a th:href="@{'/SWP/booking/contract?orderId=' + ${order.id}}" class="btn btn-secondary">
                                     <i class="fas fa-file-contract"></i>
                                     Hợp đồng
+                                    <span th:if="${order.eContract != null and order.eContract.status.name() == 'SIGNED'}" class="contract-status contract-signed">
+                                        <i class="fas fa-check-circle"></i> Đã ký
+                                    </span>
+                                    <span th:if="${order.eContract == null or order.eContract.status.name() != 'SIGNED'}" class="contract-status contract-pending">
+                                        <i class="fas fa-clock"></i> Chờ ký
+                                    </span>
                                 </a>
                                 <!-- Nút hủy đơn chỉ hiển thị cho đơn hàng PENDING -->
                                 <form th:if="${order.status == 'PENDING'}"
@@ -327,10 +361,17 @@
                             Tổng giá trị: <span th:text="${#numbers.formatDecimal(totalAmount, 0, 'POINT', 2, 'COMMA')} + ' VNĐ'"></span>
                         </div>
                         <p th:text="'Số đơn hàng: ' + ${orders.size()}"></p>
-                        <button class="btn btn-success" style="margin-top: 15px; font-size: 16px; padding: 12px 24px;">
+                        <button class="btn btn-success"
+                                th:disabled="${!allContractsSigned}"
+                                th:title="${!allContractsSigned ? 'Vui lòng ký tất cả hợp đồng trước khi thanh toán' : 'Thanh toán tất cả đơn hàng'}"
+                                style="margin-top: 15px; font-size: 16px; padding: 12px 24px;">
                             <i class="fas fa-credit-card"></i>
-                            Thanh toán
+                            <span th:if="${allContractsSigned}">Thanh toán</span>
+                            <span th:unless="${allContractsSigned}">Thanh toán</span>
                         </button>
+                        <p th:unless="${allContractsSigned}" style="margin-top: 10px; color: #ffc107; font-size: 14px; text-align: center;">
+                            <i class="fas fa-exclamation-triangle"></i> Bạn cần ký tất cả hợp đồng trước khi thanh toán
+                        </p>
                     </div>
                 </div>
 

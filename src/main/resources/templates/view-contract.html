@@ -453,8 +453,8 @@
         </ul>
       </div>
 
-      <div th:if="${contract.status.name != 'SIGNED'}" class="signature-section">
-        <form th:action="@{/econtract/sign/{id}(id=${contract.id})}"
+      <div th:if="${contract.status.name() != 'SIGNED'}" class="signature-section">
+        <form th:action="@{/SWP/econtract/sign/{id}(id=${contract.id})}"
               method="post"
               class="signature-form">
           <div class="checkbox-container">
@@ -466,15 +466,11 @@
 
       </div>
 
-      <div th:if="${contract.status.name == 'SIGNED'}" class="signed-status">
+      <div th:if="${contract.status.name() == 'SIGNED'}" class="signed-status">
         <p>✅ Hợp đồng đã được ký thành công!</p>
       </div>
 
-      <div th:if="${contract.status.name == 'SIGNED'}" class="export-section">
-        <form th:action="${'/econtract/export-pdf/' + contract.id}" method="get">
-          <button type="submit" class="export-button">📄 Xuất hợp đồng PDF</button>
-        </form>
-      </div>
+
     </div>
   </div>
 </div>

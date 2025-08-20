@@ -3,8 +3,11 @@ package com.example.swp.controller.website;
 import com.example.swp.entity.Storage;
 import com.example.swp.entity.Customer;
 import com.example.swp.entity.Order;
+import com.example.swp.entity.EContract;
+import com.example.swp.enums.EContractStatus;
 import com.example.swp.service.StorageService;
 import com.example.swp.service.OrderService;
+import com.example.swp.service.EContractService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,6 +39,9 @@ public class BookingController {
 
     @Autowired
     private OrderService orderService;
+
+    @Autowired
+    private EContractService eContractService;
 
     /**
      * Helper method để kiểm tra và lấy customer từ session
@@ -281,6 +287,9 @@ public class BookingController {
             // Lưu đơn hàng vào database
             Order savedOrder = orderService.save(order);
 
+            // Tạo hợp đồng cho đơn hàng
+            EContract contract = eContractService.createContract(savedOrder);
+
             // Lưu ID đơn hàng vào session để hiển thị trong booking detail
             session.setAttribute("latestOrderId", savedOrder.getId());
 
@@ -369,10 +378,14 @@ public class BookingController {
                 .mapToDouble(Order::getTotalAmount)
                 .sum();
 
+        // Kiểm tra xem tất cả hợp đồng đã được ký chưa
+        boolean allContractsSigned = eContractService.areAllContractsSignedForCustomer(customer.getId());
+
         // Thêm attributes vào model
         model.addAttribute("orders", orders);
         model.addAttribute("customer", customer);
         model.addAttribute("totalAmount", totalAmount);
+        model.addAttribute("allContractsSigned", allContractsSigned);
 
         return "my-bookings";
     }
@@ -456,15 +469,14 @@ public class BookingController {
             return "redirect:/SWP/customers/my-bookings";
         }
 
-        // Tạo contract object giả lập cho template
-        java.util.Map<String, Object> contract = new java.util.HashMap<>();
-        contract.put("contractCode", "HD-" + order.getId());
-        contract.put("id", order.getId());
-        
-        // Tạo status object đơn giản
-        java.util.Map<String, String> status = new java.util.HashMap<>();
-        status.put("name", "DRAFT");
-        contract.put("status", status);
+        // Lấy hoặc tạo hợp đồng cho đơn hàng
+        Optional<EContract> contractOpt = eContractService.findByOrder(order);
+        EContract contract;
+        if (contractOpt.isEmpty()) {
+            contract = eContractService.createContract(order);
+        } else {
+            contract = contractOpt.get();
+        }
 
         // Thêm attributes vào model
         model.addAttribute("order", order);
@@ -472,5 +484,47 @@ public class BookingController {
         model.addAttribute("contract", contract);
 
         return "view-contract";
+    }
+
+    /**
+     * Xử lý ký hợp đồng
+     */
+    @PostMapping("/econtract/sign/{id}")
+    public String signContract(@PathVariable Long id, 
+                              HttpSession session, 
+                              RedirectAttributes redirectAttributes) {
+        
+        // Kiểm tra customer đã đăng nhập chưa
+        Customer customer = getLoggedInCustomer(session);
+        if (customer == null) {
+            return "redirect:/api/login";
+        }
+
+        try {
+            // Lấy hợp đồng
+            Optional<EContract> contractOpt = eContractService.findById(id);
+            if (contractOpt.isEmpty()) {
+                redirectAttributes.addFlashAttribute("error", "Không tìm thấy hợp đồng");
+                return "redirect:/SWP/customers/my-bookings";
+            }
+
+            EContract contract = contractOpt.get();
+            
+            // Kiểm tra xem hợp đồng có thuộc về customer hiện tại không
+            if (contract.getOrder().getCustomer().getId() != customer.getId()) {
+                redirectAttributes.addFlashAttribute("error", "Bạn không có quyền ký hợp đồng này");
+                return "redirect:/SWP/customers/my-bookings";
+            }
+
+            // Ký hợp đồng
+            EContract signedContract = eContractService.signContract(id);
+            
+            redirectAttributes.addFlashAttribute("successMessage", "Hợp đồng đã được ký thành công!");
+            return "redirect:/SWP/booking/contract?orderId=" + signedContract.getOrder().getId();
+            
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Có lỗi xảy ra khi ký hợp đồng: " + e.getMessage());
+            return "redirect:/SWP/customers/my-bookings";
+        }
     }
 }
