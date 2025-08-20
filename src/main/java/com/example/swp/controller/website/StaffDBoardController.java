@@ -33,7 +33,6 @@ import com.example.swp.service.StorageService;
 import com.example.swp.service.StorageTransactionService;
 import com.example.swp.service.VoucherService;
 
-
 @Controller
 @RequestMapping("/staff")
 public class StaffDBoardController {
@@ -138,7 +137,6 @@ public class StaffDBoardController {
         return "customer-list"; // Trang HTML hiển thị danh sách người dùng
     }
 
-
     @GetMapping("/staff-add-storage")
     public String showAddStorageForm(Model model) {
         model.addAttribute("storage", new Storage());
@@ -173,9 +171,9 @@ public class StaffDBoardController {
 
     @PostMapping("/staff-add-storage")
     public String addStorage(@ModelAttribute StorageRequest storageRequest,
-                             @RequestParam("image") MultipartFile file,
-                             @RequestParam("returnUrl") String returnUrl,
-                             RedirectAttributes redirectAttributes) {
+            @RequestParam("image") MultipartFile file,
+            @RequestParam("returnUrl") String returnUrl,
+            RedirectAttributes redirectAttributes) {
         try {
             // Upload ảnh
             if (file != null && !file.isEmpty()) {
@@ -197,8 +195,8 @@ public class StaffDBoardController {
 
     @PostMapping("/storages/{id}/delete")
     public String deleteStorage(@PathVariable("id") int id,
-                                @RequestParam(value = "returnUrl", required = false) String returnUrl,
-                                RedirectAttributes redirectAttributes) {
+            @RequestParam(value = "returnUrl", required = false) String returnUrl,
+            RedirectAttributes redirectAttributes) {
         storageService.deleteStorageById(id);
         redirectAttributes.addFlashAttribute("message", "Storage deleted successfully");
         if (returnUrl == null || returnUrl.isEmpty()) {
@@ -209,8 +207,8 @@ public class StaffDBoardController {
 
     @PostMapping("/storages/{id}/edit")
     public String editStorage(@PathVariable int id,
-                              @ModelAttribute Storage storage,
-                              RedirectAttributes redirectAttributes) {
+            @ModelAttribute Storage storage,
+            RedirectAttributes redirectAttributes) {
         try {
             Optional<Storage> existingStorageOpt = storageService.findByID(id);
             if (existingStorageOpt.isPresent()) {
@@ -259,8 +257,8 @@ public class StaffDBoardController {
 
     @PostMapping("/storages/{id}/toggle-status")
     public String toggleStorageStatus(@PathVariable("id") int id,
-                                      @RequestParam(value = "returnUrl", required = false) String returnUrl,
-                                      RedirectAttributes redirectAttributes) {
+            @RequestParam(value = "returnUrl", required = false) String returnUrl,
+            RedirectAttributes redirectAttributes) {
         Optional<Storage> optionalStorage = storageService.findByID(id);
         if (optionalStorage.isPresent()) {
             Storage storage = optionalStorage.get();
