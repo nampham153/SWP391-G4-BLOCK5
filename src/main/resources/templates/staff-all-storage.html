@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Storage List - Staff Manager</title>
+    <link rel="stylesheet" th:href="@{/css/staff-dashboard.css}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+<!-- Sidebar -->
+<div th:replace="taskbar/staff-taskbar :: staffTaskbar"></div>
+<main class="main-content">
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <button class="sidebar-toggle">
+                <i class="fas fa-bars"></i>
+            </button>
+            <h1>Quản Lý Kho</h1>
+        </div>
+
+        <div class="header-right">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Search storage units, items...">
+            </div>
+        </div>
+    </header>
+    <!-- Page Content -->
+    <div class="page-content">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h2 class="page-title">Tất cả các kho</h2>
+            <div class="page-actions">
+                <button class="btn-secondary btn-back">
+                    <a href="/SWP/staff/staff-dashboard" style="color: inherit; text-decoration: none;">
+                        <i class="fas fa-arrow-left"></i>
+                        Quay Lại Dashboard
+                    </a>
+                </button>
+                <button class="btn-primary">
+                    <a href="/SWP/staff/staff-add-storage" style="color: white; text-decoration: none;">
+                        <i class="fas fa-plus"></i>
+                        Thêm Kho Mới
+                    </a>
+                </button>
+            </div>
+        </div>
+
+        <!-- Filter Section -->
+        <div class="filter-section">
+            <div class="filter-group">
+                <label for="statusFilter">Trạng thái:</label>
+                <select id="statusFilter" class="filter-select">
+                    <option value="available">Còn trống</option>
+                    <option value="occupied">Đã thuê</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="areaFilter">Diện tích:</label>
+                <select id="areaFilter" class="filter-select">
+                    <option value="">Diện tích</option>
+                    <option value="small">Nhỏ (< 200m²)</option>
+                    <option value="medium">Medium (200-800m²)</option>
+                    <option value="large">Large (> 800m²)</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="priceFilter">Giá cả:</label>
+                <select id="priceFilter" class="filter-select">
+                    <option value="">Theo giá</option>
+                    <option value="low">Dưới 150.000</option>
+                    <option value="medium">150.000 - 300.000</option>
+                    <option value="high">Hơn 300.000</option>
+                </select>
+            </div>
+            <button class="btn-primary" type="button" onclick="applyFilters()">
+                <i class="fas fa-filter"></i> Lọc
+            </button>
+            <button class="btn-secondary" onclick="clearFilters()">
+                <i class="fas fa-times"></i>
+                Xóa Filters
+            </button>
+
+            <div class="filter-group">
+                <label for="sortSelect">Sắp xếp theo:</label>
+                <select id="sortSelect" class="filter-select" onchange="applyFilters()">
+                    <option value="">Mặc định</option>
+                    <option value="priceAsc">Giá tăng dần</option>
+                    <option value="priceDesc">Giá giảm dần</option>
+                    <option value="areaAsc">Diện tích tăng dần</option>
+                    <option value="areaDesc">Diện tích giảm dần</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Storage Table -->
+        <div class="card">
+            <div class="card-header">
+                <h3>Tổng kho (<span id="totalCount" th:text="${#lists.size(storages)}"></span>)</h3>
+            </div>
+
+            <div class="table-container">
+                <table class="data-table">
+                    <thead style="margin-left: 10px;">
+                    <tr>
+                        <th>ID</th>
+                        <th>Ảnh</th>
+                        <th>Tên Kho</th>
+                        <th>Diện tích</th>
+                        <th>Giá cả</th>
+                        <th>Trạng thái</th>
+                        <th>Hành động</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <!-- Sample data - replace with Thymeleaf loop -->
+                    <tr th:each="storage : ${storages}">
+                    <td th:text="${storage.storageid}"></td>
+                        <td><img th:src="${storage.imUrl} ?: '/images/default-storage.jpg'" class="storage-image" /></td>
+                        <td th:text="${storage.storagename}"></td>
+                        <td th:text="${storage.area + ' m²'}"></td>
+                        <td th:text="${storage.pricePerDay}"></td>
+                        <td>
+                    <span th:class="${storage.status} ? 'status-badge active' : 'status-badge warning'"
+                        th:text="${storage.status} ? 'Còn trống' : 'Đã thuê'"></span>
+                        </td>
+                        <td>
+                            <div class="action-buttons">
+                                <a th:href="@{'/SWP/staff/storages/' + ${storage.getStorageid()} + '/detail'}"
+                                   class="btn-icon" title="View Details">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <form th:action="@{'/SWP/staff/storages/' + ${storage.getStorageid()} + '/toggle-status'}"
+                                      method="post" style="display: inline;"
+                                      onsubmit="return confirm('Bạn có chắc muốn thay đổi trạng thái kho này?');">
+                                    <input type="hidden" name="returnUrl" value="/SWP/staff/staff-all-storage"/>
+                                    <button type="submit" class="btn-icon warning" title="Chuyển trạng thái">
+                                        <i class="fas fa-exchange-alt"></i>
+                                    </button>
+                                </form>
+                                <form th:action="@{'/SWP/staff/storages/' + ${storage.getStorageid()} + '/delete'}"
+                                      method="post" style="display: inline;"
+                                      onsubmit="return confirm('Bạn có chắc là xóa kho này không?');">
+                                    <input type="hidden" name="returnUrl" value="/SWP/staff/staff-all-storage"/>
+                                    <button type="submit" class="btn-icon danger" title="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination">
+                <button><i class="fas fa-chevron-left"></i></button>
+                <button class="active">1</button>
+                <button>2</button>
+                <button>3</button>
+                <button><i class="fas fa-chevron-right"></i></button>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script>
+    const COLUMN_COUNT = 7;
+    const rowsPerPage = 10;
+    let currentPage = 1;
+
+    document.addEventListener('DOMContentLoaded', function () {
+        // Gán sự kiện lọc, sắp xếp
+        document.getElementById('statusFilter').addEventListener('change', applyFiltersAndPaginate);
+        document.getElementById('areaFilter').addEventListener('change', applyFiltersAndPaginate);
+        document.getElementById('priceFilter').addEventListener('change', applyFiltersAndPaginate);
+        document.getElementById('sortSelect').addEventListener('change', applyFiltersAndPaginate);
+
+        // Gọi lần đầu
+        applyFiltersAndPaginate();
+    });
+
+    function applyFiltersAndPaginate() {
+        const status = document.getElementById('statusFilter').value;
+        const area = document.getElementById('areaFilter').value;
+        const price = document.getElementById('priceFilter').value;
+        const sort = document.getElementById('sortSelect').value;
+
+        const rows = Array.from(document.querySelectorAll('.data-table tbody tr'));
+        let visibleRows = [];
+
+        rows.forEach(row => {
+            const statusText = row.querySelector('.status-badge')?.textContent.trim().toLowerCase() || '';
+            const areaValue = parseFloat(row.children[3].textContent.replace(/[^\d.]/g, '')) || 0;
+            const priceValue = parseFloat(row.children[4].textContent.replace(/[^\d.]/g, '')) || 0;
+
+            let show = true;
+
+            if (status === 'available' && !statusText.includes('còn trống')) show = false;
+            if (status === 'occupied' && !statusText.includes('đã thuê')) show = false;
+
+            if (area === 'small' && !(areaValue < 200)) show = false;
+            if (area === 'medium' && !(areaValue >= 200 && areaValue <= 800)) show = false;
+            if (area === 'large' && !(areaValue > 800)) show = false;
+
+            if (price === 'low' && !(priceValue < 150000)) show = false;
+            if (price === 'medium' && !(priceValue >= 150000 && priceValue <= 300000)) show = false;
+            if (price === 'high' && !(priceValue > 300000)) show = false;
+
+            row.style.display = show ? '' : 'none';
+            row.dataset.filtered = show ? 'true' : 'false';
+
+            if (show) visibleRows.push(row);
+        });
+
+        // Sắp xếp
+        if (sort) {
+            visibleRows.sort((a, b) => {
+                const areaA = parseFloat(a.children[3].textContent.replace(/[^\d.]/g, '')) || 0;
+                const areaB = parseFloat(b.children[3].textContent.replace(/[^\d.]/g, '')) || 0;
+                const priceA = parseFloat(a.children[4].textContent.replace(/[^\d.]/g, '')) || 0;
+                const priceB = parseFloat(b.children[4].textContent.replace(/[^\d.]/g, '')) || 0;
+
+                switch (sort) {
+                    case 'priceAsc': return priceA - priceB;
+                    case 'priceDesc': return priceB - priceA;
+                    case 'areaAsc': return areaA - areaB;
+                    case 'areaDesc': return areaB - areaA;
+                    default: return 0;
+                }
+            });
+
+            // Re-append to tbody
+            const tbody = document.querySelector('.data-table tbody');
+            visibleRows.forEach(row => tbody.appendChild(row));
+        }
+
+        currentPage = 1;
+        const totalPages = Math.max(1, Math.ceil(visibleRows.length / rowsPerPage));
+        renderPagination(totalPages);
+        showPage(currentPage);
+        document.getElementById('totalCount').textContent = visibleRows.length;
+    }
+
+    function showPage(page) {
+        const rows = Array.from(document.querySelectorAll('.data-table tbody tr'))
+            .filter(row => row.dataset.filtered === 'true');
+
+        const totalPages = Math.max(1, Math.ceil(rows.length / rowsPerPage));
+        currentPage = Math.min(Math.max(1, page), totalPages);
+
+        rows.forEach((row, index) => {
+            row.style.display = (index >= (currentPage - 1) * rowsPerPage && index < currentPage * rowsPerPage)
+                ? '' : 'none';
+        });
+
+        highlightCurrentPage();
+    }
+
+    function renderPagination(totalPages) {
+        const pagination = document.querySelector('.pagination');
+        pagination.innerHTML = '';
+
+        const prevBtn = document.createElement('button');
+        prevBtn.innerHTML = '<i class="fas fa-chevron-left"></i>';
+        prevBtn.disabled = currentPage === 1;
+        prevBtn.addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                showPage(currentPage);
+            }
+        });
+        pagination.appendChild(prevBtn);
+
+        for (let i = 1; i <= totalPages; i++) {
+            const btn = document.createElement('button');
+            btn.textContent = i;
+            if (i === currentPage) btn.classList.add('active');
+            btn.addEventListener('click', () => {
+                currentPage = i;
+                showPage(currentPage);
+            });
+            pagination.appendChild(btn);
+        }
+
+        const nextBtn = document.createElement('button');
+        nextBtn.innerHTML = '<i class="fas fa-chevron-right"></i>';
+        nextBtn.disabled = currentPage === totalPages;
+        nextBtn.addEventListener('click', () => {
+            if (currentPage < totalPages) {
+                currentPage++;
+                showPage(currentPage);
+            }
+        });
+        pagination.appendChild(nextBtn);
+    }
+
+    function highlightCurrentPage() {
+        const buttons = document.querySelectorAll('.pagination button');
+        buttons.forEach(btn => {
+            if (btn.textContent === String(currentPage)) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+    }
+
+    function clearFilters() {
+        document.getElementById('statusFilter').value = '';
+        document.getElementById('areaFilter').value = '';
+        document.getElementById('priceFilter').value = '';
+        document.getElementById('sortSelect').value = '';
+        applyFiltersAndPaginate();
+    }
+</script>
+</body>
+</html>

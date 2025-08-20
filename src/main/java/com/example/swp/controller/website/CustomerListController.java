@@ -4,6 +4,8 @@ import com.example.swp.entity.Customer;
 import com.example.swp.enums.RoleName;
 import com.example.swp.service.CustomerService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -23,7 +25,14 @@ public class CustomerListController {
             @RequestParam(value = "role", required = false, defaultValue = "ALL") String role,
             @RequestParam(value = "name", required = false) String name,
             @RequestParam(value = "customerId", required = false) Integer customerId,
-            Model model) {
+            Model model,
+            Authentication authentication) {
+        
+        // Kiểm tra quyền truy cập - chỉ STAFF được phép
+        if (authentication == null || 
+            !authentication.getAuthorities().contains(new SimpleGrantedAuthority(RoleName.STAFF.name()))) {
+            return "redirect:/api/login";
+        }
         List<Customer> customers;
         if (customerId != null) {
             Customer found = customerService.getCustomer(customerId);
@@ -44,10 +53,32 @@ public class CustomerListController {
     }
 
     @GetMapping("/customers/{id}")
-    public String customerDetail(@PathVariable int id, Model model) {
+    public String customerDetail(@PathVariable int id, Model model, Authentication authentication) {
+        
+        // Kiểm tra quyền truy cập - chỉ STAFF được phép
+        if (authentication == null || 
+            !authentication.getAuthorities().contains(new SimpleGrantedAuthority(RoleName.STAFF.name()))) {
+            return "redirect:/api/login";
+        }
         Customer customer = customerService.getCustomer(id);
         if (customer == null) {
             return "redirect:/SWP/customers";
+        }
+        model.addAttribute("customer", customer);
+        return "customer-detail";
+    }
+
+    @GetMapping("/manager/customers/{id}")
+    public String managerCustomerDetail(@PathVariable int id, Model model, Authentication authentication) {
+        
+        // Kiểm tra quyền truy cập - chỉ MANAGER được phép
+        if (authentication == null || 
+            !authentication.getAuthorities().contains(new SimpleGrantedAuthority(RoleName.MANAGER.name()))) {
+            return "redirect:/api/login";
+        }
+        Customer customer = customerService.getCustomer(id);
+        if (customer == null) {
+            return "redirect:/admin/manager-customer-list";
         }
         model.addAttribute("customer", customer);
         return "customer-detail";
