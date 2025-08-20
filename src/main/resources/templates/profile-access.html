@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile Access - QVL Storage</title>
+    <link rel="stylesheet" th:href="@{/css/profile-access.css}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+<!-- Sidebar -->
+<nav class="sidebar">
+    <div class="sidebar-header">
+        <div class="logo">
+            <i class="fas fa-database"></i>
+            <span>QVL Storage</span>
+        </div>
+    </div>
+    <ul class="sidebar-menu">
+        <li class="menu-item">
+            <a href="/SWP">
+                <i class="fas fa-home"></i>
+                <span>Home</span>
+            </a>
+        </li>
+        <li class="menu-item">
+            <a href="/SWP/staff/staff-dashboard">
+                <i class="fas fa-tachometer-alt"></i>
+                <span>Dashboard</span>
+            </a>
+        </li>
+        <li class="menu-item">
+            <a href="addstorage">
+                <i class="fas fa-hdd"></i>
+                <span>Add Storage</span>
+            </a>
+        </li>
+        <li class="menu-item">
+            <a href="/SWP/staff/staff-all-storage">
+                <i class="fas fa-warehouse"></i>
+                <span>Storage List</span>
+            </a>
+        </li>
+        <li class="menu-item">
+            <a href="/SWP/orders">
+                <i class="fas fa-chart-bar"></i>
+                <span>Order List</span>
+            </a>
+        </li>
+        <li class="menu-item">
+            <a href="#inventory">
+                <i class="fas fa-boxes"></i>
+                <span>Feedback</span>
+            </a>
+        </li>
+        <li class="menu-item">
+            <a href="#reports">
+                <i class="fas fa-file-alt"></i>
+                <span>Reports</span>
+            </a>
+        </li>
+        <li class="menu-item">
+            <a href="/SWP/customers">
+                <i class="fas fa-users"></i>
+                <span>Customer List</span>
+            </a>
+        </li>
+        <li class="menu-item active">
+            <a href="/SWP/support">
+                <i class="fas fa-headset"></i>
+                <span>Customer Support</span>
+            </a>
+        </li>
+        <li class="menu-item">
+            <a href="#settings">
+                <i class="fas fa-cog"></i>
+                <span>Settings</span>
+            </a>
+        </li>
+    </ul>
+
+    <div class="sidebar-footer">
+        <div class="user-info">
+            <div class="user-avatar">
+                <i class="fas fa-user"></i>
+            </div>
+            <div class="user-details">
+                <span class="user-name">Support Agent</span>
+                <span class="user-role">Customer Service</span>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- Main Content -->
+<main class="main-content">
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <button class="sidebar-toggle">
+                <i class="fas fa-bars"></i>
+            </button>
+            <h1>Profile Access Management</h1>
+        </div>
+
+        <div class="header-right">
+            <div class="breadcrumb">
+                <a href="/SWP/support">Customer Support</a>
+                <i class="fas fa-chevron-right"></i>
+                <span>Profile Access</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Page Content -->
+    <div class="page-content">
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="page-header-left">
+                <div class="profile-avatar-large">
+                    <i class="fas fa-user-circle"></i>
+                </div>
+                <div class="profile-title">
+                    <h2 class="page-title">Customer Profile Access</h2>
+                    <p class="profile-subtitle">
+                        <span>Securely access and manage customer profile information</span>
+                    </p>
+                </div>
+            </div>
+            <div class="page-actions">
+                <button class="btn-secondary btn-back">
+                    <a href="/SWP/support" style="color: inherit; text-decoration: none;">
+                        <i class="fas fa-arrow-left"></i>
+                        Back to Support
+                    </a>
+                </button>
+                <button class="btn-secondary">
+                    <i class="fas fa-shield-alt"></i>
+                    Privacy Policy
+                </button>
+            </div>
+        </div>
+
+        <!-- Access Form Card -->
+        <div class="card form-card">
+            <div class="card-header">
+                <h3>
+                    <i class="fas fa-user-check"></i>
+                    Customer Identity Verification
+                </h3>
+                <div class="privacy-badge">
+                    <i class="fas fa-lock"></i>
+                    <span>Privacy Protected</span>
+                </div>
+            </div>
+
+            <div class="card-content">
+                <!-- Error Message -->
+                <div th:if="${error}" class="alert alert-error">
+                    <div class="alert-icon">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="alert-content">
+                        <h4>Access Denied</h4>
+                        <p th:text="${error}">Error message</p>
+                    </div>
+                </div>
+
+                <!-- Success Message -->
+                <div th:if="${success}" class="alert alert-success">
+                    <div class="alert-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="alert-content">
+                        <h4>Access Granted</h4>
+                        <p th:text="${success}">Success message</p>
+                    </div>
+                </div>
+
+                <form th:action="@{/SWP/support/profile-access}"
+                      method="post"
+                      class="access-form"
+                      id="accessForm">
+
+                    <!-- Instructions Section -->
+                    <div class="instructions-section">
+                        <div class="instruction-header">
+                            <i class="fas fa-info-circle"></i>
+                            <h4>Access Instructions</h4>
+                        </div>
+                        <div class="instruction-content">
+                            <p>To access customer profile information, please verify the customer's identity by providing accurate personal details:</p>
+                            <ul class="instruction-list">
+                                <li><i class="fas fa-check"></i> Enter the customer's full legal name</li>
+                                <li><i class="fas fa-check"></i> Provide valid citizen identification number</li>
+                                <li><i class="fas fa-check"></i> Ensure information matches official records</li>
+                                <li><i class="fas fa-check"></i> Follow data protection guidelines</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Form Fields -->
+                    <div class="form-section">
+                        <div class="section-header">
+                            <h4>
+                                <i class="fas fa-user-shield"></i>
+                                Customer Verification Details
+                            </h4>
+                        </div>
+
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="fullname" class="form-label">
+                                    <i class="fas fa-user"></i>
+                                    Full Legal Name *
+                                </label>
+                                <input type="text"
+                                       id="fullname"
+                                       name="fullname"
+                                       required
+                                       class="form-input"
+                                       placeholder="Enter customer's complete legal name"
+                                       autocomplete="off">
+                                <div class="form-help">
+                                    <i class="fas fa-info-circle"></i>
+                                    Must match the name on official identification documents
+                                </div>
+                                <div class="form-error" id="fullname-error"></div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="id_citizen" class="form-label">
+                                    <i class="fas fa-id-card"></i>
+                                    Citizen ID Number *
+                                </label>
+                                <input type="text"
+                                       id="id_citizen"
+                                       name="id_citizen"
+                                       required
+                                       class="form-input"
+                                       placeholder="Enter citizen identification number"
+                                       autocomplete="off">
+                                <div class="form-help">
+                                    <i class="fas fa-info-circle"></i>
+                                    Government-issued identification number
+                                </div>
+                                <div class="form-error" id="id_citizen-error"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Privacy Notice -->
+                    <div class="privacy-notice">
+                        <div class="notice-icon">
+                            <i class="fas fa-user-shield"></i>
+                        </div>
+                        <div class="notice-content">
+                            <h5>Privacy & Data Protection</h5>
+                            <p>This access is logged for security purposes. Customer data must be handled according to privacy regulations and company policies. Unauthorized access or misuse of customer information is strictly prohibited.</p>
+                        </div>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary" id="submitBtn">
+                            <i class="fas fa-unlock-alt"></i>
+                            Access Profile
+                        </button>
+                        <button type="button" class="btn-secondary" onclick="clearForm()">
+                            <i class="fas fa-eraser"></i>
+                            Clear Form
+                        </button>
+                        <a href="/SWP/support" class="btn-cancel">
+                            <i class="fas fa-times"></i>
+                            Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Quick Access Tools -->
+        <div class="card tools-card">
+            <div class="card-header">
+                <h3>
+                    <i class="fas fa-tools"></i>
+                    Quick Access Tools
+                </h3>
+            </div>
+            <div class="card-content">
+                <div class="tools-grid">
+                    <div class="tool-item">
+                        <div class="tool-icon">
+                            <i class="fas fa-search"></i>
+                        </div>
+                        <div class="tool-content">
+                            <h4>Advanced Search</h4>
+                            <p>Search customers by email, phone, or partial information</p>
+                            <div class="tool-input">
+                                <input type="text" placeholder="Search by email or phone..." class="search-input">
+                                <button class="btn-primary tool-button">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tool-item">
+                        <div class="tool-icon">
+                            <i class="fas fa-qrcode"></i>
+                        </div>
+                        <div class="tool-content">
+                            <h4>QR Code Scanner</h4>
+                            <p>Scan customer QR code for quick profile access</p>
+                            <button class="btn-secondary tool-button" onclick="openQRScanner()">
+                                <i class="fas fa-camera"></i>
+                                Scan QR Code
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="tool-item">
+                        <div class="tool-icon">
+                            <i class="fas fa-history"></i>
+                        </div>
+                        <div class="tool-content">
+                            <h4>Recent Accesses</h4>
+                            <p>View recently accessed customer profiles</p>
+                            <button class="btn-secondary tool-button" onclick="showRecentAccesses()">
+                                <i class="fas fa-clock"></i>
+                                View History
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="tool-item">
+                        <div class="tool-icon">
+                            <i class="fas fa-file-export"></i>
+                        </div>
+                        <div class="tool-content">
+                            <h4>Bulk Export</h4>
+                            <p>Export customer data for authorized purposes</p>
+                            <button class="btn-secondary tool-button" onclick="openBulkExport()">
+                                <i class="fas fa-download"></i>
+                                Export Data
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Access Guidelines -->
+        <div class="card guidelines-card">
+            <div class="card-header">
+                <h3>
+                    <i class="fas fa-shield-alt"></i>
+                    Data Access Guidelines
+                </h3>
+            </div>
+            <div class="card-content">
+                <div class="guidelines-grid">
+                    <div class="guideline-item">
+                        <div class="guideline-icon">
+                            <i class="fas fa-user-lock"></i>
+                        </div>
+                        <div class="guideline-content">
+                            <h5>Identity Verification</h5>
+                            <p>Always verify customer identity through multiple data points before accessing sensitive information.</p>
+                        </div>
+                    </div>
+                    <div class="guideline-item">
+                        <div class="guideline-icon">
+                            <i class="fas fa-eye"></i>
+                        </div>
+                        <div class="guideline-content">
+                            <h5>Authorized Access Only</h5>
+                            <p>Access customer data only when necessary for legitimate business purposes and customer support.</p>
+                        </div>
+                    </div>
+                    <div class="guideline-item">
+                        <div class="guideline-icon">
+                            <i class="fas fa-clipboard-list"></i>
+                        </div>
+                        <div class="guideline-content">
+                            <h5>Activity Logging</h5>
+                            <p>All profile access activities are automatically logged and monitored for compliance.</p>
+                        </div>
+                    </div>
+                    <div class="guideline-item">
+                        <div class="guideline-icon">
+                            <i class="fas fa-user-secret"></i>
+                        </div>
+                        <div class="guideline-content">
+                            <h5>Confidentiality</h5>
+                            <p>Maintain strict confidentiality of customer information and follow data protection protocols.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Profile Access Activity -->
+        <div class="card">
+            <div class="card-header">
+                <h3>
+                    <i class="fas fa-clock"></i>
+                    Recent Profile Access Activity
+                </h3>
+                <div class="card-actions">
+                    <button class="btn-secondary">
+                        <i class="fas fa-refresh"></i>
+                        Refresh
+                    </button>
+                    <button class="btn-secondary">
+                        <i class="fas fa-download"></i>
+                        Export Log
+                    </button>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Customer</th>
+                        <th>Agent</th>
+                        <th>Access Type</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td>12:45 PM</td>
+                        <td>
+                            <div class="customer-info">
+                                <div class="customer-avatar-small">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <span>John Doe</span>
+                            </div>
+                        </td>
+                        <td>Support Agent</td>
+                        <td>
+                            <span class="access-badge profile">Profile View</span>
+                        </td>
+                        <td>
+                            <span class="status-badge success">Authorized</span>
+                        </td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn-icon" title="View Details">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn-icon" title="Access Profile">
+                                    <i class="fas fa-user"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>11:30 AM</td>
+                        <td>
+                            <div class="customer-info">
+                                <div class="customer-avatar-small">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <span>Jane Smith</span>
+                            </div>
+                        </td>
+                        <td>Support Agent</td>
+                        <td>
+                            <span class="access-badge edit">Profile Edit</span>
+                        </td>
+                        <td>
+                            <span class="status-badge success">Authorized</span>
+                        </td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn-icon" title="View Details">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn-icon" title="Access Profile">
+                                    <i class="fas fa-user"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>10:15 AM</td>
+                        <td>
+                            <div class="customer-info">
+                                <div class="customer-avatar-small">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <span>Mike Johnson</span>
+                            </div>
+                        </td>
+                        <td>Support Agent</td>
+                        <td>
+                            <span class="access-badge search">Search Query</span>
+                        </td>
+                        <td>
+                            <span class="status-badge denied">Access Denied</span>
+                        </td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn-icon" title="View Details">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn-icon" title="Retry Access">
+                                    <i class="fas fa-redo"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script>
+    // Sidebar toggle for mobile
+    document.querySelector('.sidebar-toggle').addEventListener('click', function() {
+        document.querySelector('.sidebar').classList.toggle('open');
+    });
+
+    // Form validation
+    function validateForm() {
+        let isValid = true;
+        const requiredFields = ['fullname', 'id_citizen'];
+
+        requiredFields.forEach(field => {
+            const input = document.getElementById(field);
+            const error = document.getElementById(field + '-error');
+
+            if (!input.value.trim()) {
+                error.textContent = 'This field is required';
+                input.classList.add('error');
+                isValid = false;
+            } else {
+                error.textContent = '';
+                input.classList.remove('error');
+            }
+        });
+
+        return isValid;
+    }
+
+    // Clear form
+    function clearForm() {
+        if (confirm('Are you sure you want to clear all form data?')) {
+            document.getElementById('accessForm').reset();
+            // Clear any error states
+            document.querySelectorAll('.form-input').forEach(input => {
+                input.classList.remove('error');
+            });
+            document.querySelectorAll('.form-error').forEach(error => {
+                error.textContent = '';
+            });
+        }
+    }
+
+    // Tool functions
+    function openQRScanner() {
+        alert('QR Code scanner would open here');
+    }
+
+    function showRecentAccesses() {
+        alert('Recent accesses history would be displayed');
+    }
+
+    function openBulkExport() {
+        alert('Bulk export dialog would open here');
+    }
+
+    // Real-time validation
+    document.querySelectorAll('.form-input').forEach(input => {
+        input.addEventListener('blur', function() {
+            const error = document.getElementById(this.id + '-error');
+            if (this.hasAttribute('required') && !this.value.trim()) {
+                error.textContent = 'This field is required';
+                this.classList.add('error');
+            } else {
+                error.textContent = '';
+                this.classList.remove('error');
+            }
+        });
+
+        // Remove error styling on input
+        input.addEventListener('input', function() {
+            if (this.classList.contains('error') && this.value.trim()) {
+                this.classList.remove('error');
+                const error = document.getElementById(this.id + '-error');
+                error.textContent = '';
+            }
+        });
+    });
+
+    // Form submission
+    document.getElementById('accessForm').addEventListener('submit', function(e) {
+        if (!validateForm()) {
+            e.preventDefault();
+        } else {
+            // Show loading state
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying...';
+            submitBtn.disabled = true;
+        }
+    });
+
+    // Advanced search functionality
+    document.querySelector('.search-input').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            const searchTerm = this.value;
+            if (searchTerm) {
+                alert(`Searching for: ${searchTerm}`);
+            }
+        }
+    });
+
+    // Auto-hide alerts after 5 seconds
+    setTimeout(function() {
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(alert => {
+            alert.style.opacity = '0';
+            setTimeout(() => alert.remove(), 300);
+        });
+    }, 5000);
+</script>
+</body>
+</html>

@@ -45,7 +45,7 @@ public class Staff implements UserDetails {
     }
 
     @OneToMany(mappedBy = "staff")
-    @JsonIgnore  // ✅ Ngăn JSON vòng lặp
+    @JsonIgnore
     private List<Attendance> attendances;
 
     @Override

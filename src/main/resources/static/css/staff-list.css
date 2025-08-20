@@ -441,4 +441,31 @@ body {
         align-items: flex-start;
         gap: 15px;
     }
+
 }
+
+.btn-sort {
+    padding: 8px 12px;
+    border: 2px solid #e9ecef;
+    border-radius: 6px;
+    background: #fff;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    color: #495057;
+}
+.btn-sort:hover {
+    border-color: #007bff;
+    color: #007bff;
+}
+.btn-sort.active {
+    background: #007bff;
+    border-color: #007bff;
+    color: #fff;
+}
+.sort-container {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
