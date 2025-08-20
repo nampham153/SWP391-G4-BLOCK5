@@ -22,14 +22,10 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.time.temporal.Temporal;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
-import static org.springframework.data.jpa.domain.AbstractPersistable_.id;
 
 @Component
 public class OrderServiceimpl implements OrderService {
@@ -342,6 +338,35 @@ public class OrderServiceimpl implements OrderService {
     }
     public Optional<Order> findOrderByCustomerAndStorage(int customerId, int storageId) {
         return orderRepository.findByCustomer_IdAndStorage_Storageid(customerId, storageId);
+    }
+
+    @Override
+    public List<Order> findActiveOrdersByCustomerAndStorage(int customerId, int storageId) {
+        return orderRepository.findActiveOrdersByCustomerAndStorage(customerId, storageId);
+    }
+
+    @Override
+    @Transactional
+    public void cancelExistingOrdersForCustomerAndStorage(int customerId, int storageId, String reason) {
+        List<Order> existingOrders = findActiveOrdersByCustomerAndStorage(customerId, storageId);
+        
+        for (Order order : existingOrders) {
+            // Chỉ hủy các đơn hàng chưa thanh toán (PENDING, APPROVED)
+            if ("PENDING".equals(order.getStatus()) || "APPROVED".equals(order.getStatus())) {
+                order.setStatus("CANCELLED");
+                order.setCancelReason(reason);
+                orderRepository.save(order);
+                
+                // Ghi log hoạt động
+                activityLogService.logActivity(
+                    "Hủy đơn hàng tự động",
+                    "Đơn hàng #" + order.getId() + " đã bị hủy tự động do khách hàng đặt lại cùng kho",
+                    order.getCustomer(),
+                    order,
+                    null, null, null, null
+                );
+            }
+        }
     }
 
 //    @Override

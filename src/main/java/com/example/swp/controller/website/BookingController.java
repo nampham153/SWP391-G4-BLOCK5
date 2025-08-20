@@ -249,12 +249,17 @@ public class BookingController {
         }
 
         try {
+            // Hủy các đơn hàng cũ của khách hàng cho cùng kho này (nếu có)
+            orderService.cancelExistingOrdersForCustomerAndStorage(
+                customer.getId(), 
+                storageId, 
+                "Khách hàng đặt lại cùng kho - Hủy đơn hàng cũ tự động"
+            );
+
             // Tính toán chi phí
             long days = ChronoUnit.DAYS.between(startDate, endDate);
             double pricePerDay = storage.getPricePerDay();
             double totalCost = days * pricePerDay * (rentalArea / storage.getArea());
-
-
 
             // Tạo và lưu đơn hàng vào database
             Order order = new Order();
