@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hỗ trợ khách hàng</title>
+    <link rel="stylesheet" href="/css/manager-taskbar.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <style>
+        .main-content {
+            margin-left: 250px;
+            padding: 20px;
+        }
+        .chat-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-top: 20px;
+        }
+        .chat-header {
+            border-bottom: 1px solid #eee;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+        .chat-header h2 {
+            color: #333;
+            margin: 0;
+        }
+        .chat-messages {
+            height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            background: #f9f9f9;
+        }
+        .message {
+            margin-bottom: 15px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .message.customer {
+            background: #e3f2fd;
+            margin-left: 20%;
+        }
+        .message.staff {
+            background: #f3e5f5;
+            margin-right: 20%;
+        }
+        .chat-input {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+        }
+        .chat-input input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .chat-input button {
+            padding: 10px 20px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .chat-input button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div th:replace="taskbar/manager-taskbar :: managerTaskbar"></div>
+
+    <main class="main-content">
+        <div class="chat-container">
+            <div class="chat-header">
+                <h2><i class="fas fa-comments"></i> Hỗ trợ khách hàng</h2>
+            </div>
+            
+            <div class="chat-messages" id="chatMessages">
+                <div class="message customer">
+                    <strong>Khách hàng:</strong> Xin chào, tôi cần hỗ trợ về dịch vụ kho hàng
+                </div>
+                <div class="message staff">
+                    <strong>Nhân viên:</strong> Xin chào! Tôi có thể giúp gì cho bạn?
+                </div>
+                <div class="message customer">
+                    <strong>Khách hàng:</strong> Tôi muốn thuê kho để lưu trữ hàng hóa
+                </div>
+                <div class="message staff">
+                    <strong>Nhân viên:</strong> Vui lòng cho tôi biết thông tin về hàng hóa và thời gian lưu trữ
+                </div>
+            </div>
+            
+            <div class="chat-input">
+                <input type="text" id="messageInput" placeholder="Nhập tin nhắn...">
+                <button onclick="sendMessage()">
+                    <i class="fas fa-paper-plane"></i> Gửi
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            
+            if (message) {
+                const chatMessages = document.getElementById('chatMessages');
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message staff';
+                messageDiv.innerHTML = '<strong>Nhân viên:</strong> ' + message;
+                
+                chatMessages.appendChild(messageDiv);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+                
+                input.value = '';
+            }
+        }
+        
+        // Gửi tin nhắn khi nhấn Enter
+        document.getElementById('messageInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>
