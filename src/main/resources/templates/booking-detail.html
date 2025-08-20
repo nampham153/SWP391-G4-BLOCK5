@@ -64,6 +64,9 @@
                             <span th:if="${order.status == 'PENDING'}"
                                   class="status-badge status-pending"
                                   th:text="${order.status}"></span>
+                            <span th:if="${order.status == 'PAID'}"
+                                  class="status-badge status-paid"
+                                  th:text="${order.status}"></span>
                         </div>
                     </div>
 
@@ -119,6 +122,24 @@
                             </div>
                         </div>
 
+                        <!-- Action buttons -->
+                        <div class="order-actions" style="margin-top: 30px; text-align: center; border-top: 1px solid #eee; padding-top: 20px;">
+                            <a href="/SWP/customers/my-bookings" class="btn btn-secondary" style="margin-right: 10px;">
+                                <i class="fas fa-list"></i>
+                                Về danh sách đơn hàng
+                            </a>
+                            <!-- Nút hủy đơn chỉ hiển thị cho đơn hàng PENDING -->
+                            <form th:if="${order.status == 'PENDING'}" 
+                                  th:action="@{'/SWP/customers/cancel-order/' + ${order.id}}" 
+                                  method="post" 
+                                  style="display: inline;"
+                                  onsubmit="return confirm('Bạn có chắc chắn muốn hủy đơn hàng này?')">
+                                <button type="submit" class="btn btn-danger">
+                                    <i class="fas fa-times"></i>
+                                    Hủy đơn hàng
+                                </button>
+                            </form>
+                        </div>
 
                     </div>
                 </div>

@@ -2,7 +2,9 @@ package com.example.swp.controller.website;
 
 import com.example.swp.entity.Storage;
 import com.example.swp.entity.Customer;
+import com.example.swp.entity.Order;
 import com.example.swp.service.StorageService;
+import com.example.swp.service.OrderService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +16,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -30,6 +33,9 @@ public class BookingController {
 
     @Autowired
     private StorageService storageService;
+
+    @Autowired
+    private OrderService orderService;
 
     /**
      * Helper method để kiểm tra và lấy customer từ session
@@ -250,23 +256,27 @@ public class BookingController {
 
 
 
-            // Lưu thông tin booking vào session để hiển thị trong booking detail
-            session.setAttribute("bookingStorageId", storageId);
-            session.setAttribute("bookingStartDate", startDate);
-            session.setAttribute("bookingEndDate", endDate);
-            session.setAttribute("bookingRentalArea", rentalArea);
-            session.setAttribute("bookingTotalCost", totalCost);
-            session.setAttribute("bookingCustomerName", name);
-            session.setAttribute("bookingCustomerEmail", email);
-            session.setAttribute("bookingCustomerPhone", phone);
+            // Tạo và lưu đơn hàng vào database
+            Order order = new Order();
+            order.setStorage(storage);
+            order.setCustomer(customer);
+            order.setStartDate(startDate);
+            order.setEndDate(endDate);
+            order.setOrderDate(LocalDate.now());
+            order.setTotalAmount(totalCost);
+            order.setStatus("PENDING");
+            order.setRentalArea(rentalArea);
+
+            // Lưu đơn hàng vào database
+            Order savedOrder = orderService.save(order);
+
+            // Lưu ID đơn hàng vào session để hiển thị trong booking detail
+            session.setAttribute("latestOrderId", savedOrder.getId());
 
             // Thông báo thành công
             redirectAttributes.addFlashAttribute("successMessage",
-                    "Đặt kho thành công! " +
-                            "Tên: " + name + ", Email: " + email + ", Phone: " + phone +
-                            ", Diện tích: " + rentalArea + " m², " +
-                            "Từ " + startDate + " đến " + endDate +
-                            ". Tổng chi phí: " + String.format("%,.0f", totalCost) + " VNĐ");
+                    "Đặt kho thành công! Mã đơn hàng: #" + savedOrder.getId() + 
+                    ". Tổng chi phí: " + String.format("%,.0f", totalCost) + " VNĐ");
 
             // Xóa order token khỏi session
             session.removeAttribute("orderToken");
@@ -284,7 +294,10 @@ public class BookingController {
      * Hiển thị trang booking detail sau khi đặt kho thành công
      */
     @GetMapping("/booking/detail")
-    public String showBookingDetail(Model model, HttpSession session) {
+    public String showBookingDetail(
+            @RequestParam(value = "orderId", required = false) Integer orderId,
+            Model model, 
+            HttpSession session) {
 
         // Kiểm tra customer đã đăng nhập chưa
         Customer customer = getLoggedInCustomer(session);
@@ -292,49 +305,115 @@ public class BookingController {
             return "redirect:/api/login";
         }
 
-        // Lấy thông tin booking từ session
-        Integer storageId = (Integer) session.getAttribute("bookingStorageId");
-        LocalDate startDate = (LocalDate) session.getAttribute("bookingStartDate");
-        LocalDate endDate = (LocalDate) session.getAttribute("bookingEndDate");
-        Double rentalArea = (Double) session.getAttribute("bookingRentalArea");
-        Double totalCost = (Double) session.getAttribute("bookingTotalCost");
-        String customerName = (String) session.getAttribute("bookingCustomerName");
-        String customerEmail = (String) session.getAttribute("bookingCustomerEmail");
-        String customerPhone = (String) session.getAttribute("bookingCustomerPhone");
-
-        // Kiểm tra xem có thông tin booking trong session không
-        if (storageId == null || startDate == null || endDate == null) {
-            return "redirect:/SWP/storages";
+        // Lấy ID đơn hàng từ parameter hoặc session
+        Integer targetOrderId = orderId;
+        if (targetOrderId == null) {
+            targetOrderId = (Integer) session.getAttribute("latestOrderId");
+        }
+        
+        if (targetOrderId == null) {
+            return "redirect:/SWP/customers/my-bookings";
         }
 
-        // Lấy thông tin storage
-        Optional<Storage> optionalStorage = storageService.findByID(storageId);
-        if (optionalStorage.isEmpty()) {
-            return "redirect:/SWP/storages";
+        // Lấy đơn hàng từ database
+        Optional<Order> optionalOrder = orderService.findOrderById(targetOrderId);
+        if (optionalOrder.isEmpty()) {
+            return "redirect:/SWP/customers/my-bookings";
         }
 
-        Storage storage = optionalStorage.get();
+        Order order = optionalOrder.get();
 
-        // Tạo object giả lập order để hiển thị (vì chưa có Order entity đầy đủ)
-        // Comment: Tạm thời tạo object giả lập để hiển thị thông tin booking
-        var mockOrder = new Object() {
-            public int getId() { return (int)(System.currentTimeMillis() % 100000); }
-            public Storage getStorage() { return storage; }
-            public LocalDate getStartDate() { return startDate; }
-            public LocalDate getEndDate() { return endDate; }
-            public double getRentalArea() { return rentalArea; }
-            public double getTotalAmount() { return totalCost; }
-            public String getStatus() { return "CONFIRMED"; }
-            public String getCustomerName() { return customerName; }
-            public String getCustomerEmail() { return customerEmail; }
-            public String getCustomerPhone() { return customerPhone; }
-            public String getCancelReason() { return null; }
-        };
+        // Kiểm tra xem đơn hàng có thuộc về customer hiện tại không
+        if (order.getCustomer().getId() != customer.getId()) {
+            return "redirect:/SWP/customers/my-bookings";
+        }
 
         // Thêm attributes vào model
-        model.addAttribute("order", mockOrder);
+        model.addAttribute("order", order);
         model.addAttribute("customer", customer);
 
         return "booking-detail";
+    }
+
+    /**
+     * Hiển thị danh sách đơn hàng của khách hàng
+     */
+    @GetMapping("/customers/my-bookings")
+    public String myBookings(Model model, HttpSession session) {
+        
+        // Kiểm tra customer đã đăng nhập chưa
+        Customer customer = getLoggedInCustomer(session);
+        if (customer == null) {
+            return "redirect:/api/login";
+        }
+
+        // Lấy danh sách đơn hàng của khách hàng (loại trừ đơn hàng đã hủy)
+        List<Order> allOrders = orderService.findOrdersByCustomer(customer);
+        List<Order> orders = allOrders.stream()
+                .filter(order -> !"CANCELLED".equals(order.getStatus()))
+                .collect(java.util.stream.Collectors.toList());
+        
+        // Tính tổng giá trị đơn hàng (chỉ tính đơn hàng không bị hủy)
+        double totalAmount = orders.stream()
+                .mapToDouble(Order::getTotalAmount)
+                .sum();
+
+        // Thêm attributes vào model
+        model.addAttribute("orders", orders);
+        model.addAttribute("customer", customer);
+        model.addAttribute("totalAmount", totalAmount);
+
+        return "my-bookings";
+    }
+
+    /**
+     * Hủy đơn hàng
+     */
+    @PostMapping("/customers/cancel-order/{orderId}")
+    public String cancelOrder(@PathVariable int orderId, 
+                             HttpSession session, 
+                             RedirectAttributes redirectAttributes) {
+        
+        // Kiểm tra customer đã đăng nhập chưa
+        Customer customer = getLoggedInCustomer(session);
+        if (customer == null) {
+            return "redirect:/api/login";
+        }
+
+        // Lấy đơn hàng từ database
+        Optional<Order> optionalOrder = orderService.findOrderById(orderId);
+        if (optionalOrder.isEmpty()) {
+            redirectAttributes.addFlashAttribute("error", "Không tìm thấy đơn hàng");
+            return "redirect:/SWP/customers/my-bookings";
+        }
+
+        Order order = optionalOrder.get();
+
+        // Kiểm tra xem đơn hàng có thuộc về customer hiện tại không
+        if (order.getCustomer().getId() != customer.getId()) {
+            redirectAttributes.addFlashAttribute("error", "Bạn không có quyền hủy đơn hàng này");
+            return "redirect:/SWP/customers/my-bookings";
+        }
+
+        // Chỉ cho phép hủy đơn hàng có trạng thái PENDING
+        if (!"PENDING".equals(order.getStatus())) {
+            redirectAttributes.addFlashAttribute("error", "Chỉ có thể hủy đơn hàng đang chờ xử lý");
+            return "redirect:/SWP/customers/my-bookings";
+        }
+
+        try {
+            // Cập nhật trạng thái đơn hàng thành CANCELLED
+            order.setStatus("CANCELLED");
+            order.setCancelReason("Khách hàng hủy đơn");
+            orderService.save(order);
+
+            redirectAttributes.addFlashAttribute("successMessage", 
+                "Đã hủy đơn hàng #" + orderId + " thành công");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", 
+                "Có lỗi xảy ra khi hủy đơn hàng: " + e.getMessage());
+        }
+
+        return "redirect:/SWP/customers/my-bookings";
     }
 }
