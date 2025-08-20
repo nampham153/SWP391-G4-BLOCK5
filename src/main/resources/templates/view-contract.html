@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>Ký hợp đồng</title>
+  <meta charset="UTF-8"/>
+  <!-- không nhất thiết phải có viewport cho PDF nhưng cũng không hại -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+  <!-- Preconnect (nếu có dùng Google Fonts online) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <!-- phải có giá trị cho crossorigin trong XHTML -->
+  <link rel="preconnect" href="https://fonts.gstatic.com"
+        crossorigin="anonymous"/>
+
+  <!-- Nhúng CSS Google Fonts (chú ý &amp;) -->
+  <link
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap"
+          rel="stylesheet"/>
+
+  <!-- Bọc CSS vào CDATA để khỏi lỗi entity -->
+  <style type="text/css" th:inline="none">
+    /*<![CDATA[*/
+    @font-face {
+      font-family: 'Inter';
+      font-weight: normal;
+      font-style: normal;
+    }
+
+    :root {
+      --primary-color: #2c3e50; /* Primary dark color */
+      --primary-hover: #34495e;
+      --success-color: #34c759;
+      --warning-color: #f59e0b;
+      --danger-color: #ef4444;
+      --gray-50: #f8fafc;
+      --gray-100: #f3f4f6;
+      --gray-200: #e5e7eb;
+      --gray-300: #d1d5db;
+      --gray-600: #4b5563;
+      --gray-700: #374151;
+      --gray-800: #1f2937;
+      --gray-900: #111827;
+      --border-radius: 8px;
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+    }
+
+    .back-button {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background-color: #2c3e50;
+      color: #ffff;
+      font-size: 0.95rem;
+      font-weight: 500;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      padding: 0.75rem 1.5rem;
+      border: 1px solid var(--gray-200);
+      border-radius: var(--border-radius);
+      text-decoration: none;
+      transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+
+    .back-button:hover {
+      background-color: var(--primary-color);
+      color: #ffffff;
+      box-shadow: var(--shadow-sm);
+      transform: translateY(-2px);
+    }
+
+    .back-button:active {
+      transform: translateY(0);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.6;
+      color: var(--gray-800);
+      background: var(--gray-50);
+      margin: 0;
+      padding: 1.5rem;
+      min-height: 100vh;
+    }
+
+    .contract-view {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .contract-document {
+      background: #ffffff;
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow-md);
+      border: 1px solid var(--gray-200);
+    }
+
+    .contract-header {
+      background: var(--primary-color);
+      color: #ffffff;
+      padding: 2rem;
+      text-align: center;
+      border-top-left-radius: var(--border-radius);
+      border-top-right-radius: var(--border-radius);
+    }
+
+    .contract-header h2 {
+      margin: 0;
+      font-size: 2rem;
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    .contract-body {
+      padding: 2rem;
+    }
+
+    .contract-info {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .info-item {
+      background: var(--gray-50);
+      padding: 1.25rem;
+      border-radius: var(--border-radius);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .info-item:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .info-label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--gray-600);
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+    }
+
+    .info-value {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--gray-900);
+    }
+
+    .info-value.highlight {
+      color: var(--primary-color);
+      font-size: 1.2rem;
+    }
+
+    .info-value.amount {
+      color: var(--success-color);
+      font-size: 1.2rem;
+    }
+
+    .contract-terms {
+      background: #ffffff;
+      border: 1px solid var(--gray-200);
+      border-radius: var(--border-radius);
+      padding: 1.5rem;
+      margin: 2rem 0;
+    }
+
+    .contract-terms h3 {
+      color: var(--gray-900);
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .contract-terms h3::before {
+      content: "⚖️";
+      font-size: 1rem;
+    }
+
+    .contract-terms ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .contract-terms li {
+      padding: 0.75rem 0;
+      border-bottom: 1px solid var(--gray-200);
+      position: relative;
+      padding-left: 1.5rem;
+    }
+
+    .contract-terms li::before {
+      content: "•";
+      color: var(--primary-color);
+      font-weight: bold;
+      font-size: 1rem;
+      position: absolute;
+      left: 0;
+      top: 0.75rem;
+    }
+
+    .contract-terms li:last-child {
+      border-bottom: none;
+    }
+
+    .signature-section {
+      background: #ffffff;
+      border: 2px solid var(--primary-color);
+      border-radius: var(--border-radius);
+      padding: 2rem;
+      margin-top: 2rem;
+      text-align: center;
+    }
+
+    .signature-form {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.5rem;
+    }
+
+    .checkbox-container {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      background: var(--gray-50);
+      padding: 1rem;
+      border-radius: var(--border-radius);
+      border: 1px solid var(--gray-200);
+      width: 100%;
+      max-width: 500px;
+    }
+
+    .checkbox-container input[type="checkbox"] {
+      width: 1.25rem;
+      height: 1.25rem;
+      accent-color: var(--primary-color);
+      cursor: pointer;
+    }
+
+    .checkbox-container label {
+      font-size: 0.95rem;
+      color: var(--gray-700);
+      cursor: pointer;
+    }
+
+    .sign-button {
+      background: var(--primary-color);
+      color: #ffffff;
+      border: none;
+      padding: 0.75rem 2rem;
+      font-size: 1rem;
+      font-weight: 600;
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      transition: background-color 0.2s ease, transform 0.2s ease;
+    }
+
+    .sign-button:hover {
+      background: var(--primary-hover);
+      transform: translateY(-2px);
+    }
+
+    .sign-button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .signed-status {
+      background: var(--gray-50);
+      border: 2px solid var(--success-color);
+      border-radius: var(--border-radius);
+      padding: 2rem;
+      text-align: center;
+      margin-top: 2rem;
+    }
+
+    .signed-status p {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--success-color);
+      margin: 0;
+    }
+
+    .export-section {
+      text-align: center;
+      margin-top: 2rem;
+    }
+
+    .export-button {
+      background: var(--primary-color);
+      color: #ffffff;
+      border: none;
+      padding: 0.75rem 2rem;
+      font-size: 0.95rem;
+      font-weight: 600;
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      transition: background-color 0.2s ease, transform 0.2s ease;
+    }
+
+    .export-button:hover {
+      background: var(--primary-hover);
+      transform: translateY(-2px);
+    }
+
+    @media (max-width: 768px) {
+      body {
+        padding: 1rem;
+      }
+
+      .contract-header {
+        padding: 1.5rem;
+      }
+
+      .contract-header h2 {
+        font-size: 1.5rem;
+      }
+
+      .contract-body {
+        padding: 1.5rem;
+      }
+
+      .contract-info {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+
+      .contract-terms {
+        padding: 1rem;
+      }
+
+      .signature-section {
+        padding: 1.5rem;
+      }
+
+      .sign-button {
+        padding: 0.75rem 1.5rem;
+        font-size: 0.95rem;
+      }
+
+      .export-button {
+        padding: 0.75rem 1.5rem;
+        font-size: 0.9rem;
+      }
+    }
+
+    @media print {
+      body {
+        background: #ffffff;
+        padding: 0;
+      }
+
+      .contract-document {
+        box-shadow: none;
+        border: none;
+      }
+
+      .signature-section,
+      .export-section {
+        display: none;
+      }
+
+      .contract-header {
+        background: #ffffff;
+        color: var(--primary-color);
+        border-bottom: 2px solid var(--primary-color);
+      }
+
+      .contract-header h2 {
+        color: var(--primary-color);
+      }
+    }
+    /*]]>*/
+  </style>
+</head>
+<body>
+<div class="navbar" style="margin-top:-25px;">
+  <div th:replace="taskbar/customer-navbar :: customerNavbar"></div>
+</div>
+  <a th:href="@{/SWP/customers/my-bookings}" class="back-button">← Quay lại</a>
+<div class="contract-view">
+  <div class="contract-document">
+    <div class="contract-header">
+      <h2>HỢP ĐỒNG THUÊ KHO</h2>
+    </div>
+
+    <div class="contract-body">
+      <div class="contract-info">
+        <div class="info-item">
+          <div class="info-label">Mã hợp đồng</div>
+          <div class="info-value highlight" th:text="${contract.contractCode}">HD-XXXXXX</div>
+        </div>
+
+        <div class="info-item">
+          <div class="info-label">Khách hàng</div>
+          <div class="info-value" th:text="${order.customer.fullname}">Nguyễn Văn A</div>
+        </div>
+
+        <div class="info-item">
+          <div class="info-label">Email</div>
+          <div class="info-value" th:text="${order.customer.email}">customer@email.com</div>
+        </div>
+
+        <div class="info-item">
+          <div class="info-label">Kho</div>
+          <div class="info-value" th:text="${order.storage.storagename}">Kho ABC</div>
+        </div>
+
+        <div class="info-item">
+          <div class="info-label">Thời gian thuê</div>
+          <div class="info-value">
+            <span th:text="${order.startDate}">01/01/2024</span> →
+            <span th:text="${order.endDate}">31/12/2024</span>
+          </div>
+        </div>
+
+        <div class="info-item">
+          <div class="info-label">Diện tích</div>
+          <div class="info-value" th:text="${order.rentalArea + ' m²'}">100 m²</div>
+        </div>
+
+        <div class="info-item" style="width: 830px;">
+          <div class="info-label">Tổng tiền</div>
+          <div class="info-value amount" th:text="${order.totalAmount + ' VNĐ'}">1,000,000 VNĐ</div>
+        </div>
+      </div>
+
+      <div class="contract-terms">
+        <h3>Điều khoản &amp; Cam kết pháp lý</h3>
+        <ul>
+          <li>Khách hàng cam kết cung cấp thông tin chính xác, đầy đủ khi ký kết hợp đồng.</li>
+          <li>Không được đơn phương chấm dứt hợp đồng khi chưa có sự đồng ý bằng văn bản của bên quản lý kho.</li>
+          <li>Không sử dụng kho vào mục đích trái pháp luật, bao gồm nhưng không giới hạn bởi việc lưu trữ chất cấm, hàng giả, hàng vi phạm bản quyền.</li>
+          <li>Khách hàng chịu toàn bộ trách nhiệm dân sự và hình sự nếu phát hiện lưu trữ hàng hóa trái quy định.</li>
+          <li>Bên quản lý kho có quyền kiểm tra định kỳ và đột xuất để đảm bảo an toàn và tuân thủ pháp luật.</li>
+          <li>Mọi hư hại, mất mát tài sản bên trong kho do lỗi của khách hàng sẽ không được bên quản lý kho bồi thường.</li>
+          <li>Trường hợp thiên tai, hỏa hoạn, sự cố bất khả kháng gây ảnh hưởng đến tài sản, các bên sẽ thỏa thuận giải pháp hợp lý.</li>
+          <li>Khách hàng có trách nhiệm thanh toán đúng hạn. Quá hạn 7 ngày mà không thanh toán sẽ bị khóa quyền truy cập và thanh lý tài sản.</li>
+          <li>Tất cả các tranh chấp phát sinh sẽ được giải quyết tại Tòa án có thẩm quyền tại nơi đặt kho.</li>
+        </ul>
+      </div>
+
+      <div th:if="${contract.status.name != 'SIGNED'}" class="signature-section">
+        <form th:action="@{/econtract/sign/{id}(id=${contract.id})}"
+              method="post"
+              class="signature-form">
+          <div class="checkbox-container">
+            <input type="checkbox" id="agree" required />
+            <label for="agree">Tôi đã đọc, hiểu rõ và đồng ý…</label>
+          </div>
+          <button type="submit" class="sign-button" disabled>🖊️ Ký hợp đồng</button>
+        </form>
+
+      </div>
+
+      <div th:if="${contract.status.name == 'SIGNED'}" class="signed-status">
+        <p>✅ Hợp đồng đã được ký thành công!</p>
+      </div>
+
+      <div th:if="${contract.status.name == 'SIGNED'}" class="export-section">
+        <form th:action="${'/econtract/export-pdf/' + contract.id}" method="get">
+          <button type="submit" class="export-button">📄 Xuất hợp đồng PDF</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="footer" style="max-width: 100%; margin-top: 30px">
+  <div th:replace="taskbar/customer-footer :: customerFooter"></div>
+</div>
+<script th:inline="javascript">
+  /* MDN khuyến nghị: mã JS cũng nên để th:inline nếu dùng inline expressions */
+  /*<![CDATA[*/
+  document.addEventListener('DOMContentLoaded', function() {
+    // Add smooth scrolling to signature section
+    const signButton = document.querySelector('.sign-button');
+    if (signButton) {
+      signButton.addEventListener('click', function(e) {
+        // Add loading state
+        this.style.opacity = '0.7';
+        this.innerHTML = '⏳ Đang xử lý...';
+      });
+    }
+
+    // Add checkbox validation
+    const checkbox = document.getElementById('agree');
+    const submitButton = document.querySelector('.sign-button');
+
+    if (checkbox && submitButton) {
+      checkbox.addEventListener('change', function() {
+        submitButton.disabled = !this.checked;
+        submitButton.style.opacity = this.checked ? '1' : '0.6';
+      });
+
+      // Initial state
+      submitButton.disabled = !checkbox.checked;
+      submitButton.style.opacity = checkbox.checked ? '1' : '0.6';
+    }
+  });
+  /*]]>*/
+</script>
+</body>
+</html>

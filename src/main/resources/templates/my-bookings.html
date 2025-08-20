@@ -301,6 +301,10 @@
                                     <i class="fas fa-eye"></i>
                                     Xem chi tiết
                                 </a>
+                                <a th:href="@{'/SWP/booking/contract?orderId=' + ${order.id}}" class="btn btn-secondary">
+                                    <i class="fas fa-file-contract"></i>
+                                    Hợp đồng
+                                </a>
                                 <!-- Nút hủy đơn chỉ hiển thị cho đơn hàng PENDING -->
                                 <form th:if="${order.status == 'PENDING'}"
                                       th:action="@{'/SWP/customers/cancel-order/' + ${order.id}}"

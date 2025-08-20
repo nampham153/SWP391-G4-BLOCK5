@@ -427,4 +427,50 @@ public class BookingController {
 
         return "redirect:/SWP/customers/my-bookings";
     }
+
+    /**
+     * Hiển thị trang hợp đồng thuê kho
+     */
+    @GetMapping("/booking/contract")
+    public String showContract(
+            @RequestParam("orderId") Integer orderId,
+            Model model, 
+            HttpSession session) {
+
+        // Kiểm tra customer đã đăng nhập chưa
+        Customer customer = getLoggedInCustomer(session);
+        if (customer == null) {
+            return "redirect:/api/login";
+        }
+
+        // Lấy đơn hàng từ database
+        Optional<Order> optionalOrder = orderService.findOrderById(orderId);
+        if (optionalOrder.isEmpty()) {
+            return "redirect:/SWP/customers/my-bookings";
+        }
+
+        Order order = optionalOrder.get();
+
+        // Kiểm tra xem đơn hàng có thuộc về customer hiện tại không
+        if (order.getCustomer().getId() != customer.getId()) {
+            return "redirect:/SWP/customers/my-bookings";
+        }
+
+        // Tạo contract object giả lập cho template
+        java.util.Map<String, Object> contract = new java.util.HashMap<>();
+        contract.put("contractCode", "HD-" + order.getId());
+        contract.put("id", order.getId());
+        
+        // Tạo status object đơn giản
+        java.util.Map<String, String> status = new java.util.HashMap<>();
+        status.put("name", "DRAFT");
+        contract.put("status", status);
+
+        // Thêm attributes vào model
+        model.addAttribute("order", order);
+        model.addAttribute("customer", customer);
+        model.addAttribute("contract", contract);
+
+        return "view-contract";
+    }
 }

@@ -16,7 +16,7 @@
     <div class="hero-section">
         <div class="hero-content">
             <h1>Chi tiết đơn hàng</h1>
-            <p th:text="'Thông tin chi tiết đơn hàng #' + ${order.id}"></p>
+            <p th:text="'Thông tin chi tiết đơn hàng '"></p>
         </div>
     </div>
 
@@ -51,9 +51,7 @@
             <div class="order-container">
                 <div class="order-card">
                     <div class="card-header">
-                        <div class="order-id">
-                            <span class="id-badge" th:text="'#' + ${order.id}"></span>
-                        </div>
+
                         <div class="order-status">
                             <span th:if="${order.status == 'CANCELLED'}"
                                   class="status-badge status-cancelled"
