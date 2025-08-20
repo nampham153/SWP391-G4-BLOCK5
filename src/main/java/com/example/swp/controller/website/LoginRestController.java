@@ -114,7 +114,7 @@ public class LoginRestController {
                         if(staff != null) {
                         session.setAttribute("loggedInStaff", staff);
                         }
-                    redirectUrl = "/admin/manager-dashboard";
+                    redirectUrl = "/staff/staff-dashboard";
                     break;
                 default:
                     break;
