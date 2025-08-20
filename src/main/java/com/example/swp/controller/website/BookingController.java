@@ -241,6 +241,12 @@ public class BookingController {
             return "redirect:/SWP/booking/" + storageId + "/booking?startDate=" + startDate + "&endDate=" + endDate;
         }
 
+        // Kiểm tra diện tích phải là số nguyên
+        if (rentalArea != Math.floor(rentalArea)) {
+            redirectAttributes.addFlashAttribute("error", "Diện tích thuê phải là số nguyên, không được nhập số thập phân.");
+            return "redirect:/SWP/booking/" + storageId + "/booking?startDate=" + startDate + "&endDate=" + endDate;
+        }
+
         if (rentalArea > storage.getArea()) {
             redirectAttributes.addFlashAttribute("error",
                     "Diện tích thuê (" + rentalArea + " m²) không được vượt quá diện tích kho (" + storage.getArea()
