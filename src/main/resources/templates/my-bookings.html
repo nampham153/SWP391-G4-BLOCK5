@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
         .orders-container {
-            max-width: 1200px;
+            max-width: 2500px;
             margin: 0 auto;
             padding: 20px;
         }
@@ -20,6 +20,7 @@
             margin-bottom: 20px;
             overflow: hidden;
             transition: transform 0.2s ease;
+            max-width: 2500px;
         }
 
         .order-card:hover {
@@ -232,7 +233,7 @@
                     <div th:each="order : ${orders}" class="order-card">
                         <div class="order-header">
                             <div class="order-id">
-                                <span th:text="'Đơn hàng #' + ${order.id}"></span>
+                                <span th:text="'Đơn hàng'"></span>
                             </div>
                             <div class="order-status">
                                 <span th:if="${order.status == 'CANCELLED'}"

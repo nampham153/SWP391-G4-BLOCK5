@@ -120,9 +120,9 @@
                 <a href="javascript:void(0);" id="profileMenuBtn" title="Tài khoản">
                     <i class="fa fa-user-circle" style="font-size: 1.8rem; color: white;"></i>
                 </a>
-                <div class="user-info-display" style="margin-left: 10px;" th:if="${customer != null}">
-                    <span class="user-name" th:text="${customer.fullname}"></span>
-                    <span class="user-points">(<span th:text="${customer.points}">0</span> điểm)</span>
+                <div class="user-info-display" style="margin-left: 10px;" th:if="${session.loggedInCustomer != null or customer != null}">
+                    <span class="user-name" th:text="${session.loggedInCustomer != null ? session.loggedInCustomer.fullname : (customer != null ? customer.fullname : '')}"></span>
+                    <span class="user-points">(<span th:text="${session.loggedInCustomer != null ? session.loggedInCustomer.points : (customer != null ? customer.points : 0)}">0</span> điểm)</span>
                 </div>
                 <ul class="profile-dropdown" id="profileDropdown" style="display: none; position: absolute; top: 100%; right: 0; background: white; list-style: none; padding: 10px 0; margin: 5px 0 0 0; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.2); z-index: 1000;">
                     <li><a th:href="@{/profile(tab='info')}" style="display: block; padding: 8px 16px; text-decoration: none;"><i class="fa fa-id-card"></i> Thông tin cá nhân</a></li>
