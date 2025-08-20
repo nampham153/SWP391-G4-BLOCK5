@@ -126,8 +126,45 @@ public class ManagerController {
         return "manager-customer-list";
     }
 
+    @GetMapping("/manager-all-storage")
+    public String showAllStorageList(Model model, HttpSession session) {
+        // Populate user info for manager taskbar
+        Manager loggedInManager = (Manager) session.getAttribute("loggedInManager");
+        if (loggedInManager != null) {
+            model.addAttribute("user", loggedInManager.getFullname());
+            model.addAttribute("userName", loggedInManager.getEmail());
+            model.addAttribute("userRole", "MANAGER");
+        } else {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getPrincipal())) {
+                UserDetails userDetails = (UserDetails) auth.getPrincipal();
+                model.addAttribute("userName", userDetails.getUsername());
+                model.addAttribute("userRole", auth.getAuthorities().iterator().next().getAuthority());
+            }
+        }
+
+        List<Storage> storages = storageService.getAll();
+        model.addAttribute("storages", storages);
+        return "manager-all-storage"; // Tên file HTML tương ứng
+    }
+
     @GetMapping("/addstorage")
-    public String showAddStorageForm(Model model) {
+    public String showAddStorageForm(Model model, HttpSession session) {
+        // Populate user info for taskbar
+        Manager loggedInManager = (Manager) session.getAttribute("loggedInManager");
+        if (loggedInManager != null) {
+            model.addAttribute("user", loggedInManager.getFullname());
+            model.addAttribute("userName", loggedInManager.getEmail());
+            model.addAttribute("userRole", "MANAGER");
+        } else {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getPrincipal())) {
+                UserDetails userDetails = (UserDetails) auth.getPrincipal();
+                model.addAttribute("userName", userDetails.getUsername());
+                model.addAttribute("userRole", auth.getAuthorities().iterator().next().getAuthority());
+            }
+        }
+
         model.addAttribute("storage", new Storage());
         return "addstorage";
     }
@@ -177,10 +214,15 @@ public class ManagerController {
 
     @LogActivity(action = "Xoá kho")
     @PostMapping("/storages/{id}/delete")
-    public String deleteStorage(@PathVariable int id, RedirectAttributes redirectAttributes) {
+    public String deleteStorage(@PathVariable int id,
+                                @RequestParam(value = "returnUrl", required = false) String returnUrl,
+                                RedirectAttributes redirectAttributes) {
         storageService.deleteStorageById(id);
         redirectAttributes.addFlashAttribute("message", "Đã xoá kho thành công!");
-        return "redirect:/admin/manager-dashboard";
+        if (returnUrl == null || returnUrl.isEmpty()) {
+            return "redirect:/admin/storages";
+        }
+        return "redirect:" + returnUrl;
     }
 
     @LogActivity(action = "Cập nhật kho")
