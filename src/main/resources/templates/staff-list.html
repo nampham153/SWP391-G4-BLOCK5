@@ -43,6 +43,14 @@
                 <input type="text" id="searchInput" placeholder="Tìm kiếm..." class="filter-select"
                        style="max-width: 360px; padding: 8px 10px; border: 1px solid #e9ecef; border-radius: 6px;">
             </div>
+            <div class="filter-group">
+                <label>Sắp xếp theo tên:</label>
+                <div class="sort-container" style="display:flex; gap:8px; align-items:center;">
+                    <button type="button" id="sortAscBtn" class="btn-sort">A-Z</button>
+                    <button type="button" id="sortDescBtn" class="btn-sort">Z-A</button>
+                    <button type="button" id="sortResetBtn" class="btn-sort active">Mặc định</button>
+                </div>
+            </div>
         </div>
     <!-- Staff Table -->
     <div class="card">
@@ -110,6 +118,48 @@
     </div>
 </main>
 <script>
+    (function initStaffSorting(){
+        const table = document.getElementById('staffTable');
+        if (!table) return;
+
+        const tbody = table.querySelector('tbody');
+        const sortAscBtn   = document.getElementById('sortAscBtn');
+        const sortDescBtn  = document.getElementById('sortDescBtn');
+        const sortResetBtn = document.getElementById('sortResetBtn');
+
+        // Mark original order so we can reset later
+        Array.from(tbody.querySelectorAll('tr')).forEach((row, i) => {
+            row.dataset.origIndex = String(i);
+        });
+
+        function setActive(btn){
+            [sortAscBtn, sortDescBtn, sortResetBtn].forEach(b => b && b.classList.remove('active'));
+            btn && btn.classList.add('active');
+        }
+
+        function sortRows(order) {
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+
+            rows.sort((a, b) => {
+                if (order === 'none') {
+                    return Number(a.dataset.origIndex) - Number(b.dataset.origIndex);
+                }
+                const aName = (a.querySelector('.staff-name')?.textContent || '').trim().toLowerCase();
+                const bName = (b.querySelector('.staff-name')?.textContent || '').trim().toLowerCase();
+
+                const cmp = aName.localeCompare(bName, 'vi', { sensitivity: 'base' });
+                return order === 'asc' ? cmp : -cmp; // 'desc'
+            });
+
+            // Re-append in new order (keeps any row.style.display set by your search)
+            rows.forEach(r => tbody.appendChild(r));
+        }
+
+        // Hook buttons
+        sortAscBtn  && sortAscBtn.addEventListener('click',  () => { sortRows('asc');  setActive(sortAscBtn);  });
+        sortDescBtn && sortDescBtn.addEventListener('click', () => { sortRows('desc'); setActive(sortDescBtn); });
+        sortResetBtn&& sortResetBtn.addEventListener('click', () => { sortRows('none'); setActive(sortResetBtn); });
+    })();
     // Live search on current page (filters rows by multiple fields)
     function attachStaffSearch() {
         const input = document.getElementById('searchInput');
@@ -166,6 +216,7 @@
 
     // Init
     window.addEventListener('DOMContentLoaded', attachStaffSearch);
+
 </script>
 
 </body>
