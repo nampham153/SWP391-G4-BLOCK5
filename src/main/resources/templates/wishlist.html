@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wishlist của tôi - Storage Rental</title>
+    <style>
+        /*<![CDATA[*/
+        :root {
+            --primary-color: #2c3e50; /* Primary dark color */
+            --primary-hover: #34495e;
+            --success-color: #34c759;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --gray-50: #f8fafc;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --gray-900: #111827;
+            --border-radius: 8px;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: var(--gray-800);
+            background: var(--gray-50);
+            min-height: 100vh;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            scroll-behavior: smooth;
+        }
+
+        /* Navigation Bar */
+        .navbar {
+            background: #ffffff;
+            border-radius: var(--border-radius);
+            padding: 1rem;
+            box-shadow: var(--shadow-sm);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 1rem;
+        }
+
+        .nav-brand {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            text-decoration: none;
+        }
+
+        .nav-menu {
+            list-style: none;
+            display: flex;
+            gap: 1rem;
+        }
+
+        .nav-menu a {
+            color: var(--gray-700);
+            text-decoration: none;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: var(--border-radius);
+            transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+        }
+
+        .nav-menu a:hover,
+        .nav-menu a.active {
+            background: var(--primary-color);
+            color: #ffffff;
+            transform: translateY(-2px);
+        }
+
+        .cart-container {
+            position: relative;
+        }
+
+        .cart-icon {
+            background: var(--primary-color);
+            border: none;
+            color: #ffffff;
+            font-size: 1rem;
+            cursor: pointer;
+            padding: 0.75rem;
+            border-radius: var(--border-radius);
+            transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .cart-icon:hover {
+            background: var(--primary-hover);
+            transform: scale(1.1);
+            box-shadow: var(--shadow-md);
+        }
+
+        .cart-count {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            background: var(--danger-color);
+            color: #ffffff;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        /* Main Content Wrapper */
+        .wrapper {
+            flex: 1 0 auto;
+            padding: 1rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+
+        /* Wishlist Grid */
+        .wishlist-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .wishlist-card {
+            background: #ffffff;
+            border-radius: var(--border-radius);
+            padding: 1.25rem;
+            box-shadow: var(--shadow-sm);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .wishlist-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .storage-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .storage-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--gray-900);
+            margin-bottom: 0.25rem;
+        }
+
+        .storage-status {
+            padding: 0.5rem 1rem;
+            border-radius: 16px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .status-available {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-rented {
+            background: var(--gray-100);
+            color: var(--gray-600);
+        }
+
+        .storage-details {
+            margin: 1rem 0;
+        }
+
+        .storage-address {
+            color: var(--gray-600);
+            font-size: 0.9rem;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .storage-address::before {
+            content: '📍';
+            font-size: 1rem;
+        }
+
+        .storage-price {
+            color: var(--primary-color);
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .storage-price::before {
+            content: '💰';
+            font-size: 1rem;
+        }
+
+        .wishlist-date {
+            color: var(--gray-600);
+            font-size: 0.85rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .wishlist-date::before {
+            content: '📅';
+            font-size: 0.9rem;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--gray-200);
+            border-radius: var(--border-radius);
+            background: #ffffff;
+            color: var(--gray-700);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: border-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+            transform: translateY(-1px);
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: #ffffff;
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+            color: #ffffff;
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            border-color: var(--danger-color);
+            color: var(--danger-color);
+        }
+
+        .btn-danger:hover {
+            background: var(--danger-color);
+            color: #ffffff;
+            transform: translateY(-1px);
+        }
+
+        /* Empty State */
+        .empty-wishlist {
+            background: #ffffff;
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            text-align: center;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .empty-icon {
+            font-size: 3rem;
+            color: var(--gray-300);
+            margin-bottom: 1rem;
+        }
+
+        .empty-wishlist h3 {
+            color: var(--gray-900);
+            font-size: 1.25rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .empty-wishlist p {
+            color: var(--gray-600);
+            font-size: 0.95rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Loading State */
+        .loading-spinner {
+            display: inline-block;
+            width: 32px;
+            height: 32px;
+            border: 3px solid var(--gray-200);
+            border-radius: 50%;
+            border-top-color: var(--primary-color);
+            animation: spin 1s ease-in-out infinite;
+            margin-bottom: 1rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--success-color);
+            color: #ffffff;
+            padding: 0.75rem 1.25rem;
+            border-radius: var(--border-radius);
+            z-index: 1001;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            box-shadow: var(--shadow-md);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        .toast.error {
+            background: var(--danger-color);
+        }
+
+        .toast::before {
+            content: '✓';
+            font-weight: 600;
+        }
+
+        .toast.error::before {
+            content: '✗';
+        }
+
+        /* Footer */
+        .footer {
+            flex-shrink: 0;
+            background: #ffffff;
+            padding: 1rem;
+            box-shadow: var(--shadow-sm);
+            border-radius: var(--border-radius);
+            margin-top: auto;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            body {
+                padding: 0.75rem;
+            }
+
+            .nav-container {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .nav-menu {
+                flex-direction: column;
+                align-items: center;
+                gap: 0.5rem;
+            }
+
+            .wishlist-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .card-actions {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .wishlist-grid.single-item {
+                min-height: calc(100vh - 150px); /* Adjust for smaller screens */
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 0 0.5rem;
+            }
+
+            .wishlist-card {
+                padding: 1rem;
+            }
+
+            .storage-name {
+                font-size: 1.1rem;
+            }
+        }
+        /*]]>*/
+    </style>
+</head>
+<body>
+<!-- Navigation Bar -->
+<div th:replace="taskbar/customer-navbar :: customerNavbar"></div>
+
+<!-- Main Content Wrapper -->
+<div class="wrapper">
+    <div class="container">
+        <div id="wishlistContainer">
+            <div class="empty-wishlist">
+                <div class="loading-spinner"></div>
+                <h3>Đang tải dữ liệu...</h3>
+                <p>Vui lòng chờ trong giây lát</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Notification -->
+<div id="toast" class="toast"></div>
+
+<!-- Footer -->
+<div th:replace="taskbar/customer-footer :: customerFooter"></div>
+
+<script>
+    let wishlistData = [];
+
+    // Load wishlist on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        loadWishlist();
+    });
+
+    async function loadWishlist() {
+        try {
+            const response = await fetch('/api/wishlist/my', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+
+            if (response.status === 401) {
+                showEmptyState('🔒 Bạn cần đăng nhập để xem wishlist', true, '/api/login');
+                return;
+            }
+
+            if (response.ok) {
+                wishlistData = await response.json();
+                renderWishlist();
+                updateCartCount();
+            } else {
+                const errorText = await response.text();
+                showEmptyState('❌ Có lỗi khi tải wishlist: ' + errorText);
+            }
+        } catch (error) {
+            console.error('Error loading wishlist:', error);
+            showEmptyState('🌐 Lỗi kết nối mạng. Vui lòng thử lại sau.');
+        }
+    }
+
+    function renderWishlist() {
+        const container = document.getElementById('wishlistContainer');
+        const validWishlist = wishlistData.filter(item => item && item.storage);
+
+        if (validWishlist.length === 0) {
+            showEmptyState();
+            return;
+        }
+
+        const wishlistHTML = `
+            <div class="wishlist-grid ${validWishlist.length === 1 ? 'single-item' : ''}">
+                ${validWishlist.map(item => createWishlistCard(item)).join('')}
+            </div>
+        `;
+        container.innerHTML = wishlistHTML;
+    }
+
+    function createWishlistCard(item) {
+        const storage = item.storage;
+        const addedDate = new Date(item.date).toLocaleDateString('vi-VN', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+
+        return `
+            <div class="wishlist-card" data-storage-id="${storage.storageid}">
+                <div class="storage-header">
+                    <div class="storage-name">${storage.storagename || 'Tên kho không xác định'}</div>
+                    <div class="${storage.status ? 'storage-status status-available' : 'storage-status status-rented'}">
+                        ${storage.status ? '✅ Còn trống' : '❌ Đang thuê'}
+                    </div>
+                </div>
+                <div class="storage-details">
+                    <div class="storage-address">${storage.city || 'Địa chỉ chưa cập nhật'}</div>
+                    ${storage.pricePerDay ?
+            `<div class="storage-price">${storage.pricePerDay.toLocaleString('vi-VN')} VNĐ/ngày</div>` :
+            '<div class="storage-price">Giá liên hệ</div>'
+        }
+                    <div class="wishlist-date">Đã thêm: ${addedDate}</div>
+                </div>
+                <div class="card-actions">
+                    <a href="/SWP/storages/${storage.storageid}" class="btn btn-secondary">
+                        Chi tiết
+                    </a>
+                </div>
+            </div>
+        `;
+    }
+
+    function showEmptyState(message = '💝 Wishlist của bạn đang trống', isError = false, redirectUrl = null) {
+        const container = document.getElementById('wishlistContainer');
+        const icon = isError ? '😔' : '🛒';
+        const defaultMessage = isError ? message : 'Hãy thêm các kho lưu trữ yêu thích vào wishlist của bạn!';
+
+        container.innerHTML = `
+            <div class="empty-wishlist">
+                <div class="empty-icon">${icon}</div>
+                <h3>${isError ? 'Có lỗi xảy ra' : 'Wishlist trống'}</h3>
+                <p>${message || defaultMessage}</p>
+                ${redirectUrl ?
+            `<a href="${redirectUrl}" class="btn btn-primary">Đăng nhập ngay</a>` :
+            `<a href="/SWP/storages" class="btn btn-primary">🔍 Khám phá kho lưu trữ</a>`
+        }
+            </div>
+        `;
+    }
+
+    function updateCartCount() {
+        const cartCount = document.getElementById('cartCount');
+        cartCount.textContent = wishlistData.length;
+        cartCount.style.animation = 'none';
+        setTimeout(() => {
+            cartCount.style.animation = 'pulse 2s infinite';
+        }, 10);
+    }
+
+    async function removeFromWishlist(storageId) {
+        const card = document.querySelector(`[data-storage-id="${storageId}"]`);
+        const removeBtn = card.querySelector('.btn-danger');
+        const originalText = removeBtn.innerHTML;
+        removeBtn.innerHTML = '⏳';
+        removeBtn.disabled = true;
+
+        try {
+            const response = await fetch('/api/wishlist/remove', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({ storageId: storageId })
+            });
+
+            if (response.ok) {
+                const result = await response.text();
+                showToast('✅ ' + (result || 'Đã xóa khỏi wishlist thành công'), false);
+                wishlistData = wishlistData.filter(item => item.storage.storageid !== storageId);
+                card.style.transition = 'all 0.3s ease';
+                card.style.opacity = '0';
+                card.style.transform = 'scale(0.8)';
+                setTimeout(() => {
+                    renderWishlist();
+                    updateCartCount();
+                }, 300);
+            } else {
+                const error = await response.text();
+                showToast('❌ ' + (error || 'Có lỗi khi xóa khỏi wishlist'), true);
+                removeBtn.innerHTML = originalText;
+                removeBtn.disabled = false;
+            }
+        } catch (error) {
+            console.error('Error removing from wishlist:', error);
+            showToast('🌐 Lỗi kết nối. Vui lòng thử lại sau.', true);
+            removeBtn.innerHTML = originalText;
+            removeBtn.disabled = false;
+        }
+    }
+
+    function showToast(message, isError = false) {
+        const toast = document.getElementById('toast');
+        toast.textContent = message;
+        toast.className = 'toast ' + (isError ? 'error' : '');
+        toast.classList.add('show');
+        setTimeout(() => {
+            toast.classList.remove('show');
+        }, 4000);
+    }
+
+    function refreshWishlist() {
+        const container = document.getElementById('wishlistContainer');
+        container.innerHTML = `
+            <div class="empty-wishlist">
+                <div class="loading-spinner"></div>
+                <h3>Đang làm mới...</h3>
+                <p>Vui lòng chờ trong giây lát</p>
+            </div>
+        `;
+        loadWishlist();
+        showToast('🔄 Đang làm mới wishlist...', false);
+    }
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'F5' || (e.ctrlKey && e.key === 'r')) {
+            e.preventDefault();
+            refreshWishlist();
+        }
+    });
+</script>
+</body>
+</html>

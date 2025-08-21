@@ -15,4 +15,6 @@ public interface NotificationService {
     void markAllAsRead(Customer customer);
 
     void createNotification(String message, Customer customer);
+
+
 }
