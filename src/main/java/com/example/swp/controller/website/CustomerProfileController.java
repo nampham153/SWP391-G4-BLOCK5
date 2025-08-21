@@ -20,7 +20,7 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
+import java.security.Principal;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -43,17 +43,15 @@ public class CustomerProfileController {
     /**
      * Trang profile khách hàng
      */
-    @GetMapping("/profile")
-    public String profile(Model model, HttpSession session,
+    @GetMapping(path = "/profile")
+    public String profile(Model model,
+                          Principal principal,
                           @RequestParam(value = "tab", required = false, defaultValue = "profile") String tab) {
-        String email = (String) session.getAttribute("email");
-
-        // Nếu chưa đăng nhập, chuyển về trang đăng nhập, hoặc bạn có thể set message lỗi
-        if (email == null) {
+        if (principal == null) {
             model.addAttribute("error", "Bạn chưa đăng nhập.");
             return "redirect:/login";
         }
-
+        String email = principal.getName(); // Spring Security username = email
         Customer customer = customerService.findByEmail(email);
 
         CustomerProfileUpdateRequest customerProfile = new CustomerProfileUpdateRequest();
@@ -70,28 +68,24 @@ public class CustomerProfileController {
         model.addAttribute("customerProfile", customerProfile);
         model.addAttribute("forgotPasswordRequest", forgotPasswordRequest);
         model.addAttribute("changePasswordRequest", changePasswordRequest);
-        model.addAttribute("customer", customer); // customer có thể null, nhớ kiểm tra trong template!
+        model.addAttribute("customer", customer);
         model.addAttribute("activeTab", tab);
         return "customer-profile";
     }
 
-    /**
-     * Cập nhật thông tin profile + upload avatar
-     */
-    @PostMapping("/update-profile")
+    @PostMapping(path = "/update-profile")
     public String updateProfile(
             @ModelAttribute("customerProfile") @Valid CustomerProfileUpdateRequest form,
             BindingResult bindingResult,
             @RequestParam(value = "avatarFile", required = false) MultipartFile avatarFile,
             Model model,
-            HttpSession session
+            Principal principal
     ) {
-        String email = (String) session.getAttribute("email");
-        if (email == null) {
+        if (principal == null) {
             model.addAttribute("error", "Bạn chưa đăng nhập.");
             return "redirect:/login";
         }
-
+        String email = principal.getName();
         Customer customer = customerService.findByEmail(email);
 
         model.addAttribute("forgotPasswordRequest", new ForgotPasswordRequest());
@@ -100,42 +94,42 @@ public class CustomerProfileController {
         model.addAttribute("activeTab", "update");
 
         if (bindingResult.hasErrors()) return "customer-profile";
-        if (customer != null) {
-            customer.setFullname(form.getFullname());
-            customer.setPhone(form.getPhone());
-            customer.setAddress(form.getAddress());
-
-            if (avatarFile != null && !avatarFile.isEmpty()) {
-                try {
-                    customer.setAvatar(avatarFile.getBytes());
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-            customerService.save(customer);
-            notificationService.createNotification("Bạn vừa cập nhật thông tin cá nhân thành công.", customer);
-
-            activityLogService.logActivity(
-                    "Cập nhật hồ sơ",
-                    "Khách hàng " + customer.getFullname() + " đã cập nhật thông tin cá nhân.",
-                    customer,
-                    null, null, null, null, null
-            );
-
-            Customer updated = customerService.findByEmail(email);
-            model.addAttribute("customerProfile", form);
-            model.addAttribute("customer", updated);
-            model.addAttribute("success", "Cập nhật thành công!");
+        if (customer == null) {
+            model.addAttribute("error", "Không xác định được khách hàng.");
             return "customer-profile";
         }
-        model.addAttribute("error", "Không xác định được khách hàng.");
+
+        customer.setFullname(form.getFullname());
+        customer.setPhone(form.getPhone());
+        customer.setAddress(form.getAddress());
+
+        if (avatarFile != null && !avatarFile.isEmpty()) {
+            try {
+                customer.setAvatar(avatarFile.getBytes());
+            } catch (IOException e) {
+                // log if you want
+            }
+        }
+        customerService.save(customer);
+        notificationService.createNotification("Bạn vừa cập nhật thông tin cá nhân thành công.", customer);
+        activityLogService.logActivity(
+                "Cập nhật hồ sơ",
+                "Khách hàng " + customer.getFullname() + " đã cập nhật thông tin cá nhân.",
+                customer, null, null, null, null, null
+        );
+
+        // reload and return
+        Customer updated = customerService.findByEmail(email);
+        model.addAttribute("customerProfile", form);
+        model.addAttribute("customer", updated);
+        model.addAttribute("success", "Cập nhật thành công!");
         return "customer-profile";
     }
 
     /**
      * Trả về ảnh đại diện từ database (dùng cho <img th:src="@{/profile/avatar/{id}(id=${customer.id})}"/>)
      */
-    @GetMapping("/profile/avatar/{id}")
+    @GetMapping(path = "/profile/avatar/{id}")
     @ResponseBody
     public ResponseEntity<byte[]> getAvatar(@PathVariable int id) {
         Customer customer = customerService.getCustomer(id);
