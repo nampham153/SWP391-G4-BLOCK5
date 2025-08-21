@@ -468,4 +468,14 @@ body {
     gap: 8px;
     align-items: center;
 }
-
+.pagination{
+    display:flex; gap:8px; align-items:center; justify-content:flex-end;
+    margin-top:12px; flex-wrap:wrap
+}
+.pagination a, .pagination span{
+    padding:6px 10px; border:1px solid #e9ecef; border-radius:6px;
+    text-decoration:none; color:#212529; font-size:14px
+}
+.pagination .active{ background:#2c3e50; color:#fff; border-color:#2c3e50 }
+.pagination .disabled{ opacity:.5; pointer-events:none }
+.page-size{ padding:6px 10px; border:1px solid #e9ecef; border-radius:6px }

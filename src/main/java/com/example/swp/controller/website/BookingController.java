@@ -8,6 +8,12 @@ import com.example.swp.enums.EContractStatus;
 import com.example.swp.service.StorageService;
 import com.example.swp.service.OrderService;
 import com.example.swp.service.EContractService;
+import com.example.swp.entity.Voucher;
+import com.example.swp.entity.VoucherUsage;
+import com.example.swp.enums.VoucherStatus;
+import com.example.swp.service.VoucherService;
+import com.example.swp.service.VoucherUsageService;
+import com.example.swp.service.CustomerService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,10 +24,12 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.math.BigDecimal;
 
 // Comment: Các import khác tạm thời ẩn
 /*
@@ -42,6 +50,15 @@ public class BookingController {
 
     @Autowired
     private EContractService eContractService;
+
+    @Autowired
+    private VoucherService voucherService;
+
+    @Autowired
+    private VoucherUsageService voucherUsageService;
+
+    @Autowired
+    private CustomerService customerService;
 
     /**
      * Helper method để kiểm tra và lấy customer từ session
@@ -142,6 +159,14 @@ public class BookingController {
         model.addAttribute("endDate", endDate);
         model.addAttribute("remainArea", remainArea);
         model.addAttribute("orderToken", orderToken);
+        // Danh sách voucher khả dụng cho khách (đang ACTIVE và đủ điểm)
+        try {
+            int customerPoint = customer.getPoints() != null ? customer.getPoints() : 0;
+            List<Voucher> vouchers = voucherService.getAvailableVouchersForCustomer(customerPoint);
+            model.addAttribute("vouchers", vouchers);
+        } catch (Exception ex) {
+            model.addAttribute("vouchers", java.util.Collections.emptyList());
+        }
 
         return "booking-form";
     }
@@ -190,6 +215,15 @@ public class BookingController {
         model.addAttribute("endDate", endDate);
         model.addAttribute("remainArea", remainArea);
         model.addAttribute("orderToken", orderToken);
+
+        // Danh sách voucher khả dụng cho khách (đang ACTIVE và đủ điểm)
+        try {
+            int customerPoint = customer.getPoints() != null ? customer.getPoints() : 0;
+            List<Voucher> vouchers = voucherService.getAvailableVouchersForCustomer(customerPoint);
+            model.addAttribute("vouchers", vouchers);
+        } catch (Exception ex) {
+            model.addAttribute("vouchers", java.util.Collections.emptyList());
+        }
 
         return "booking-form";
     }
@@ -273,6 +307,55 @@ public class BookingController {
             double pricePerDay = storage.getPricePerDay();
             double totalCost = days * pricePerDay * (rentalArea / storage.getArea());
 
+            // Áp dụng voucher nếu có
+            Voucher appliedVoucher = null;
+            BigDecimal discountApplied = BigDecimal.ZERO;
+            if (voucherId != null) {
+                Optional<Voucher> voucherOpt = voucherService.getVoucherById(voucherId);
+                if (voucherOpt.isEmpty()) {
+                    redirectAttributes.addFlashAttribute("error", "Voucher không tồn tại.");
+                    return "redirect:/SWP/booking/" + storageId + "/booking?startDate=" + startDate + "&endDate=" + endDate;
+                }
+
+                Voucher voucher = voucherOpt.get();
+                int customerPoint = customer.getPoints() != null ? customer.getPoints() : 0;
+
+                // Validate voucher điều kiện cơ bản
+                boolean validStatus = voucher.getStatus() == VoucherStatus.ACTIVE;
+                boolean withinTime = (voucher.getStartDate() == null || !voucher.getStartDate().isAfter(LocalDateTime.now()))
+                        && (voucher.getEndDate() == null || voucher.getEndDate().isAfter(LocalDateTime.now()));
+                boolean hasQuantity = voucher.getRemainQuantity() != null && voucher.getRemainQuantity() > 0;
+                boolean enoughPoint = voucher.getRequiredPoint() == null || voucher.getRequiredPoint() <= customerPoint;
+
+                if (!(validStatus && withinTime && hasQuantity && enoughPoint)) {
+                    redirectAttributes.addFlashAttribute("error", "Voucher không còn khả dụng hoặc bạn không đủ điểm.");
+                    return "redirect:/SWP/booking/" + storageId + "/booking?startDate=" + startDate + "&endDate=" + endDate;
+                }
+
+                // Tính giảm giá và cập nhật điểm/quantity
+                BigDecimal original = BigDecimal.valueOf(totalCost);
+                BigDecimal discount = voucher.getDiscountAmount() != null ? voucher.getDiscountAmount() : BigDecimal.ZERO;
+                BigDecimal finalAmount = original.subtract(discount);
+                if (finalAmount.signum() < 0) finalAmount = BigDecimal.ZERO; // không âm
+
+                discountApplied = original.subtract(finalAmount);
+                totalCost = finalAmount.doubleValue();
+                appliedVoucher = voucher;
+
+                // Trừ điểm khách nếu voucher yêu cầu điểm
+                if (voucher.getRequiredPoint() != null && voucher.getRequiredPoint() > 0) {
+                    int newPoints = Math.max(0, customerPoint - voucher.getRequiredPoint());
+                    customer.setPoints(newPoints);
+                    customerService.save(customer);
+                }
+
+                // Giảm số lượng còn lại của voucher
+                if (voucher.getRemainQuantity() != null) {
+                    voucher.setRemainQuantity(Math.max(0, voucher.getRemainQuantity() - 1));
+                }
+                voucherService.saveVoucher(voucher);
+            }
+
             // Tạo và lưu đơn hàng vào database
             Order order = new Order();
             order.setStorage(storage);
@@ -283,9 +366,23 @@ public class BookingController {
             order.setTotalAmount(totalCost);
             order.setStatus("PENDING");
             order.setRentalArea(rentalArea);
+            if (appliedVoucher != null) {
+                order.setVoucher(appliedVoucher);
+            }
 
             // Lưu đơn hàng vào database
             Order savedOrder = orderService.save(order);
+
+            // Lưu lịch sử sử dụng voucher nếu có
+            if (appliedVoucher != null) {
+                VoucherUsage usage = new VoucherUsage();
+                usage.setCustomer(customer);
+                usage.setVoucher(appliedVoucher);
+                usage.setOrder(savedOrder);
+                usage.setUsedAt(LocalDateTime.now());
+                usage.setDiscountAmount(discountApplied);
+                voucherUsageService.save(usage);
+            }
 
             // Tạo hợp đồng cho đơn hàng
             EContract contract = eContractService.createContract(savedOrder);

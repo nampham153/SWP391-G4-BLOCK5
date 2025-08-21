@@ -28,69 +28,74 @@
         </div>
 
         <!-- User Menu bên phải -->
-        <div class="user-menu" style="display: flex; align-items: center; gap: 15px;">
+        <div class="user-menu" style="display:flex;align-items:center;gap:15px;">
 
-            <!-- Notification Bell -->
-            <ul style="display: flex; align-items: center; gap: 24px; list-style: none; margin: 0;">
-                <!-- Chuông thông báo -->
-                <li>
-                    <a th:href="@{/notifications}" class="notification-bell" title="Thông báo"
-                        style="position:relative; color: white;">
+            <ul style="display:flex;align-items:center;gap:24px;list-style:none;margin:0;">
+
+                <!-- Show this block only when logged in -->
+                <li th:if="${isLoggedIn}">
+                    <a th:href="@{/notifications}" class="notification-bell" title="Thông báo" style="position:relative;color:white;">
                         <i class="fa fa-bell" style="font-size:1.5rem;"></i>
-                        <span class="notification-badge" th:if="${unreadCount > 0}" th:text="${unreadCount}"
-                            style="position:absolute;top:-8px;right:-8px;background:#e74c3c;color:white;border-radius:50%;padding:2px 7px;font-size:0.8rem;"></span>
+                        <span class="notification-badge"
+                              th:if="${unreadCount > 0}" th:text="${unreadCount}"
+                              style="position:absolute;top:-8px;right:-8px;background:#e74c3c;color:white;border-radius:50%;padding:2px 7px;font-size:0.8rem;"></span>
                     </a>
                 </li>
 
-                <!-- Hồ sơ người dùng -->
-                <li class="profile-menu" style="position:relative;">
-                    <a href="javascript:void(0);" id="profileMenuBtn" title="Tài khoản" style="color:white;">
-                        <i class="fa fa-user-circle" style="font-size: 1.8rem;"></i>
+                <!-- Profile menu (only when logged in) -->
+                <li class="profile-menu" style="position:relative;" th:if="${isLoggedIn}">
+                    <a href="javascript:void(0);" id="profileMenuBtn" title="Tài khoản" style="color:white;display:flex;align-items:center;">
+                        <!-- Avatar if exists -->
+                        <img th:if="${customer != null}" th:src="@{/profile/avatar/{id}(id=${customer.id})}"
+                             alt="avatar" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,.7);" />
+                        <!-- Fallback icon if no customer (shouldn’t happen if logged in) -->
+                        <i th:if="${customer == null}" class="fa fa-user-circle" style="font-size:1.8rem;"></i>
                     </a>
-                    <ul class="profile-dropdown" id="profileDropdown"
-                        style="display:none;position:absolute;right:0;top:40px;background:white;
-           padding:0;border-radius:10px;box-shadow:0 4px 12px rgba(0,0,0,0.2);
-           z-index:999;width:200px;">
 
-                        <!-- Nếu đã đăng nhập -->
-                        <li sec:authorize="isAuthenticated()" style="border-bottom: 1px solid #eee;">
-                            <a th:href="@{/profile(tab='info')}"
+                    <ul class="profile-dropdown" id="profileDropdown"
+                        style="display:none;position:absolute;right:0;top:40px;background:white;padding:0;border-radius:10px;box-shadow:0 4px 12px rgba(0,0,0,0.2);z-index:999;width:220px;">
+                        <li style="border-bottom:1px solid #eee;">
+                            <!-- FIX: 'info' -> 'profile' so the Profile tab activates correctly -->
+                            <a th:href="@{/profile(tab='profile')}"
                                style="display:block;padding:10px 16px;text-decoration:none;color:#333;">
                                 <i class="fa fa-id-card"></i> Thông tin cá nhân
                             </a>
                         </li>
-                        <li sec:authorize="isAuthenticated()" style="border-bottom: 1px solid #eee;">
+                        <li style="border-bottom:1px solid #eee;">
                             <a th:href="@{/profile(tab='update')}"
                                style="display:block;padding:10px 16px;text-decoration:none;color:#333;">
                                 <i class="fa fa-edit"></i> Cập nhật thông tin
                             </a>
                         </li>
-                        <li sec:authorize="isAuthenticated()">
-                            <form th:action="@{/api/logout}" method="get" style="margin:0;">
+                        <li style="border-bottom:1px solid #eee;">
+                            <a th:href="@{/profile(tab='forgot')}"
+                               style="display:block;padding:10px 16px;text-decoration:none;color:#333;">
+                                <i class="fa fa-unlock-alt"></i> Quên mật khẩu
+                            </a>
+                        </li>
+                        <li>
+                            <form th:action="@{/logout}" method="post" style="margin:0;">
                                 <button type="submit"
-                                        style="background:none;border:none;padding:10px 16px;
-                           width:100%;text-align:left;color:#333;cursor:pointer;">
+                                        style="background:none;border:none;padding:10px 16px;width:100%;text-align:left;color:#333;cursor:pointer;">
                                     <i class="fa fa-sign-out-alt"></i> Đăng xuất
                                 </button>
                             </form>
                         </li>
-
-                        <!-- Nếu chưa đăng nhập -->
-                        <li sec:authorize="isAnonymous()" style="border-bottom: 1px solid #eee;">
-                            <a th:href="@{/api/login}"
-                               style="display:block;padding:10px 16px;text-decoration:none;color:#333;">
-                                <i class="fa fa-sign-in-alt"></i> Đăng nhập
-                            </a>
-                        </li>
-                        <li sec:authorize="isAnonymous()">
-                            <a th:href="@{/register}"
-                               style="display:block;padding:10px 16px;text-decoration:none;color:#333;">
-                                <i class="fa fa-user-plus"></i> Đăng ký
-                            </a>
-                        </li>
                     </ul>
                 </li>
+
+                <!-- Show Login/Register when NOT logged in -->
+                <li th:if="${!isLoggedIn}">
+                    <a th:href="@{/api/login}" class="btn btn-outline-white" style="padding:8px 14px;border:1px solid #fff;border-radius:6px;">Đăng nhập</a>
+                </li>
+                <li th:if="${!isLoggedIn}">
+                    <a th:href="@{/register}" class="btn btn-dark" style="padding:8px 14px;border-radius:6px;background:#fff;color:#333;">Đăng ký</a>
+                </li>
+
             </ul>
+        </div>
+
+        </ul>
 
             </ul>
         </div>
@@ -330,16 +335,17 @@
         document.addEventListener("DOMContentLoaded", function () {
             const btn = document.getElementById("profileMenuBtn");
             const dropdown = document.getElementById("profileDropdown");
-            btn.addEventListener("click", function (e) {
-                e.preventDefault();
-                dropdown.style.display = (dropdown.style.display === "block") ? "none" : "block";
-            });
-            // Đóng menu khi click ngoài vùng
-            window.addEventListener("click", function (event) {
-                if (!btn.contains(event.target) && !dropdown.contains(event.target)) {
-                    dropdown.style.display = "none";
-                }
-            });
+            if (btn && dropdown) {
+                btn.addEventListener("click", function (e) {
+                    e.preventDefault();
+                    dropdown.style.display = (dropdown.style.display === "block") ? "none" : "block";
+                });
+                window.addEventListener("click", function (event) {
+                    if (!btn.contains(event.target) && !dropdown.contains(event.target)) {
+                        dropdown.style.display = "none";
+                    }
+                });
+            }
         });
     </script>
 </body>

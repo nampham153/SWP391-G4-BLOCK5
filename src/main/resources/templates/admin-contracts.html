@@ -308,11 +308,11 @@
                 <h3 th:text="${signedContracts}">0</h3>
                 <p>Đã ký</p>
             </div>
-            <div class="stat-card pending">
-                <i class="fas fa-clock"></i>
-                <h3 th:text="${pendingContracts}">0</h3>
-                <p>Chờ ký</p>
-            </div>
+<!--            <div class="stat-card pending">-->
+<!--                <i class="fas fa-clock"></i>-->
+<!--                <h3 th:text="${pendingContracts}">0</h3>-->
+<!--                <p>Chờ ký</p>-->
+<!--            </div>-->
             <div class="stat-card cancelled" th:if="${pendingCancellationContracts != null and pendingCancellationContracts > 0}">
                 <i class="fas fa-exclamation-triangle"></i>
                 <h3 th:text="${pendingCancellationContracts}">0</h3>
@@ -327,7 +327,7 @@
                 <div class="filter-buttons">
                     <button class="filter-btn active" onclick="filterContracts('all')">Tất cả</button>
                     <button class="filter-btn" onclick="filterContracts('SIGNED')">Đã ký</button>
-                    <button class="filter-btn" onclick="filterContracts('PENDING')">Chờ ký</button>
+<!--                    <button class="filter-btn" onclick="filterContracts('PENDING')">Chờ ký</button>-->
                 </div>
             </div>
 

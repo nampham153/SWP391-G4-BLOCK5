@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Chi tiết order</title>
+    <link rel="stylesheet" th:href="@{/css/order-detail.css}">
+</head>
+<body>
+<!-- Navigation Bar -->
+<!-- Top nav uses base -->
+<nav class="navbar">
+    <ul>
+        <li><a th:href="@{${base}}">Home</a></li>
+        <li><a th:href="@{${base} + '/orders'}">Orders</a></li>
+    </ul>
+</nav>
+
+<!-- Status badge (keeps your styles) -->
+<div class="status-badge" th:class="'status-badge ' + ${order.getStatus().toLowerCase()}">
+    <span th:text="${order.getStatus()}">Pending</span>
+</div>
+
+<!-- Action buttons (both roles) -->
+<div class="action-buttons">
+    <div th:if="${#strings.equalsIgnoreCase(order.status,'PENDING')}">
+        <form th:action="@{${base} + '/orders/' + ${order.id} + '/approve'}" method="post" style="display:inline;">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <button type="submit" class="approve-btn">✓ Phê duyệt</button>
+        </form>
+        <form th:action="@{${base} + '/orders/' + ${order.id} + '/reject'}" method="post" style="display:inline;">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <button type="submit" class="reject-btn">✗ Từ chối</button>
+        </form>
+    </div>
+
+    <div th:if="${#strings.equalsIgnoreCase(order.status,'REJECTED')}"
+         style="font-weight:600;color:#c82333;padding:12px 0;">
+        Order này đã bị từ chối
+    </div>
+    <div th:if="${#strings.equalsIgnoreCase(order.status,'PAID')}"
+         style="font-weight:600;color:#20c997;padding:12px 0;">
+        Order này đã được thanh toán
+    </div>
+    <div th:if="${#strings.equalsIgnoreCase(order.status,'APPROVED')}"
+         style="font-weight:600;color:#007bff;padding:12px 0;">
+        Order này cần được thanh toán
+    </div>
+
+    <div style="width:100%;margin-top:20px;">
+        <a th:href="@{${base} + '/orders'}" class="back-btn">Quay lại danh sách</a>
+    </div>
+</div>
+
+
+</body>
+</html>

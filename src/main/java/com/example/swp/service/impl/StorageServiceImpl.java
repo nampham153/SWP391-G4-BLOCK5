@@ -1,28 +1,34 @@
 package com.example.swp.service.impl;
 
-import com.example.swp.dto.StorageRequest;
-import com.example.swp.entity.Storage;
-import com.example.swp.repository.StorageRepository;
-import com.example.swp.service.StorageService;
-import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Component;
-
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Component;
+
+import com.example.swp.dto.StorageRequest;
+import com.example.swp.entity.Staff;
+import com.example.swp.entity.Storage;
+import com.example.swp.repository.StaffRepository;
+import com.example.swp.repository.StorageRepository;
+import com.example.swp.service.StorageService;
+
+import jakarta.validation.Valid;
 
 @Component
 public class StorageServiceImpl implements StorageService {
     @Autowired
     private StorageRepository storageRepository;
+
+    @Autowired
+    private StaffRepository staffRepository;
 
     @Autowired
     @Lazy
@@ -54,6 +60,11 @@ public class StorageServiceImpl implements StorageService {
         storage.setDescription(storageRequest.getDescription());
         storage.setStatus(storageRequest.isStatus());
 
+        if (storageRequest.getStaffid() != null) {
+            Optional<Staff> staffOpt = staffRepository.findById(storageRequest.getStaffid());
+            staffOpt.ifPresent(storage::setStaff);
+        }
+
         if (storageRequest.getImUrl() != null && !storageRequest.getImUrl().isEmpty()) {
             storage.setImUrl(storageRequest.getImUrl());
         }
@@ -80,6 +91,11 @@ public class StorageServiceImpl implements StorageService {
         storage.setArea(storageRequest.getArea());
         storage.setPricePerDay(storageRequest.getPricePerDay());
         storage.setDescription(storageRequest.getDescription());
+
+        if (storageRequest.getStaffid() != null) {
+            Optional<Staff> staffOpt = staffRepository.findById(storageRequest.getStaffid());
+            staffOpt.ifPresent(storage::setStaff);
+        }
 
         if (storageRequest.getImUrl() != null && !storageRequest.getImUrl().isEmpty()) {
             storage.setImUrl(storageRequest.getImUrl());

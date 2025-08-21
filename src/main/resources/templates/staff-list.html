@@ -110,9 +110,26 @@
 
     <!-- Pagination -->
     <div class="pagination">
-        <a th:if="${currentPage > 1}" th:href="@{staff-list(page=${currentPage - 1},size=10)}">Trước</a>
-        <span>Page <span th:text="${currentPage}"></span> of <span th:text="${totalPages}"></span></span>
-        <a th:if="${currentPage < totalPages}" th:href="@{staff-list(page=${currentPage + 1},size=10)}">Tiếp</a>
+        <div class="pagination">
+            <a th:classappend="${currentPage == 1} ? ' disabled'"
+               th:href="@{staff-list(page=1, size=${size})}">« Đầu</a>
+
+            <a th:if="${currentPage > 1}"
+               th:href="@{staff-list(page=${currentPage - 1}, size=${size})}">‹ Trước</a>
+            <!-- Show up to 5 page numbers centered around currentPage -->
+            <span th:each="p : ${#numbers.sequence(
+                        currentPage > 3 ? currentPage - 2 : 1,
+                        currentPage < totalPages - 2 ? currentPage + 2 : totalPages)}">
+    <a th:if="${p != currentPage}" th:text="${p}"
+       th:href="@{staff-list(page=${p}, size=${size})}"></a>
+    <span th:if="${p == currentPage}" th:text="${p}" class="active"></span>
+  </span>
+
+            <a th:if="${currentPage < totalPages}"
+               th:href="@{staff-list(page=${currentPage + 1}, size=${size})}">Sau ›</a>
+
+            <a th:classappend="${currentPage == totalPages} ? ' disabled'"
+               th:href="@{staff-list(page=${totalPages}, size=${size})}">Cuối »</a>
     </div>
     </div>
     </div>

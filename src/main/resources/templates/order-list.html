@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.w3.org/1999/xhtml">
+<head>
+    <title>Danh sách đơn hàng</title>
+    <link rel="stylesheet" th:href="@{/css/order-list.css}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+
+<div sec:authorize="hasAuthority('MANAGER')"
+     th:replace="~{taskbar/manager-taskbar :: managerTaskbar}"></div>
+<div sec:authorize="hasAuthority('STAFF')"
+     th:replace="~{taskbar/staff-taskbar :: staffTaskbar}"></div>
+<!-- Main Content -->
+<main class="main-content">
+
+
+<!-- Container -->
+<div class="container">
+    <h1>Danh sách đơn hàng</h1>
+    <div class="form-row-spacebetween">
+
+        <!-- Filter (left) -->
+        <form th:action="@{${base} + '/orders'}" method="get" class="filter-form">
+            <label for="status">Lọc theo trạng thái:</label>
+            <select id="status" name="status" onchange="this.form.submit()">
+                <option value="ALL"      th:selected="${selectedStatus == 'ALL'}">Tất cả</option>
+                <option value="PENDING"  th:selected="${selectedStatus == 'PENDING'}">PENDING</option>
+                <option value="APPROVED" th:selected="${selectedStatus == 'APPROVED'}">APPROVED</option>
+                <option value="REJECTED" th:selected="${selectedStatus == 'REJECTED'}">REJECTED</option>
+                <option value="PAID"     th:selected="${selectedStatus == 'PAID'}">PAID</option>
+            </select>
+        </form>
+
+        <!-- Search (right) -->
+        <form th:action="@{${base} + '/orders'}" method="get" class="search-form">
+            <label for="orderId">Tìm kiếm theo ID:</label>
+            <input type="number" id="orderId" name="orderId" placeholder="Nhập mã đơn..." required>
+            <button type="submit" class="btn btn-dark">Tìm</button>
+        </form>
+
+    </div>
+
+    <!-- Bảng danh sách đơn hàng -->
+    <table>
+        <thead>
+        <tr>
+            <th>Mã đơn hàng</th>
+            <th>Ngày đặt</th>
+            <th>Tổng tiền</th>
+            <th>Trạng thái</th>
+            <th>Hành động</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="order : ${orders}">
+            <td th:text="${order.getId()}"></td>
+            <td th:text="${order.getOrderDate()}"></td>
+            <td th:text="${order.getTotalAmount()}"></td>
+            <td>
+                    <span th:text="${order.getStatus()}"
+                          th:class="'status-badge ' + ${order.getStatus()?.toLowerCase()}"></span>
+            </td>
+            <td>
+                <a th:href="@{${base} + '/orders/' + ${order.id}}">Xem chi tiết</a>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+</main>
+</body>
+</html>

@@ -21,6 +21,7 @@ import com.example.swp.entity.Customer;
 import com.example.swp.entity.Feedback;
 import com.example.swp.entity.Order;
 import com.example.swp.entity.RecentActivity;
+import com.example.swp.entity.Staff;
 import com.example.swp.entity.Storage;
 import com.example.swp.entity.Voucher;
 import com.example.swp.enums.VoucherStatus;
@@ -33,8 +34,10 @@ import com.example.swp.service.StorageService;
 import com.example.swp.service.StorageTransactionService;
 import com.example.swp.service.VoucherService;
 
+import jakarta.servlet.http.HttpSession;
+
 @Controller
-@RequestMapping("/SWP/staff")
+@RequestMapping("/staff")
 public class StaffDBoardController {
 
     @Autowired
@@ -137,11 +140,7 @@ public class StaffDBoardController {
         return "customer-list"; // Trang HTML hiển thị danh sách người dùng
     }
 
-    @GetMapping("/staff-add-storage")
-    public String showAddStorageForm(Model model) {
-        model.addAttribute("storage", new Storage());
-        return "/staff-add-storage"; // Trang HTML chứa form
-    }
+
 
     @GetMapping("/storages/{id}/detail")
     public String showStorageDetail(@PathVariable int id, Model model, RedirectAttributes redirectAttributes) {
@@ -173,12 +172,20 @@ public class StaffDBoardController {
     public String addStorage(@ModelAttribute StorageRequest storageRequest,
             @RequestParam("image") MultipartFile file,
             @RequestParam("returnUrl") String returnUrl,
-            RedirectAttributes redirectAttributes) {
+            RedirectAttributes redirectAttributes,
+            HttpSession session) {
         try {
             // Upload ảnh
             if (file != null && !file.isEmpty()) {
                 String imageUrl = cloudinaryService.uploadImage(file);
                 storageRequest.setImUrl(imageUrl);
+            }
+
+            // Gán staffid từ session nếu có
+            Object loggedInStaffObj = session.getAttribute("loggedInStaff");
+            if (loggedInStaffObj instanceof Staff) {
+                Staff loggedInStaff = (Staff) loggedInStaffObj;
+                storageRequest.setStaffid(loggedInStaff.getStaffid());
             }
 
             // Lưu vào DB
