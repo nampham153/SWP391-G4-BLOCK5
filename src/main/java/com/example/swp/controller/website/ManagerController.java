@@ -374,20 +374,42 @@ public class ManagerController {
         }
 
         // Lấy tất cả hợp đồng
-        List<EContract> contracts = eContractService.findAll();
+        List<EContract> allContracts = eContractService.findAll();
         
-        // Thống kê hợp đồng
+        // Chỉ hiển thị hợp đồng từ các đơn hàng đã thanh toán (PAID) hoặc đã được duyệt (APPROVED)
+        List<EContract> contracts = allContracts.stream()
+                .filter(contract -> {
+                    String orderStatus = contract.getOrder().getStatus();
+                    return "PAID".equals(orderStatus) || "APPROVED".equals(orderStatus);
+                })
+                .collect(java.util.stream.Collectors.toList());
+        
+        // Thống kê hợp đồng dựa trên danh sách đã lọc
         long signedContracts = contracts.stream()
                 .filter(contract -> contract.getStatus().name().equals("SIGNED"))
                 .count();
         long pendingContracts = contracts.stream()
                 .filter(contract -> contract.getStatus().name().equals("PENDING"))
                 .count();
+        long cancelledContracts = contracts.stream()
+                .filter(contract -> contract.getStatus().name().equals("CANCELLED"))
+                .count();
+        long pendingCancellationContracts = contracts.stream()
+                .filter(contract -> contract.getStatus().name().equals("PENDING_CANCELLATION"))
+                .count();
+
+        System.out.println("DEBUG ADMIN: Total contracts found: " + allContracts.size());
+        System.out.println("DEBUG ADMIN: Filtered contracts (PAID/APPROVED): " + contracts.size());
+        System.out.println("DEBUG ADMIN: Signed contracts: " + signedContracts);
+        System.out.println("DEBUG ADMIN: Pending contracts: " + pendingContracts);
+        System.out.println("DEBUG ADMIN: Pending cancellation contracts: " + pendingCancellationContracts);
 
         model.addAttribute("contracts", contracts);
         model.addAttribute("totalContracts", contracts.size());
         model.addAttribute("signedContracts", signedContracts);
         model.addAttribute("pendingContracts", pendingContracts);
+        model.addAttribute("cancelledContracts", cancelledContracts);
+        model.addAttribute("pendingCancellationContracts", pendingCancellationContracts);
 
         return "admin-contracts";
     }

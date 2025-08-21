@@ -541,14 +541,28 @@ public class BookingController {
         }
 
         // Lấy danh sách hợp đồng của khách hàng
-        List<EContract> contracts = eContractService.findByCustomerId(customer.getId());
+        List<EContract> allContracts = eContractService.findByCustomerId(customer.getId());
         
-        // Tính toán thống kê
+        // Chỉ hiển thị hợp đồng từ các đơn hàng đã thanh toán (PAID) hoặc đã được duyệt (APPROVED)
+        List<EContract> contracts = allContracts.stream()
+                .filter(contract -> {
+                    String orderStatus = contract.getOrder().getStatus();
+                    return "PAID".equals(orderStatus) || "APPROVED".equals(orderStatus);
+                })
+                .collect(java.util.stream.Collectors.toList());
+        
+        // Tính toán thống kê dựa trên danh sách đã lọc
         long signedCount = contracts.stream()
                 .filter(contract -> contract.getStatus().name().equals("SIGNED"))
                 .count();
         long pendingCount = contracts.stream()
                 .filter(contract -> contract.getStatus().name().equals("PENDING"))
+                .count();
+        long cancelledCount = contracts.stream()
+                .filter(contract -> contract.getStatus().name().equals("CANCELLED"))
+                .count();
+        long pendingCancellationCount = contracts.stream()
+                .filter(contract -> contract.getStatus().name().equals("PENDING_CANCELLATION"))
                 .count();
         
         // Thêm attributes vào model
@@ -556,7 +570,85 @@ public class BookingController {
         model.addAttribute("customer", customer);
         model.addAttribute("signedCount", signedCount);
         model.addAttribute("pendingCount", pendingCount);
+        model.addAttribute("cancelledCount", cancelledCount);
+        model.addAttribute("pendingCancellationCount", pendingCancellationCount);
 
         return "my-contracts";
+    }
+
+    /**
+     * Hủy hợp đồng
+     */
+    @PostMapping("/customers/cancel-contract/{contractId}")
+    public String cancelContract(@PathVariable Long contractId, 
+                                HttpSession session, 
+                                RedirectAttributes redirectAttributes) {
+        
+        System.out.println("DEBUG: Cancel contract called with ID: " + contractId);
+        
+        // Kiểm tra customer đã đăng nhập chưa
+        Customer customer = getLoggedInCustomer(session);
+        if (customer == null) {
+            System.out.println("DEBUG: Customer not logged in");
+            return "redirect:/api/login";
+        }
+
+        System.out.println("DEBUG: Customer ID: " + customer.getId());
+
+        try {
+            // Lấy hợp đồng
+            Optional<EContract> contractOpt = eContractService.findById(contractId);
+            if (contractOpt.isEmpty()) {
+                System.out.println("DEBUG: Contract not found with ID: " + contractId);
+                redirectAttributes.addFlashAttribute("error", "Không tìm thấy hợp đồng");
+                return "redirect:/SWP/customers/my-contracts";
+            }
+
+            EContract contract = contractOpt.get();
+            System.out.println("DEBUG: Found contract: " + contract.getContractCode() + ", Status: " + contract.getStatus());
+            
+            // Kiểm tra xem hợp đồng có thuộc về customer hiện tại không
+            if (contract.getOrder().getCustomer().getId() != customer.getId()) {
+                System.out.println("DEBUG: Contract belongs to different customer");
+                redirectAttributes.addFlashAttribute("error", "Bạn không có quyền hủy hợp đồng này");
+                return "redirect:/SWP/customers/my-contracts";
+            }
+
+            // Kiểm tra trạng thái hợp đồng
+            if (contract.getStatus() == EContractStatus.CANCELLED) {
+                System.out.println("DEBUG: Contract already cancelled");
+                redirectAttributes.addFlashAttribute("error", "Hợp đồng đã được hủy trước đó");
+                return "redirect:/SWP/customers/my-contracts";
+            }
+            
+            if (contract.getStatus() == EContractStatus.PENDING_CANCELLATION) {
+                System.out.println("DEBUG: Contract cancellation already requested");
+                redirectAttributes.addFlashAttribute("error", "Yêu cầu hủy hợp đồng đã được gửi, chờ admin xác nhận");
+                return "redirect:/SWP/customers/my-contracts";
+            }
+            
+            // Chỉ cho phép hủy hợp đồng đã ký
+            if (contract.getStatus() != EContractStatus.SIGNED) {
+                System.out.println("DEBUG: Contract not in SIGNED status, current status: " + contract.getStatus());
+                redirectAttributes.addFlashAttribute("error", "Chỉ có thể hủy hợp đồng đã ký");
+                return "redirect:/SWP/customers/my-contracts";
+            }
+
+            // Gửi yêu cầu hủy hợp đồng (chờ admin xác nhận)
+            System.out.println("DEBUG: Requesting contract cancellation...");
+            EContract updatedContract = eContractService.requestCancellation(contractId);
+            System.out.println("DEBUG: Contract cancellation requested. New status: " + updatedContract.getStatus());
+            
+            redirectAttributes.addFlashAttribute("successMessage", 
+                "Yêu cầu hủy hợp đồng " + contract.getContractCode() + " đã được gửi. Chờ admin xác nhận!");
+            
+        } catch (Exception e) {
+            System.out.println("DEBUG: Error cancelling contract: " + e.getMessage());
+            e.printStackTrace();
+            redirectAttributes.addFlashAttribute("error", 
+                "Có lỗi xảy ra khi hủy hợp đồng: " + e.getMessage());
+        }
+
+        return "redirect:/SWP/customers/my-contracts";
     }
 }

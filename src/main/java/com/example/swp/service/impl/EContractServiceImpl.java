@@ -103,4 +103,79 @@ public class EContractServiceImpl implements EContractService {
     public List<EContract> findByStatus(EContractStatus status) {
         return eContractRepository.findByStatus(status);
     }
+    
+    @Override
+    public EContract cancelContract(Long contractId) {
+        System.out.println("DEBUG SERVICE: Attempting to cancel contract with ID: " + contractId);
+        Optional<EContract> contractOpt = eContractRepository.findById(contractId);
+        if (contractOpt.isPresent()) {
+            EContract contract = contractOpt.get();
+            System.out.println("DEBUG SERVICE: Found contract: " + contract.getContractCode() + ", Current status: " + contract.getStatus());
+            contract.setStatus(EContractStatus.CANCELLED);
+            EContract savedContract = eContractRepository.save(contract);
+            System.out.println("DEBUG SERVICE: Contract saved with new status: " + savedContract.getStatus());
+            return savedContract;
+        }
+        System.out.println("DEBUG SERVICE: Contract not found with ID: " + contractId);
+        throw new RuntimeException("Contract not found with ID: " + contractId);
+    }
+    
+    @Override
+    public EContract requestCancellation(Long contractId) {
+        System.out.println("DEBUG SERVICE: Requesting cancellation for contract ID: " + contractId);
+        Optional<EContract> contractOpt = eContractRepository.findById(contractId);
+        if (contractOpt.isPresent()) {
+            EContract contract = contractOpt.get();
+            System.out.println("DEBUG SERVICE: Found contract: " + contract.getContractCode() + ", Current status: " + contract.getStatus());
+            contract.setStatus(EContractStatus.PENDING_CANCELLATION);
+            EContract savedContract = eContractRepository.save(contract);
+            System.out.println("DEBUG SERVICE: Contract saved with new status: " + savedContract.getStatus());
+            System.out.println("DEBUG SERVICE: Saved contract ID: " + savedContract.getId());
+            return savedContract;
+        }
+        System.out.println("DEBUG SERVICE: Contract not found with ID: " + contractId);
+        throw new RuntimeException("Contract not found with ID: " + contractId);
+    }
+    
+    @Override
+    public EContract approveCancellation(Long contractId) {
+        System.out.println("DEBUG SERVICE: Approving cancellation for contract ID: " + contractId);
+        Optional<EContract> contractOpt = eContractRepository.findById(contractId);
+        if (contractOpt.isPresent()) {
+            EContract contract = contractOpt.get();
+            System.out.println("DEBUG SERVICE: Found contract: " + contract.getContractCode() + ", Current status: " + contract.getStatus());
+            contract.setStatus(EContractStatus.CANCELLED);
+            EContract savedContract = eContractRepository.save(contract);
+            System.out.println("DEBUG SERVICE: Contract approved for cancellation. New status: " + savedContract.getStatus());
+            return savedContract;
+        }
+        System.out.println("DEBUG SERVICE: Contract not found with ID: " + contractId);
+        throw new RuntimeException("Contract not found with ID: " + contractId);
+    }
+    
+    @Override
+    public EContract rejectCancellation(Long contractId) {
+        System.out.println("DEBUG SERVICE: Rejecting cancellation for contract ID: " + contractId);
+        Optional<EContract> contractOpt = eContractRepository.findById(contractId);
+        if (contractOpt.isPresent()) {
+            EContract contract = contractOpt.get();
+            System.out.println("DEBUG SERVICE: Found contract: " + contract.getContractCode() + ", Current status: " + contract.getStatus());
+            contract.setStatus(EContractStatus.SIGNED); // Trở về trạng thái đã ký
+            EContract savedContract = eContractRepository.save(contract);
+            System.out.println("DEBUG SERVICE: Contract cancellation rejected. New status: " + savedContract.getStatus());
+            return savedContract;
+        }
+        System.out.println("DEBUG SERVICE: Contract not found with ID: " + contractId);
+        throw new RuntimeException("Contract not found with ID: " + contractId);
+    }
+    
+    @Override
+    public void cancelContractsByOrderId(Integer orderId) {
+        Optional<EContract> contractOpt = eContractRepository.findByOrderId(orderId);
+        if (contractOpt.isPresent()) {
+            EContract contract = contractOpt.get();
+            contract.setStatus(EContractStatus.CANCELLED);
+            eContractRepository.save(contract);
+        }
+    }
 }

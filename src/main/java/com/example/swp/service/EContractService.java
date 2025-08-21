@@ -32,4 +32,14 @@ public interface EContractService {
     List<EContract> findAll();
     
     List<EContract> findByStatus(EContractStatus status);
+    
+    EContract cancelContract(Long contractId);
+    
+    EContract requestCancellation(Long contractId);
+    
+    EContract approveCancellation(Long contractId);
+    
+    EContract rejectCancellation(Long contractId);
+    
+    void cancelContractsByOrderId(Integer orderId);
 }

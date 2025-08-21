@@ -80,6 +80,10 @@
             color: #f39c12;
         }
 
+        .stat-card.cancelled i {
+            color: #e74c3c;
+        }
+
         .stat-card h3 {
             font-size: 32px;
             margin-bottom: 10px;
@@ -283,7 +287,7 @@
 </head>
 <body>
     <!-- Admin Navbar -->
-    <div th:replace="taskbar/manager-navbar :: managerNavbar"></div>
+    <div th:replace="taskbar/manager-taskbar :: managerTaskbar"></div>
 
     <div class="admin-container">
         <!-- Page Header -->
@@ -308,6 +312,11 @@
                 <i class="fas fa-clock"></i>
                 <h3 th:text="${pendingContracts}">0</h3>
                 <p>Chờ ký</p>
+            </div>
+            <div class="stat-card cancelled" th:if="${pendingCancellationContracts != null and pendingCancellationContracts > 0}">
+                <i class="fas fa-exclamation-triangle"></i>
+                <h3 th:text="${pendingCancellationContracts}">0</h3>
+                <p>Chờ xác nhận hủy</p>
             </div>
         </div>
 
