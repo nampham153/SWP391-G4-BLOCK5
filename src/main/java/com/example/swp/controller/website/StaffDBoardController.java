@@ -140,11 +140,7 @@ public class StaffDBoardController {
         return "customer-list"; // Trang HTML hiển thị danh sách người dùng
     }
 
-    @GetMapping("/staff-add-storage")
-    public String showAddStorageForm(Model model) {
-        model.addAttribute("storage", new Storage());
-        return "/staff-add-storage"; // Trang HTML chứa form
-    }
+
 
     @GetMapping("/storages/{id}/detail")
     public String showStorageDetail(@PathVariable int id, Model model, RedirectAttributes redirectAttributes) {

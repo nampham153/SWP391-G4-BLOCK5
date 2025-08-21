@@ -24,14 +24,7 @@
             <button class="sidebar-toggle">
                 <i class="fas fa-bars"></i>
             </button>
-            <h1>Quản Lý Kho</h1>
-        </div>
-
-        <div class="header-right">
-            <div class="search-box">
-                <i class="fas fa-search"></i>
-                <input type="text" placeholder="Search storage units, items...">
-            </div>
+            <h1>Danh sách kho hàng</h1>
         </div>
     </header>
     <!-- Page Content -->
@@ -147,7 +140,7 @@
                                         <i class="fas fa-exchange-alt"></i>
                                     </button>
                                 </form>
-                                <form th:action="@{'/admin/storages/' + ${storage.getStorageid()} + '/delete'}"
+                                <form th:if="${storage.status}" th:action="@{'/admin/storages/' + ${storage.getStorageid()} + '/delete'}"
                                       method="post" style="display: inline;"
                                       onsubmit="return confirm('Bạn có chắc là xóa kho này không?');">
                                     <input type="hidden" name="returnUrl" value="/admin/manager-all-storage"/>
