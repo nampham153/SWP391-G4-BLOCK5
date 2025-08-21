@@ -34,7 +34,7 @@ import com.example.swp.service.StorageTransactionService;
 import com.example.swp.service.VoucherService;
 
 @Controller
-@RequestMapping("/SWP/staff")
+@RequestMapping("/staff")
 public class StaffDBoardController {
 
     @Autowired
