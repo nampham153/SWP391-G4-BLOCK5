@@ -1,5 +1,7 @@
 package com.example.swp.dto;
 
+import org.springframework.stereotype.Component;
+
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -7,7 +9,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.stereotype.Component;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -32,4 +33,5 @@ public class StorageRequest {
     private String description;
     private String imUrl;
     private boolean status;
+    private Integer staffid;
 }
