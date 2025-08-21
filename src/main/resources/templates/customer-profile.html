@@ -126,6 +126,7 @@
       .form-grid{grid-template-columns:1fr}
       .kv{grid-template-columns:1fr}
     }
+    .banner:empty { display: none; }
   </style>
 </head>
 <body>
@@ -235,7 +236,7 @@
                 <label class="form-label" for="phone">Số điện thoại *</label>
                 <input class="input" id="phone" th:field="*{phone}" maxlength="11" required
                        oninput="validatePhone(this, 'phoneHelp')" />
-                <div id="phoneHelp" class="banner bad" style="display:block"></div>
+                <div id="phoneHelp" class="banner bad" style="display:none"></div>
                 <div class="banner bad" th:if="${#fields.hasErrors('phone')}" th:errors="*{phone}"></div>
               </div>
 
@@ -361,13 +362,16 @@
     if (!help) return;
     const v = input.value.trim();
     const re = /^0\d{9,10}$/;
-    if (v.length > 11){
-      help.textContent = 'Số điện thoại tối đa 11 số';
-    } else if (v && !re.test(v)){
-      help.textContent = 'Số điện thoại phải bắt đầu bằng 0 và có 10-11 số';
-    } else {
-      help.textContent = '';
+    let msg = '';
+
+    if (v.length > 11) {
+      msg = 'Số điện thoại tối đa 11 số';
+    } else if (v && !re.test(v)) {
+      msg = 'Số điện thoại phải bắt đầu bằng 0 và có 10-11 số';
     }
+
+    help.textContent = msg;
+    help.style.display = msg ? 'block' : 'none';
   }
 
   // avatar preview
