@@ -43,7 +43,7 @@ public class CustomerProfileController {
     /**
      * Trang profile khách hàng
      */
-    @GetMapping("/profile")
+    @GetMapping(path = "/profile")
     public String profile(Model model,
                           Principal principal,
                           @RequestParam(value = "tab", required = false, defaultValue = "profile") String tab) {
@@ -73,7 +73,7 @@ public class CustomerProfileController {
         return "customer-profile";
     }
 
-    @PostMapping("/update-profile")
+    @PostMapping(path = "/update-profile")
     public String updateProfile(
             @ModelAttribute("customerProfile") @Valid CustomerProfileUpdateRequest form,
             BindingResult bindingResult,
@@ -129,7 +129,7 @@ public class CustomerProfileController {
     /**
      * Trả về ảnh đại diện từ database (dùng cho <img th:src="@{/profile/avatar/{id}(id=${customer.id})}"/>)
      */
-    @GetMapping("/profile/avatar/{id}")
+    @GetMapping(path = "/profile/avatar/{id}")
     @ResponseBody
     public ResponseEntity<byte[]> getAvatar(@PathVariable int id) {
         Customer customer = customerService.getCustomer(id);
