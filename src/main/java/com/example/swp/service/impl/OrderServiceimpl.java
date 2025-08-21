@@ -1,5 +1,17 @@
 package com.example.swp.service.impl;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
 import com.example.swp.dto.OrderRequest;
 import com.example.swp.dto.StorageRequest;
 import com.example.swp.entity.Customer;
@@ -14,6 +26,7 @@ import com.example.swp.service.ActivityLogService;
 import com.example.swp.service.OrderService;
 import com.example.swp.service.StorageService;
 import com.example.swp.service.StorageTransactionService;
+
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -26,6 +39,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
 
 @Component
 public class OrderServiceimpl implements OrderService {
@@ -300,7 +314,8 @@ public class OrderServiceimpl implements OrderService {
 
     @Override
     public double getTotalRentedArea(int storageId) {
-        return 0;
+        Double total = orderRepository.getTotalRentedArea(storageId, LocalDate.now());
+        return total == null ? 0.0 : total;
     }
     @Transactional
     public void updateOrderStatusToPaid(int orderId) {
