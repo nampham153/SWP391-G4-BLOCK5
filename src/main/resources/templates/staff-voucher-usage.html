@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voucher Usage History - Staff Manager</title>
+    <link rel="stylesheet" th:href="@{/css/staff-dashboard.css}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+<div th:replace="taskbar/staff-taskbar :: staffTaskbar"></div>
+<main class="main-content">
+    <header class="header">
+        <div class="header-left">
+            <button class="sidebar-toggle">
+                <i class="fas fa-bars"></i>
+            </button>
+            <h1>Lịch Sử Sử Dụng Voucher</h1>
+        </div>
+    </header>
+
+    <div class="page-content">
+        <div class="page-header">
+            <h2 class="page-title">Tất cả lịch sử sử dụng voucher</h2>
+            <div class="page-actions" style="margin-top: 5px;">
+                <button class="btn-secondary btn-back">
+                    <a href="/SWP/staff/staff-dashboard" style="color: inherit; text-decoration: none;">
+                        <i class="fas fa-arrow-left"></i> Quay Lại Dashboard
+                    </a>
+                </button>
+                <button class="btn-secondary btn-back">
+                    <a href="/SWP/staff/vouchers">
+                        <i class="fas fa-arrow-left"></i> Quay Lại Danh Sách Voucher
+                    </a>
+                </button>
+            </div>
+        </div>
+
+        <div class="card" style="margin-top: 20px;">
+            <div class="card-header">
+                <h3>Tổng lượt sử dụng (<span th:text="${#lists.size(usageHistories)}"></span>)</h3>
+            </div>
+
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Tên khách</th>
+                        <th>Email</th>
+                        <th>Tên voucher</th>
+                        <th>Giảm giá</th>
+                        <th>Mã đơn hàng</th>
+                        <th>Ngày sử dụng</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <p th:if="${#lists.isEmpty(usageHistories)}">Không có lịch sử sử dụng nào.</p>
+                    <tr th:each="usage : ${usageHistories}">
+                        <td th:text="${usage.id}"></td>
+                        <td th:text="${usage.customer != null ? usage.customer.fullname : 'N/A'}"></td>
+                        <td th:text="${usage.customer != null ? usage.customer.email : 'N/A'}"></td>
+                        <td th:text="${usage.voucher != null ? usage.voucher.name : 'N/A'}"></td>
+                        <td th:text="${#numbers.formatDecimal(usage.discountAmount, 0, 2)}"></td>
+                        <td th:text="${usage.order != null ? usage.order.id : 'N/A'}"></td>
+                        <td th:text="${#temporals.format(usage.usedAt, 'dd/MM/yyyy HH:mm')}"></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</main>
+<script>
+    document.querySelector('.sidebar-toggle').addEventListener('click', function() {
+        document.querySelector('.sidebar').classList.toggle('open');
+    });
+</script>
+</body>
+</html>
