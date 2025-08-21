@@ -62,8 +62,7 @@ public class LoginRestController {
         }
         model.addAttribute("sessionId", session.getId());
         return "login";
-
-}
+    }
 
     @LogActivity(action = "Người dùng đăng nhập vào hệ thống")
     @PostMapping("/login")
@@ -111,9 +110,9 @@ public class LoginRestController {
                 case "STAFF":
                     String email = loginRequest.getEmail();
                     Staff staff = staffService.findByEmail(email).orElse(null);
-                        if(staff != null) {
+                    if(staff != null) {
                         session.setAttribute("loggedInStaff", staff);
-                        }
+                    }
                     redirectUrl = "/staff/staff-dashboard";
                     break;
                 default:
@@ -138,7 +137,6 @@ public class LoginRestController {
         }
     }
 
-
     @LogActivity(action = "Người dùng đăng xuất khỏi hệ thống")
     @GetMapping("/logout")
     public String logout() {
@@ -146,7 +144,6 @@ public class LoginRestController {
         session.invalidate();
         return "redirect:/api/login"; // Chuyển về trang login
     }
-
 
     @GetMapping("/check-session")
     @ResponseBody

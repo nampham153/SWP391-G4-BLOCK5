@@ -155,8 +155,15 @@ public class StaffDBoardController {
     }
 
     @GetMapping("/staff-all-storage")
-    public String showAllStorageList(Model model) {
-        List<Storage> storages = storageService.getAll();
+    public String showAllStorageList(Model model, HttpSession session) {
+        Object loggedInStaffObj = session.getAttribute("loggedInStaff");
+        List<Storage> storages;
+        if (loggedInStaffObj instanceof Staff) {
+            int staffId = ((Staff) loggedInStaffObj).getStaffid();
+            storages = storageService.findByStaffId(staffId);
+        } else {
+            storages = List.of();
+        }
         model.addAttribute("storages", storages);
         return "staff-all-storage"; // Tên file HTML tương ứng
     }
