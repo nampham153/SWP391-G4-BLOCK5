@@ -35,6 +35,24 @@
             min-width: 340px;
             border: 2px solid #a7c7e7;
         }
+        .back-button {
+          position: absolute;
+          top: 20px;
+          left: 20px;
+          background: rgba(255, 255, 255, 0.8);
+          color: #2c3e50;
+          border: 2px solid rgba(44, 62, 80, 0.1);
+          padding: 12px 20px;
+          border-radius: 50px;
+          text-decoration: none;
+          font-weight: 600;
+          font-size: 0.95rem;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          backdrop-filter: blur(5px);
+          z-index: 2;
+        }
 
         input[type="email"],
         input[type="password"] {
@@ -94,6 +112,7 @@
     </style>
 </head>
 <body>
+<a href="/SWP" class="back-button">← Quay lại</a>
 <div class="login-container">
     <h2>Login</h2>
     <form id="loginForm">
@@ -101,7 +120,7 @@
         <input type="password" id="password" name="password" placeholder="Password" required>
         <button type="submit">Login</button>
         <div class="links-container">
-            <a href="#">Quên mật khẩu?</a>
+            <a th:href="@{/customer-forgot-password}">Quên mật khẩu?</a>
             <a th:href="@{/register}">Tạo tài khoản mới</a>
         </div>
     </form>
@@ -133,7 +152,7 @@
                 headers: {
                     "Content-Type": "application/json"
                 },
-                credentials: "include", // ✅ CẦN THIẾT để Spring nhận JSESSIONID
+                credentials: "include",
                 body: JSON.stringify({ email, password })
             });
 
@@ -147,7 +166,7 @@
                 } else if (data.redirect) {
                     window.location.href = data.redirect;
                 } else {
-                    window.location.href = "/home-page";
+                    window.location.href = "/SWP";
                 }
             } else {
                 const error = await response.text();

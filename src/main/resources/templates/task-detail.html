@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chi tiết công việc</title>
+    <link rel="stylesheet" href="/css/admin.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        .main-content {
+            margin-left: 250px;
+            padding: 20px;
+            min-height: 100vh;
+            background-color: #f8f9fa;
+        }
+        .task-detail-container {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .task-header {
+            border-bottom: 1px solid #eee;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .task-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .task-meta {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #666;
+        }
+        .task-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        .content-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 6px;
+        }
+        .section-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+        .section-content {
+            color: #555;
+            line-height: 1.6;
+        }
+        .staff-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .staff-badge {
+            background: #007bff;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .status-pending { background-color: #fff3cd; color: #856404; }
+        .status-in_progress { background-color: #d1ecf1; color: #0c5460; }
+        .status-completed { background-color: #d4edda; color: #155724; }
+        .status-cancelled { background-color: #f8d7da; color: #721c24; }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 14px;
+            margin-right: 10px;
+        }
+        .btn-primary { background-color: #007bff; color: white; }
+        .btn-secondary { background-color: #6c757d; color: white; }
+        .actions {
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div th:replace="~{taskbar/manager-taskbar :: managerTaskbar}"></div>
+    
+    <div class="main-content">
+        <div class="task-detail-container">
+            <div class="task-header">
+                <h1 class="task-title" th:text="${task.title}"></h1>
+                <div class="task-meta">
+                    <div class="meta-item">
+                        <i class="fas fa-hashtag"></i>
+                        <span>ID: <strong th:text="${task.id}"></strong></span>
+                    </div>
+                    <div class="meta-item">
+                        <i class="fas fa-calendar"></i>
+                        <span>Hạn: <strong th:text="${#dates.format(task.dueDate, 'dd/MM/yyyy')}"></strong></span>
+                    </div>
+
+                    <div class="meta-item">
+                        <i class="fas fa-user"></i>
+                        <span>Người giao: <strong th:text="${task.assignedManager.fullname}"></strong></span>
+                    </div>
+                    <div class="meta-item">
+                        <i class="fas fa-flag"></i>
+                        <span class="status-badge" th:classappend="'status-' + ${task.status.name().toLowerCase()}"
+                              th:text="${task.status.name() == 'PENDING' ? 'Đã giao' :
+                                       (task.status.name() == 'IN_PROGRESS' ? 'Đang thực hiện' :
+                                       (task.status.name() == 'COMPLETED' ? 'Đã hoàn thành' : 'Đã hủy'))}"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="task-content">
+                <div class="content-section">
+                    <h3 class="section-title">Mô tả công việc</h3>
+                    <div class="section-content" th:text="${task.description}"></div>
+                </div>
+
+                <div class="content-section">
+                    <h3 class="section-title">Nhân viên được giao</h3>
+                    <div class="section-content">
+                        <div th:if="${task.assignedStaff != null and !task.assignedStaff.isEmpty()}">
+                            <p><strong>Số lượng nhân viên:</strong> <span th:text="${task.assignedStaff.size()}"></span> người</p>
+                            <div class="staff-list">
+                                <span th:each="staff : ${task.assignedStaff}"
+                                      class="staff-badge"
+                                      th:text="${staff.fullname}"></span>
+                            </div>
+                        </div>
+                        <div th:if="${task.assignedStaff == null or task.assignedStaff.isEmpty()}"
+                             class="section-content">
+                            <em>Chưa có nhân viên được phân công</em>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="task-content">
+                <div class="content-section">
+                    <h3 class="section-title">Thông tin thời gian</h3>
+                    <div class="section-content">
+                        <p><strong>Hạn hoàn thành:</strong> <span th:text="${#dates.format(task.dueDate, 'dd/MM/yyyy')}"></span></p>
+                    </div>
+                </div>
+
+                <div class="content-section">
+                    <h3 class="section-title">Thông tin quản lý</h3>
+                    <div class="section-content">
+                        <p><strong>Người giao việc:</strong> <span th:text="${task.assignedManager.fullname}"></span></p>
+                        <p><strong>Email người giao:</strong> <span th:text="${task.assignedManager.email}"></span></p>
+                        <p><strong>Trạng thái hiện tại:</strong>
+                            <!-- <span class="status-badge" th:classappend="'status-' + ${task.status.name().toLowerCase()}"
+                                  th:text="${task.status.name() == 'PENDING' ? 'Đã giao' :
+                                           (task.status.name() == 'Resolved' ? 'Đang thực hiện' :
+                                           (task.status.name() == 'Closed' ?  'Đã hủy'))}"></span> -->
+
+                            <span class="status-badge" 
+                                th:classappend="'status-' + ${task.status.name().toLowerCase()}"
+                                th:text="${task.status.name() == 'PENDING' ? 'Đã giao' :
+                                        (task.status.name() == 'RESOLVED' ? 'Đã xong' :
+                                        (task.status.name() == 'CLOSED' ? 'Đã hủy' : 'Unknown'))}">
+                            </span>
+               
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="actions">
+                <a href="/admin/task-list" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Quay lại
+                </a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
