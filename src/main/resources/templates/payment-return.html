@@ -1,0 +1,52 @@
+<!-- templates/payment-return.html -->
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Kết quả thanh toán VNPay</title>
+    <style>
+        body{font-family:Arial,sans-serif;background:#f6f8fa;padding:40px;}
+        .container{max-width:700px;margin:auto;background:white;padding:28px;border-radius:10px;box-shadow:0 0 10px #ccc;}
+        .row{display:flex;gap:12px;margin:10px 0;}
+        .label{min-width:180px;color:#666}
+        .success{color:#28a745;font-weight:700}
+        .error{color:#dc3545;font-weight:700}
+        .actions{margin-top:18px}
+        a.btn{display:inline-block;padding:10px 16px;border-radius:6px;text-decoration:none}
+        .btn-primary{background:#007bff;color:#fff}
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>Kết quả thanh toán VNPay</h2>
+
+    <div class="row"><div class="label">Mã giao dịch (VNPay):</div>
+        <div th:text="${vnp_TransactionNo} ?: '-'">123456</div>
+    </div>
+
+    <div class="row"><div class="label">Mã đơn của bạn (Order ID):</div>
+        <div th:text="${vnp_TxnRef} ?: '-'">45</div>
+    </div>
+
+    <div class="row"><div class="label">Nội dung đơn hàng:</div>
+        <div th:text="${vnp_OrderInfo} ?: '-'">Thanh toán đơn hàng</div>
+    </div>
+
+    <div class="row"><div class="label">Số tiền:</div>
+        <!-- amountVnd is already divided by 100 in the controller -->
+        <div th:text="${#numbers.formatInteger(amountVnd, 0, 'COMMA')} + ' VNĐ'">100,000 VNĐ</div>
+    </div>
+
+    <div class="row"><div class="label">Trạng thái thanh toán:</div>
+        <div>
+            <span th:if="${success}" class="success">Thành công</span>
+            <span th:unless="${success}" class="error">Thất bại (mã [[${vnp_ResponseCode}]])</span>
+        </div>
+    </div>
+
+    <div class="actions">
+        <a class="btn btn-primary" href="/SWP/customers/my-bookings">Về “Đơn hàng của tôi”</a>
+    </div>
+</div>
+</body>
+</html>

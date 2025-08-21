@@ -171,7 +171,7 @@ public class ProfileController {
             BindingResult bindingResult,
             Model model
     ) {
-        model.addAttribute("customerProfile", new CustomerProfileUpdateRequest());
+        model.addAttribute("customerProfile", new ProfileUpdateRequest());
         model.addAttribute("forgotPasswordRequest", form);
         model.addAttribute("changePasswordRequest", new ChangePasswordRequest());
         model.addAttribute("customer", null);
@@ -213,7 +213,7 @@ public class ProfileController {
             Model model
     ) {
         String email = (String) session.getAttribute("email");
-        model.addAttribute("customerProfile", new CustomerProfileUpdateRequest());
+        model.addAttribute("customerProfile", new ProfileUpdateRequest());
         model.addAttribute("forgotPasswordRequest", new ForgotPasswordRequest());
         model.addAttribute("changePasswordRequest", form);
         model.addAttribute("activeTab", "changePassword");
