@@ -58,7 +58,7 @@ public class LoginRestController {
     public String returnLoginPage(Model model) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth != null && auth.isAuthenticated() && !(auth instanceof AnonymousAuthenticationToken)) {
-            return "redirect:/home-page";
+            return "redirect:/SWP";
         }
         model.addAttribute("sessionId", session.getId());
         return "login";
@@ -91,7 +91,7 @@ public class LoginRestController {
 
             // Lấy role của người dùng
             String role = authentication.getAuthorities().iterator().next().getAuthority();
-            String redirectUrl = "/home-page"; // mặc định
+            String redirectUrl = "/SWP"; // mặc định
 
             switch (role) {
                 case "MANAGER":
@@ -106,7 +106,7 @@ public class LoginRestController {
                     if (customer != null) {
                         session.setAttribute("loggedInCustomer", customer);
                     }
-                    redirectUrl = "/home-page";
+                    redirectUrl = "/SWP";
                     break;
                 case "STAFF":
                     String email = loginRequest.getEmail();

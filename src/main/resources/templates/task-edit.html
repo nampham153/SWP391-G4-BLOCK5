@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chỉnh sửa công việc</title>
+    <link rel="stylesheet" href="/css/admin.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        .main-content {
+            margin-left: 250px;
+            padding: 20px;
+            min-height: 100vh;
+            background-color: #f8f9fa;
+        }
+        .edit-container {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            max-width: 800px;
+        }
+        .form-header {
+            border-bottom: 1px solid #eee;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .form-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #333;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #333;
+        }
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        .form-control:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
+        }
+        .form-control[multiple] {
+            height: 120px;
+        }
+        .form-text {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+        .checkbox-group {
+            max-height: 150px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 15px;
+            background: #f9f9f9;
+        }
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .checkbox-item input[type="checkbox"] {
+            margin-right: 10px;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 14px;
+            margin-right: 10px;
+            transition: background-color 0.3s;
+        }
+        .btn-primary { 
+            background-color: #007bff; 
+            color: white; 
+        }
+        .btn-primary:hover { 
+            background-color: #0056b3; 
+        }
+        .btn-secondary { 
+            background-color: #6c757d; 
+            color: white; 
+        }
+        .btn-secondary:hover { 
+            background-color: #545b62; 
+        }
+        .actions {
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div th:replace="~{taskbar/manager-taskbar :: managerTaskbar}"></div>
+    
+    <div class="main-content">
+        <div class="edit-container">
+            <div class="form-header">
+                <h1 class="form-title">Chỉnh sửa công việc</h1>
+            </div>
+
+            <form th:action="@{/admin/task-list/edit/{id}(id=${task.id})}" method="post">
+                <div class="form-group">
+                    <label for="title">Tiêu đề công việc:</label>
+                    <input type="text" id="title" name="title" class="form-control" 
+                           th:value="${task.title}" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Mô tả chi tiết:</label>
+                    <textarea id="description" name="description" class="form-control" 
+                              rows="4" required th:text="${task.description}"></textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="dueDate">Hạn hoàn thành:</label>
+                        <input type="date" id="dueDate" name="dueDate" class="form-control" 
+                               th:value="${#dates.format(task.dueDate, 'yyyy-MM-dd')}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="status">Trạng thái:</label>
+                        <select id="status" name="status" class="form-control" required>
+                            <option th:each="status : ${taskStatuses}"
+                                    th:value="${status}"
+                                    th:text="${status.name() == 'PENDING' ? 'Đã giao' :
+                                             (status.name() == 'RESOLVED' ? 'Đã hoàn thành' : 'Đã hủy')}"
+                                    th:selected="${status == task.status}"></option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Phân công cho nhân viên:</label>
+                    <div class="checkbox-group">
+                        <div th:each="staff : ${staffList}" class="checkbox-item">
+                            <input type="checkbox" th:id="'staff_' + ${staff.staffid}"
+                                   name="staffIds" th:value="${staff.staffid}"
+                                   th:checked="${task.assignedStaff != null and task.assignedStaff.contains(staff)}">
+                            <label th:for="'staff_' + ${staff.staffid}" th:text="${staff.fullname}"></label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="actions">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Lưu thay đổi
+                    </button>
+                    <a href="/admin/task-list" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Hủy
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

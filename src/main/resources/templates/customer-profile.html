@@ -1,403 +1,403 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
-  <meta charset="UTF-8" />
-  <title>Tài khoản của tôi</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <style>
-    :root{
-      --bg:#ffffff;
-      --text:#1f2937;            /* gray-800 */
-      --muted:#64748b;           /* slate-500 */
-      --border:#e2e8f0;          /* slate-200 */
-      --soft:#f8fafc;            /* slate-50 */
-      --primary:#2c3e50;         /* your brand tone */
-      --ring:rgba(44,62,80,.18);
-      --ok:#16a34a;
-      --bad:#dc2626;
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0; background:var(--bg); color:var(--text);
-      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-      min-height:100vh; padding:16px;
-    }
+    <meta charset="UTF-8" />
+    <title>Tài khoản của tôi</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+        :root{
+          --bg:#ffffff;
+          --text:#1f2937;            /* gray-800 */
+          --muted:#64748b;           /* slate-500 */
+          --border:#e2e8f0;          /* slate-200 */
+          --soft:#f8fafc;            /* slate-50 */
+          --primary:#2c3e50;         /* your brand tone */
+          --ring:rgba(44,62,80,.18);
+          --ok:#16a34a;
+          --bad:#dc2626;
+        }
+        *{box-sizing:border-box}
+        body{
+          margin:0; background:var(--bg); color:var(--text);
+          font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+          min-height:100vh; padding:16px;
+        }
 
-    .shell{
-      max-width:1100px; margin:20px auto;
-      display:grid; grid-template-columns:260px 1fr; gap:24px;
-    }
-    @media (max-width: 960px){ .shell{ grid-template-columns:1fr } }
+        .shell{
+          max-width:1100px; margin:20px auto;
+          display:grid; grid-template-columns:260px 1fr; gap:24px;
+        }
+        @media (max-width: 960px){ .shell{ grid-template-columns:1fr } }
 
-    /* Back button (kept) */
-    .back-button{
-      position:sticky; top:8px; z-index:1000;
-      display:inline-flex; align-items:center; gap:8px;
-      padding:10px 14px; border-radius:999px;
-      background:var(--soft); color:var(--text); text-decoration:none;
-      border:1px solid var(--border);
-      margin:6px 0 10px 0;
-    }
-    .back-button:hover{ box-shadow:0 0 0 4px var(--ring); }
+        /* Back button (kept) */
+        .back-button{
+          position:sticky; top:8px; z-index:1000;
+          display:inline-flex; align-items:center; gap:8px;
+          padding:10px 14px; border-radius:999px;
+          background:var(--soft); color:var(--text); text-decoration:none;
+          border:1px solid var(--border);
+          margin:6px 0 10px 0;
+        }
+        .back-button:hover{ box-shadow:0 0 0 4px var(--ring); }
 
-    /* Sidebar */
-    .sidebar{
-      background:#fff; border:1px solid var(--border); border-radius:16px;
-      padding:18px; position:sticky; top:56px; height:fit-content;
-    }
-    .profile-mini{display:flex;gap:12px;align-items:center;margin-bottom:12px; min-width:0;}
-    .profile-mini img{width:42px;height:42px;border-radius:50%;object-fit:cover;border:1px solid var(--border)}
-    .profile-mini .name{font-weight:700;letter-spacing:.2px; max-width:180px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
-    .profile-mini .muted{color:var(--muted); max-width:180px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+        /* Sidebar */
+        .sidebar{
+          background:#fff; border:1px solid var(--border); border-radius:16px;
+          padding:18px; position:sticky; top:56px; height:fit-content;
+        }
+        .profile-mini{display:flex;gap:12px;align-items:center;margin-bottom:12px; min-width:0;}
+        .profile-mini img{width:42px;height:42px;border-radius:50%;object-fit:cover;border:1px solid var(--border)}
+        .profile-mini .name{font-weight:700;letter-spacing:.2px; max-width:180px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+        .profile-mini .muted{color:var(--muted); max-width:180px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
 
-    .tabs{display:flex;flex-direction:column;gap:8px;margin-top:6px}
-    .tab-btn{
-      width:100%; text-align:left; background:#fff; color:var(--text);
-      border:1px solid var(--border); padding:12px 14px; border-radius:10px; cursor:pointer;
-      display:flex; align-items:center; gap:10px; transition: box-shadow .18s ease, border-color .18s ease, background .18s ease;
-    }
-    .tab-btn:hover{border-color:var(--primary); box-shadow:0 0 0 4px var(--ring); background:#fff}
-    .tab-btn.active{border-color:var(--primary); background:linear-gradient(0deg,#fff, #fff) padding-box, linear-gradient(135deg, #cbd5e1, #e2e8f0) border-box;}
+        .tabs{display:flex;flex-direction:column;gap:8px;margin-top:6px}
+        .tab-btn{
+          width:100%; text-align:left; background:#fff; color:var(--text);
+          border:1px solid var(--border); padding:12px 14px; border-radius:10px; cursor:pointer;
+          display:flex; align-items:center; gap:10px; transition: box-shadow .18s ease, border-color .18s ease, background .18s ease;
+        }
+        .tab-btn:hover{border-color:var(--primary); box-shadow:0 0 0 4px var(--ring); background:#fff}
+        .tab-btn.active{border-color:var(--primary); background:linear-gradient(0deg,#fff, #fff) padding-box, linear-gradient(135deg, #cbd5e1, #e2e8f0) border-box;}
 
-    /* Main */
-    .main{ display:flex; flex-direction:column; gap:20px; }
+        /* Main */
+        .main{ display:flex; flex-direction:column; gap:20px; }
 
-    .hero{
-      background:#fff; border:1px solid var(--border); border-radius:16px;
-      padding:18px; display:flex; align-items:center; gap:16px;
-    }
-    .hero-avatar img{width:76px;height:76px;border-radius:50%;object-fit:cover;border:1px solid var(--border)}
-    .hero .meta .title{font-size:22px;font-weight:800;letter-spacing:.3px}
-    .hero .meta .sub{color:var(--muted);margin-top:4px}
-    .chip{
-      margin-left:auto; display:inline-flex; align-items:center; gap:6px;
-      border:1px solid var(--border); padding:6px 10px; border-radius:999px; background:var(--soft);
-      color:#0f172a;
-    }
+        .hero{
+          background:#fff; border:1px solid var(--border); border-radius:16px;
+          padding:18px; display:flex; align-items:center; gap:16px;
+        }
+        .hero-avatar img{width:76px;height:76px;border-radius:50%;object-fit:cover;border:1px solid var(--border)}
+        .hero .meta .title{font-size:22px;font-weight:800;letter-spacing:.3px}
+        .hero .meta .sub{color:var(--muted);margin-top:4px}
+        .chip{
+          margin-left:auto; display:inline-flex; align-items:center; gap:6px;
+          border:1px solid var(--border); padding:6px 10px; border-radius:999px; background:var(--soft);
+          color:#0f172a;
+        }
 
-    .card{
-      background:#fff; border:1px solid var(--border); border-radius:16px; padding:18px;
-    }
-    .card h3{margin:0 0 12px 0; font-size:16px; letter-spacing:.4px; color:#0f172a; font-weight:700}
+        .card{
+          background:#fff; border:1px solid var(--border); border-radius:16px; padding:18px;
+        }
+        .card h3{margin:0 0 12px 0; font-size:16px; letter-spacing:.4px; color:#0f172a; font-weight:700}
 
-    /* Key–value profile grid */
-    .kv{display:grid;grid-template-columns:180px 1fr; gap:10px 16px}
-    .kv .label{color:var(--muted);letter-spacing:.2px}
-    .kv > div:nth-child(2n){
-      min-width:0; overflow-wrap:anywhere; word-break: break-word;
-    }
+        /* Key–value profile grid */
+        .kv{display:grid;grid-template-columns:180px 1fr; gap:10px 16px}
+        .kv .label{color:var(--muted);letter-spacing:.2px}
+        .kv > div:nth-child(2n){
+          min-width:0; overflow-wrap:anywhere; word-break: break-word;
+        }
 
-    /* Forms */
-    .form-grid{display:grid;grid-template-columns:repeat(2,1fr); gap:14px}
-    .form-group{display:flex;flex-direction:column;gap:8px}
-    .form-group.small{grid-column:1/-1}
-    .form-label{color:#0f172a;font-weight:600;font-size:.95rem}
-    .input, .file{
-      background:#fff; border:1px solid var(--border); border-radius:10px; padding:12px 14px; color:var(--text);
-      outline:none; transition: box-shadow .15s ease, border-color .15s ease; width:100%;
-    }
-    .input:focus, .file:focus{border-color:var(--primary); box-shadow:0 0 0 4px var(--ring)}
-    .input[readonly]{background:#f3f4f6; color:#6b7280; cursor:not-allowed}
+        /* Forms */
+        .form-grid{display:grid;grid-template-columns:repeat(2,1fr); gap:14px}
+        .form-group{display:flex;flex-direction:column;gap:8px}
+        .form-group.small{grid-column:1/-1}
+        .form-label{color:#0f172a;font-weight:600;font-size:.95rem}
+        .input, .file{
+          background:#fff; border:1px solid var(--border); border-radius:10px; padding:12px 14px; color:var(--text);
+          outline:none; transition: box-shadow .15s ease, border-color .15s ease; width:100%;
+        }
+        .input:focus, .file:focus{border-color:var(--primary); box-shadow:0 0 0 4px var(--ring)}
+        .input[readonly]{background:#f3f4f6; color:#6b7280; cursor:not-allowed}
 
-    .avatar-drop{display:flex;gap:14px;align-items:center;padding:12px;border:1px dashed var(--border);border-radius:12px;background:var(--soft)}
-    .avatar-drop img{width:64px;height:64px;border-radius:12px;object-fit:cover;border:1px solid var(--border)}
-    .counter{color:var(--muted);font-size:.85rem; text-align:right}
+        .avatar-drop{display:flex;gap:14px;align-items:center;padding:12px;border:1px dashed var(--border);border-radius:12px;background:var(--soft)}
+        .avatar-drop img{width:64px;height:64px;border-radius:12px;object-fit:cover;border:1px solid var(--border)}
+        .counter{color:var(--muted);font-size:.85rem; text-align:right}
 
-    .actions{display:flex;gap:10px;margin-top:6px; flex-wrap:wrap}
-    .btn{
-      border:none; border-radius:10px; padding:11px 14px; font-weight:800; letter-spacing:.3px; cursor:pointer;
-      color:white; background:var(--primary);
-      box-shadow:0 10px 30px -10px rgba(44,62,80,.35);
-    }
-    .btn.secondary{background:#fff;color:var(--text);border:1px solid var(--border)}
+        .actions{display:flex;gap:10px;margin-top:6px; flex-wrap:wrap}
+        .btn{
+          border:none; border-radius:10px; padding:11px 14px; font-weight:800; letter-spacing:.3px; cursor:pointer;
+          color:white; background:var(--primary);
+          box-shadow:0 10px 30px -10px rgba(44,62,80,.35);
+        }
+        .btn.secondary{background:#fff;color:var(--text);border:1px solid var(--border)}
 
-    /* tabs content */
-    .tab-pane{display:none}
-    .tab-pane.active{display:block}
+        /* tabs content */
+        .tab-pane{display:none}
+        .tab-pane.active{display:block}
 
-    /* success/error banners */
-    .banner{border-radius:12px;padding:10px 12px; margin-top:10px; border:1px solid var(--border); background:var(--soft)}
-    .banner.ok{border-color:#bbf7d0; background:#f0fdf4; color:#065f46}
-    .banner.bad{border-color:#fecaca; background:#fef2f2; color:#7f1d1d}
+        /* success/error banners */
+        .banner{border-radius:12px;padding:10px 12px; margin-top:10px; border:1px solid var(--border); background:var(--soft)}
+        .banner.ok{border-color:#bbf7d0; background:#f0fdf4; color:#065f46}
+        .banner.bad{border-color:#fecaca; background:#fef2f2; color:#7f1d1d}
 
-    @media (max-width: 720px){
-      body{padding:12px}
-      .shell{gap:16px}
-      .form-grid{grid-template-columns:1fr}
-      .kv{grid-template-columns:1fr}
-    }
-    .banner:empty { display: none; }
-  </style>
+        @media (max-width: 720px){
+          body{padding:12px}
+          .shell{gap:16px}
+          .form-grid{grid-template-columns:1fr}
+          .kv{grid-template-columns:1fr}
+        }
+        .banner:empty { display: none; }
+    </style>
 </head>
 <body>
 <a href="javascript:history.back()" class="back-button">← Quay lại</a>
 
 <div class="shell">
-  <!-- SIDEBAR -->
-  <aside class="sidebar">
-    <div class="profile-mini" th:if="${customer != null}">
-      <img th:src="@{/profile/avatar/{id}(id=${customer.id})}" alt="avatar"/>
-      <div>
-        <div class="name" th:text="${customer.fullname}">Khách hàng</div>
-        <div class="muted" th:text="${customer.email}">email@example.com</div>
-      </div>
-    </div>
-
-    <div class="tabs">
-      <button class="tab-btn"
-              th:classappend="${activeTab}=='profile' ? ' active' : ''"
-              onclick="showTab('profile')" type="button">👤 Xem hồ sơ</button>
-      <button class="tab-btn"
-              th:classappend="${activeTab}=='update' ? ' active' : ''"
-              onclick="showTab('update')" type="button">✏️ Cập nhật</button>
-      <button class="tab-btn"
-              th:classappend="${activeTab}=='forgot' ? ' active' : ''"
-              onclick="showTab('forgot')" type="button">🔐 Quên mật khẩu</button>
-      <button class="tab-btn"
-              th:classappend="${activeTab}=='changePassword' ? ' active' : ''"
-              onclick="showTab('changePassword')" type="button">🔁 Đổi mật khẩu</button>
-    </div>
-  </aside>
-
-  <!-- MAIN -->
-  <section class="main">
-    <!-- Header card -->
-    <div class="hero" th:if="${customer != null}">
-      <div class="hero-avatar">
-        <img th:src="@{/profile/avatar/{id}(id=${customer.id})}" alt="avatar"/>
-      </div>
-      <div class="meta">
-        <div class="title">Xin chào, <span th:text="${customer.fullname}">Khách hàng</span> 👋</div>
-        <div class="sub">Quản lý thông tin cá nhân & bảo mật tài khoản của bạn</div>
-      </div>
-      <span class="chip">Trạng thái: <strong>Hoạt động</strong></span>
-    </div>
-
-    <!-- PROFILE -->
-    <div id="profileTab" class="tab-pane"
-         th:classappend="${activeTab}=='profile' ? ' active' : ''">
-      <div class="card">
-        <h3>Hồ sơ cá nhân</h3>
-        <div th:if="${customer != null}">
-          <div class="kv" style="margin-top:6px">
-            <div class="label">Họ tên</div>
-            <div th:text="${customer.fullname}">-</div>
-
-            <div class="label">Email</div>
-            <div th:text="${customer.email}">-</div>
-
-            <div class="label">Số điện thoại</div>
-            <div th:text="${customer.phone}">-</div>
-
-            <div class="label">Địa chỉ</div>
-            <div th:text="${customer.address}">-</div>
-          </div>
-        </div>
-
-        <div th:if="${customer == null}" class="banner bad" style="margin-top:10px;">
-          Không xác định được khách hàng. Vui lòng <a th:href="@{/login}" style="text-decoration:underline">đăng nhập</a>.
-        </div>
-      </div>
-    </div>
-
-    <!-- UPDATE -->
-    <div id="updateTab" class="tab-pane"
-         th:classappend="${activeTab}=='update' ? ' active' : ''">
-      <div class="card">
-        <h3>Cập nhật thông tin</h3>
-
-        <div th:if="${customer != null}">
-          <form th:action="@{/update-profile}" th:object="${customerProfile}" method="post" enctype="multipart/form-data" id="profileForm">
-            <div class="avatar-drop">
-              <img id="avatarPreview" th:src="@{/profile/avatar/{id}(id=${customer.id})}" alt="preview"/>
-              <div>
-                <div class="form-label">Ảnh đại diện</div>
-                <input class="file" type="file" id="avatarFile" name="avatarFile" accept="image/*" />
-                <div class="muted" style="font-size:.9rem">PNG/JPG, đề xuất &lt; 1MB</div>
-              </div>
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <div class="profile-mini" th:if="${customer != null}">
+            <img th:src="@{/profile/avatar/{id}(id=${customer.id})}" alt="avatar"/>
+            <div>
+                <div class="name" th:text="${customer.fullname}">Khách hàng</div>
+                <div class="muted" th:text="${customer.email}">email@example.com</div>
             </div>
-
-            <div class="form-grid" style="margin-top:14px">
-              <div class="form-group">
-                <label class="form-label" for="fullname">Họ tên *</label>
-                <input class="input" id="fullname" th:field="*{fullname}" maxlength="50" required
-                       oninput="showCharCount(this, 50, 'fullnameCount')" />
-                <div class="counter" id="fullnameCount"></div>
-                <div class="banner bad" th:if="${#fields.hasErrors('fullname')}" th:errors="*{fullname}"></div>
-              </div>
-
-              <div class="form-group">
-                <label class="form-label" for="email">Email</label>
-                <input class="input" id="email" th:field="*{email}" readonly />
-                <div class="banner bad" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></div>
-              </div>
-
-              <div class="form-group">
-                <label class="form-label" for="phone">Số điện thoại *</label>
-                <input class="input" id="phone" th:field="*{phone}" maxlength="11" required
-                       oninput="validatePhone(this, 'phoneHelp')" />
-                <div id="phoneHelp" class="banner bad" style="display:none"></div>
-                <div class="banner bad" th:if="${#fields.hasErrors('phone')}" th:errors="*{phone}"></div>
-              </div>
-
-              <div class="form-group">
-                <label class="form-label" for="address">Địa chỉ</label>
-                <input class="input" id="address" th:field="*{address}" maxlength="100"
-                       oninput="showCharCount(this, 100, 'addressCount')" />
-                <div class="counter" id="addressCount"></div>
-                <div class="banner bad" th:if="${#fields.hasErrors('address')}" th:errors="*{address}"></div>
-              </div>
-            </div>
-
-            <div class="actions">
-              <button class="btn" id="updateBtn" type="submit">Lưu thay đổi</button>
-              <a class="btn secondary" th:href="@{/profile(tab='profile')}">Hủy</a>
-            </div>
-
-            <!-- Only show when Update tab is active -->
-            <div th:if="${activeTab}=='update' and success != null" class="banner ok" th:text="${success}"></div>
-            <div th:if="${activeTab}=='update' and error   != null" class="banner bad" th:text="${error}"></div>
-          </form>
         </div>
 
-        <div th:if="${customer == null}" class="banner bad">
-          Bạn cần <a th:href="@{/login}" style="text-decoration:underline">đăng nhập</a> để cập nhật.
+        <div class="tabs">
+            <button class="tab-btn"
+                    th:classappend="${activeTab}=='profile' ? ' active' : ''"
+                    onclick="showTab('profile')" type="button">👤 Xem hồ sơ</button>
+            <button class="tab-btn"
+                    th:classappend="${activeTab}=='update' ? ' active' : ''"
+                    onclick="showTab('update')" type="button">✏️ Cập nhật</button>
+            <button class="tab-btn"
+                    th:classappend="${activeTab}=='forgot' ? ' active' : ''"
+                    onclick="showTab('forgot')" type="button">🔐 Quên mật khẩu</button>
+            <button class="tab-btn"
+                    th:classappend="${activeTab}=='changePassword' ? ' active' : ''"
+                    onclick="showTab('changePassword')" type="button">🔁 Đổi mật khẩu</button>
         </div>
-      </div>
-    </div>
+    </aside>
 
-    <!-- FORGOT -->
-    <div id="forgotTab" class="tab-pane"
-         th:classappend="${activeTab}=='forgot' ? ' active' : ''">
-      <div class="card">
-        <h3>Quên mật khẩu</h3>
-        <form th:action="@{/forgot-password}" th:object="${forgotPasswordRequest}" method="post" style="margin-top:8px">
-          <div class="form-group small">
-            <label class="form-label" for="forgot-email">Email *</label>
-            <input class="input" id="forgot-email" th:field="*{email}" maxlength="255" placeholder="Nhập email của bạn" required />
-            <div class="banner bad" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></div>
-          </div>
-          <div class="actions">
-            <button class="btn" type="submit">Gửi hướng dẫn</button>
-            <a class="btn secondary" th:href="@{/profile(tab='profile')}">Về hồ sơ</a>
-          </div>
-
-          <div th:if="${activeTab}=='forgot' and message != null" class="banner ok"   th:text="${message}"></div>
-          <div th:if="${activeTab}=='forgot' and error   != null" class="banner bad"  th:text="${error}"></div>
-        </form>
-      </div>
-    </div>
-
-    <!-- CHANGE PASSWORD -->
-    <div id="changePasswordTab" class="tab-pane"
-         th:classappend="${activeTab}=='changePassword' ? ' active' : ''">
-      <div class="card">
-        <h3>Đổi mật khẩu</h3>
-        <div th:if="${customer != null}">
-          <form th:action="@{/change-password}" th:object="${changePasswordRequest}" method="post" autocomplete="off" style="margin-top:8px">
-            <div class="form-grid">
-              <div class="form-group">
-                <label class="form-label" for="oldPassword">Mật khẩu cũ *</label>
-                <input class="input" type="password" id="oldPassword" th:field="*{oldPassword}" required />
-                <div class="banner bad" th:if="${#fields.hasErrors('oldPassword')}" th:errors="*{oldPassword}"></div>
-              </div>
-
-              <div class="form-group">
-                <label class="form-label" for="newPassword">Mật khẩu mới *</label>
-                <input class="input" type="password" id="newPassword" th:field="*{newPassword}" required />
-                <div class="banner bad" th:if="${#fields.hasErrors('newPassword')}" th:errors="*{newPassword}"></div>
-              </div>
-
-              <div class="form-group">
-                <label class="form-label" for="confirmPassword">Xác nhận mật khẩu mới *</label>
-                <input class="input" type="password" id="confirmPassword" th:field="*{confirmPassword}" required />
-                <div class="banner bad" th:if="${#fields.hasErrors('confirmPassword')}" th:errors="*{confirmPassword}"></div>
-              </div>
+    <!-- MAIN -->
+    <section class="main">
+        <!-- Header card -->
+        <div class="hero" th:if="${customer != null}">
+            <div class="hero-avatar">
+                <img th:src="@{/profile/avatar/{id}(id=${customer.id})}" alt="avatar"/>
             </div>
-
-            <div class="actions">
-              <button class="btn" type="submit">Đổi mật khẩu</button>
-              <a class="btn secondary" th:href="@{/profile(tab='profile')}">Về hồ sơ</a>
+            <div class="meta">
+                <div class="title">Xin chào, <span th:text="${customer.fullname}">Khách hàng</span> 👋</div>
+                <div class="sub">Quản lý thông tin cá nhân & bảo mật tài khoản của bạn</div>
             </div>
-
-            <div th:if="${activeTab}=='changePassword' and success != null" class="banner ok"  th:text="${success}"></div>
-            <div th:if="${activeTab}=='changePassword' and error   != null" class="banner bad" th:text="${error}"></div>
-          </form>
+            <span class="chip">Trạng thái: <strong>Hoạt động</strong></span>
         </div>
 
-        <div th:if="${customer == null}" class="banner bad">
-          Bạn cần <a th:href="@{/login}" style="text-decoration:underline">đăng nhập</a> để đổi mật khẩu!
+        <!-- PROFILE -->
+        <div id="profileTab" class="tab-pane"
+             th:classappend="${activeTab}=='profile' ? ' active' : ''">
+            <div class="card">
+                <h3>Hồ sơ cá nhân</h3>
+                <div th:if="${customer != null}">
+                    <div class="kv" style="margin-top:6px">
+                        <div class="label">Họ tên</div>
+                        <div th:text="${customer.fullname}">-</div>
+
+                        <div class="label">Email</div>
+                        <div th:text="${customer.email}">-</div>
+
+                        <div class="label">Số điện thoại</div>
+                        <div th:text="${customer.phone}">-</div>
+
+                        <div class="label">Địa chỉ</div>
+                        <div th:text="${customer.address}">-</div>
+                    </div>
+                </div>
+
+                <div th:if="${customer == null}" class="banner bad" style="margin-top:10px;">
+                    Không xác định được khách hàng. Vui lòng <a th:href="@{/api/login}" style="text-decoration:underline">đăng nhập</a>.
+                </div>
+            </div>
         </div>
-      </div>
-    </div>
-  </section>
+
+        <!-- UPDATE -->
+        <div id="updateTab" class="tab-pane"
+             th:classappend="${activeTab}=='update' ? ' active' : ''">
+            <div class="card">
+                <h3>Cập nhật thông tin</h3>
+
+                <div th:if="${customer != null}">
+                    <form th:action="@{/update-profile}" th:object="${customerProfile}" method="post" enctype="multipart/form-data" id="profileForm">
+                        <div class="avatar-drop">
+                            <img id="avatarPreview" th:src="@{/profile/avatar/{id}(id=${customer.id})}" alt="preview"/>
+                            <div>
+                                <div class="form-label">Ảnh đại diện</div>
+                                <input class="file" type="file" id="avatarFile" name="avatarFile" accept="image/*" />
+                                <div class="muted" style="font-size:.9rem">PNG/JPG, đề xuất &lt; 1MB</div>
+                            </div>
+                        </div>
+
+                        <div class="form-grid" style="margin-top:14px">
+                            <div class="form-group">
+                                <label class="form-label" for="fullname">Họ tên *</label>
+                                <input class="input" id="fullname" th:field="*{fullname}" maxlength="50" required
+                                       oninput="showCharCount(this, 50, 'fullnameCount')" />
+                                <div class="counter" id="fullnameCount"></div>
+                                <div class="banner bad" th:if="${#fields.hasErrors('fullname')}" th:errors="*{fullname}"></div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="email">Email</label>
+                                <input class="input" id="email" th:field="*{email}" readonly />
+                                <div class="banner bad" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="phone">Số điện thoại *</label>
+                                <input class="input" id="phone" th:field="*{phone}" maxlength="11" required
+                                       oninput="validatePhone(this, 'phoneHelp')" />
+                                <div id="phoneHelp" class="banner bad" style="display:none"></div>
+                                <div class="banner bad" th:if="${#fields.hasErrors('phone')}" th:errors="*{phone}"></div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="address">Địa chỉ</label>
+                                <input class="input" id="address" th:field="*{address}" maxlength="100"
+                                       oninput="showCharCount(this, 100, 'addressCount')" />
+                                <div class="counter" id="addressCount"></div>
+                                <div class="banner bad" th:if="${#fields.hasErrors('address')}" th:errors="*{address}"></div>
+                            </div>
+                        </div>
+
+                        <div class="actions">
+                            <button class="btn" id="updateBtn" type="submit">Lưu thay đổi</button>
+                            <a class="btn secondary" th:href="@{/profile(tab='profile')}">Hủy</a>
+                        </div>
+
+                        <!-- Only show when Update tab is active -->
+                        <div th:if="${activeTab}=='update' and success != null" class="banner ok" th:text="${success}"></div>
+                        <div th:if="${activeTab}=='update' and error   != null" class="banner bad" th:text="${error}"></div>
+                    </form>
+                </div>
+
+                <div th:if="${customer == null}" class="banner bad">
+                    Bạn cần <a th:href="@{/login}" style="text-decoration:underline">đăng nhập</a> để cập nhật.
+                </div>
+            </div>
+        </div>
+
+        <!-- FORGOT -->
+        <div id="forgotTab" class="tab-pane"
+             th:classappend="${activeTab}=='forgot' ? ' active' : ''">
+            <div class="card">
+                <h3>Quên mật khẩu</h3>
+                <form th:action="@{/forgot-password}" th:object="${forgotPasswordRequest}" method="post" style="margin-top:8px">
+                    <div class="form-group small">
+                        <label class="form-label" for="forgot-email">Email *</label>
+                        <input class="input" id="forgot-email" th:field="*{email}" maxlength="255" placeholder="Nhập email của bạn" required />
+                        <div class="banner bad" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></div>
+                    </div>
+                    <div class="actions">
+                        <button class="btn" type="submit">Gửi hướng dẫn</button>
+                        <a class="btn secondary" th:href="@{/profile(tab='profile')}">Về hồ sơ</a>
+                    </div>
+
+                    <div th:if="${activeTab}=='forgot' and message != null" class="banner ok"   th:text="${message}"></div>
+                    <div th:if="${activeTab}=='forgot' and error   != null" class="banner bad"  th:text="${error}"></div>
+                </form>
+            </div>
+        </div>
+
+        <!-- CHANGE PASSWORD -->
+        <div id="changePasswordTab" class="tab-pane"
+             th:classappend="${activeTab}=='changePassword' ? ' active' : ''">
+            <div class="card">
+                <h3>Đổi mật khẩu</h3>
+                <div th:if="${customer != null}">
+                    <form th:action="@{/change-password}" th:object="${changePasswordRequest}" method="post" autocomplete="off" style="margin-top:8px">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label" for="oldPassword">Mật khẩu cũ *</label>
+                                <input class="input" type="password" id="oldPassword" th:field="*{oldPassword}" required />
+                                <div class="banner bad" th:if="${#fields.hasErrors('oldPassword')}" th:errors="*{oldPassword}"></div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="newPassword">Mật khẩu mới *</label>
+                                <input class="input" type="password" id="newPassword" th:field="*{newPassword}" required />
+                                <div class="banner bad" th:if="${#fields.hasErrors('newPassword')}" th:errors="*{newPassword}"></div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="confirmPassword">Xác nhận mật khẩu mới *</label>
+                                <input class="input" type="password" id="confirmPassword" th:field="*{confirmPassword}" required />
+                                <div class="banner bad" th:if="${#fields.hasErrors('confirmPassword')}" th:errors="*{confirmPassword}"></div>
+                            </div>
+                        </div>
+
+                        <div class="actions">
+                            <button class="btn" type="submit">Đổi mật khẩu</button>
+                            <a class="btn secondary" th:href="@{/profile(tab='profile')}">Về hồ sơ</a>
+                        </div>
+
+                        <div th:if="${activeTab}=='changePassword' and success != null" class="banner ok"  th:text="${success}"></div>
+                        <div th:if="${activeTab}=='changePassword' and error   != null" class="banner bad" th:text="${error}"></div>
+                    </form>
+                </div>
+
+                <div th:if="${customer == null}" class="banner bad">
+                    Bạn cần <a th:href="@{/login}" style="text-decoration:underline">đăng nhập</a> để đổi mật khẩu!
+                </div>
+            </div>
+        </div>
+    </section>
 </div>
 
 <script>
-  function showTab(tab){
-    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    const pane = document.getElementById(tab + 'Tab');
-    pane && pane.classList.add('active');
+    function showTab(tab){
+      document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      const pane = document.getElementById(tab + 'Tab');
+      pane && pane.classList.add('active');
 
-    const idx = (tab==='update')?1 : (tab==='forgot')?2 : (tab==='changePassword')?3 : 0;
-    const btn = document.querySelectorAll('.tab-btn')[idx];
-    btn && btn.classList.add('active');
+      const idx = (tab==='update')?1 : (tab==='forgot')?2 : (tab==='changePassword')?3 : 0;
+      const btn = document.querySelectorAll('.tab-btn')[idx];
+      btn && btn.classList.add('active');
 
-    if (history.pushState) {
-      const url = new URL(window.location);
-      url.searchParams.set('tab', tab);
-      history.replaceState(null, '', url.toString());
-    }
-  }
-
-  function showCharCount(input, max, id){
-    const el = document.getElementById(id);
-    if (!el) return;
-    el.textContent = input.value.length + '/' + max;
-  }
-
-  function validatePhone(input, helpId){
-    const help = document.getElementById(helpId);
-    if (!help) return;
-    const v = input.value.trim();
-    const re = /^0\d{9,10}$/;
-    let msg = '';
-
-    if (v.length > 11) {
-      msg = 'Số điện thoại tối đa 11 số';
-    } else if (v && !re.test(v)) {
-      msg = 'Số điện thoại phải bắt đầu bằng 0 và có 10-11 số';
+      if (history.pushState) {
+        const url = new URL(window.location);
+        url.searchParams.set('tab', tab);
+        history.replaceState(null, '', url.toString());
+      }
     }
 
-    help.textContent = msg;
-    help.style.display = msg ? 'block' : 'none';
-  }
-
-  // avatar preview
-  document.addEventListener('change', function(e){
-    if (e.target && e.target.id === 'avatarFile'){
-      const file = e.target.files && e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = function(evt){
-        const img = document.getElementById('avatarPreview');
-        if (img) img.src = evt.target.result;
-      };
-      reader.readAsDataURL(file);
+    function showCharCount(input, max, id){
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.textContent = input.value.length + '/' + max;
     }
-  });
 
-  document.addEventListener('DOMContentLoaded', function(){
-    const hasActivePane = document.querySelector('.tab-pane.active');
-    const hasActiveBtn  = document.querySelector('.tab-btn.active');
-    if (!hasActivePane || !hasActiveBtn){ showTab('profile'); }
+    function validatePhone(input, helpId){
+      const help = document.getElementById(helpId);
+      if (!help) return;
+      const v = input.value.trim();
+      const re = /^0\d{9,10}$/;
+      let msg = '';
 
-    const fn = document.getElementById('fullname');
-    if (fn) showCharCount(fn, 50, 'fullnameCount');
-    const ad = document.getElementById('address');
-    if (ad) showCharCount(ad, 100, 'addressCount');
-  });
+      if (v.length > 11) {
+        msg = 'Số điện thoại tối đa 11 số';
+      } else if (v && !re.test(v)) {
+        msg = 'Số điện thoại phải bắt đầu bằng 0 và có 10-11 số';
+      }
+
+      help.textContent = msg;
+      help.style.display = msg ? 'block' : 'none';
+    }
+
+    // avatar preview
+    document.addEventListener('change', function(e){
+      if (e.target && e.target.id === 'avatarFile'){
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(evt){
+          const img = document.getElementById('avatarPreview');
+          if (img) img.src = evt.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    document.addEventListener('DOMContentLoaded', function(){
+      const hasActivePane = document.querySelector('.tab-pane.active');
+      const hasActiveBtn  = document.querySelector('.tab-btn.active');
+      if (!hasActivePane || !hasActiveBtn){ showTab('profile'); }
+
+      const fn = document.getElementById('fullname');
+      if (fn) showCharCount(fn, 50, 'fullnameCount');
+      const ad = document.getElementById('address');
+      if (ad) showCharCount(ad, 100, 'addressCount');
+    });
 </script>
 </body>
 </html>
