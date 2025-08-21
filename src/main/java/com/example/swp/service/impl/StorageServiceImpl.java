@@ -188,4 +188,9 @@ public class StorageServiceImpl implements StorageService {
             pageable
         );
     }
+
+    @Override
+    public List<Storage> findByStaffId(int staffId) {
+        return storageRepository.findByStaff_Staffid(staffId);
+    }
 }

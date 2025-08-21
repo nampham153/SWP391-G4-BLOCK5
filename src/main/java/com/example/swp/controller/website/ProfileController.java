@@ -6,6 +6,7 @@ import com.example.swp.dto.ForgotPasswordRequest;
 import com.example.swp.entity.Customer;
 import com.example.swp.service.ActivityLogService;
 import com.example.swp.service.CustomerService;
+import com.example.swp.service.EmailService;
 import com.example.swp.service.NotificationService;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
@@ -23,12 +24,15 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.UUID;
 
 @Controller
 public class ProfileController {
 
     @Autowired
     private CustomerService customerService;
+    @Autowired
+    private EmailService emailService;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -158,5 +162,97 @@ public class ProfileController {
             return ResponseEntity.notFound().build();
         }
     }
+    /**
+     * Xử lý quên mật khẩu
+     */
+    @PostMapping("/forgot-password")
+    public String forgotPassword(
+            @ModelAttribute("forgotPasswordRequest") @Valid ForgotPasswordRequest form,
+            BindingResult bindingResult,
+            Model model
+    ) {
+        model.addAttribute("customerProfile", new CustomerProfileUpdateRequest());
+        model.addAttribute("forgotPasswordRequest", form);
+        model.addAttribute("changePasswordRequest", new ChangePasswordRequest());
+        model.addAttribute("customer", null);
+        model.addAttribute("activeTab", "forgot");
 
+        if (bindingResult.hasErrors()) return "customer-profile";
+
+        Customer customer = customerService.findByEmail(form.getEmail());
+        if (customer == null) {
+            bindingResult.rejectValue("email", "notfound", "Email này không tồn tại!");
+            return "customer-profile";
+        }
+
+        // Sinh mật khẩu mới hoặc tạo link reset
+        String newPassword = UUID.randomUUID().toString().substring(0, 8);
+        customer.setPassword(passwordEncoder.encode(newPassword));
+        customerService.save(customer);
+
+        // Gửi mail
+        String subject = "Đặt lại mật khẩu";
+        String body = "Xin chào " + customer.getFullname() + ",\n\n"
+                + "Mật khẩu mới của bạn là: " + newPassword + "\n\n"
+                + "Vui lòng đăng nhập và đổi lại mật khẩu ngay.";
+        emailService.sendEmail(customer.getEmail(), subject, body);
+
+        model.addAttribute("message", "Hướng dẫn đặt lại mật khẩu đã được gửi!");
+        return "customer-profile";
+    }
+
+
+    /**
+     * Đổi mật khẩu
+     */
+    @PostMapping("/change-password")
+    public String changePassword(
+            @ModelAttribute("changePasswordRequest") @Valid ChangePasswordRequest form,
+            BindingResult bindingResult,
+            HttpSession session,
+            Model model
+    ) {
+        String email = (String) session.getAttribute("email");
+        model.addAttribute("customerProfile", new CustomerProfileUpdateRequest());
+        model.addAttribute("forgotPasswordRequest", new ForgotPasswordRequest());
+        model.addAttribute("changePasswordRequest", form);
+        model.addAttribute("activeTab", "changePassword");
+        Customer customer = (email != null) ? customerService.findByEmail(email) : null;
+        model.addAttribute("customer", customer);
+
+        if (email == null) {
+            model.addAttribute("error", "Bạn chưa đăng nhập.");
+            return "customer-profile";
+        }
+        if (bindingResult.hasErrors()) return "customer-profile";
+        if (!form.getNewPassword().equals(form.getConfirmPassword())) {
+            bindingResult.rejectValue("confirmPassword", "match", "Xác nhận mật khẩu không khớp!");
+            return "customer-profile";
+        }
+        if (customer == null) {
+            model.addAttribute("error", "Không tìm thấy thông tin khách hàng.");
+            return "customer-profile";
+        }
+
+        // So sánh mã hóa
+        if (!passwordEncoder.matches(form.getOldPassword(), customer.getPassword())) {
+            bindingResult.rejectValue("oldPassword", "invalid", "Mật khẩu cũ không đúng!");
+            return "customer-profile";
+        }
+
+        customer.setPassword(passwordEncoder.encode(form.getNewPassword()));
+        customerService.save(customer);
+
+        notificationService.createNotification("Bạn vừa đổi mật khẩu thành công.", customer);
+        activityLogService.logActivity(
+                "Đổi mật khẩu",
+                "Khách hàng " + customer.getFullname() + " đã đổi mật khẩu thành công.",
+                customer,
+                null, null, null, null, null
+        );
+
+
+        model.addAttribute("success", "Đổi mật khẩu thành công!");
+        return "customer-profile";
+    }
 }

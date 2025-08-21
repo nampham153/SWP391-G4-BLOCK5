@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Công việc của tôi</title>
+    <link rel="stylesheet" href="/css/staff.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        * {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        .task-container {
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            margin: 20px;
+        }
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e9ecef;
+        }
+        .page-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin: 0;
+        }
+        .search-container {
+            position: relative;
+        }
+        .search-input {
+            padding: 10px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 25px;
+            width: 300px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        .search-input:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
+        }
+        .content-section {
+            margin-bottom: 30px;
+        }
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 15px;
+        }
+        .back-link {
+            margin-bottom: 20px;
+        }
+        .back-link a {
+            color: #6c757d;
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.3s ease;
+        }
+        .back-link a:hover {
+            color: #007bff;
+        }
+        .filter-section {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .filter-group label {
+            font-size: 14px;
+            font-weight: 500;
+            color: #495057;
+        }
+        .filter-select {
+            padding: 8px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 14px;
+            background: white;
+        }
+        .export-btn {
+            padding: 8px 16px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        .export-btn:hover {
+            background: #218838;
+        }
+        .task-count {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 15px;
+        }
+        .task-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .task-table th, .task-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        .task-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+        }
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .status-pending { background-color: #fff3cd; color: #856404; }
+        .status-in_progress { background-color: #d1ecf1; color: #0c5460; }
+        .status-completed { background-color: #d4edda; color: #155724; }
+        .status-cancelled { background-color: #f8d7da; color: #721c24; }
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 14px;
+            margin-right: 5px;
+        }
+        .btn-primary { background-color: #007bff; color: white; }
+        .btn-success { background-color: #28a745; color: white; }
+        .btn-warning { background-color: #ffc107; color: #212529; }
+        .btn-sm { padding: 4px 8px; font-size: 12px; }
+        .overdue {
+            background-color: #f8d7da;
+        }
+        .due-soon {
+            background-color: #fff3cd;
+        }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            padding: 20px;
+            border-top: 1px solid #e2e8f0;
+            background-color: #f8fafc;
+        }
+        .pagination button, .pagination a {
+            padding: 8px 12px;
+            border: 1px solid #e2e8f0;
+            background-color: white;
+            color: #64748b;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            min-width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+        }
+        .pagination button:hover:not(:disabled), .pagination a:hover:not(.active) {
+            background-color: #f1f5f9;
+            border-color: #cbd5e1;
+            color: #334155;
+        }
+        .pagination button.active, .pagination a.active {
+            background-color: #3b82f6;
+            border-color: #3b82f6;
+            color: white;
+        }
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div th:replace="~{taskbar/staff-taskbar :: staffTaskbar}"></div>
+    
+    <div class="main-content">
+        <div class="task-container">
+            <div class="page-header">
+                <h1 class="page-title">Quản Lý Công Việc</h1>
+                <div class="search-container">
+                    <input type="text" placeholder="Tìm kiếm công việc..." class="search-input">
+                </div>
+            </div>
+
+            <div class="content-section">
+                <h2 class="section-title">Danh sách công việc được giao</h2>
+                <div class="back-link">
+                    <a href="/staff/dashboard">← Quay lại Dashboard</a>
+                </div>
+
+                <div class="filter-section">
+                    <div class="filter-group">
+                        <label>Lọc trạng thái:</label>
+                        <select id="statusFilter" class="filter-select" onchange="filterTasks()">
+                            <option value="">Tất cả</option>
+                            <option value="PENDING">Đã giao</option>
+                            <option value="RESOLVED">Đã hoàn thành</option>
+                            <option value="CANCELLED">Đã hủy</option>
+                        </select>
+                    </div>
+                    <button onclick="exportTasksExcel()" class="export-btn">Xuất Excel</button>
+                </div>
+
+                <div class="task-count">
+                    <span>Danh Sách Công Việc (<span th:text="${totalTasks}">0</span>)</span>
+                </div>
+            </div>
+
+            <table class="task-table">
+                <thead>
+                    <tr>
+                        <th>Tiêu đề</th>
+                        <th>Mô tả</th>
+                        <th>Người giao</th>
+                        <th>Hạn hoàn thành</th>
+                        <th>Trạng thái</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="task : ${tasks}">
+                        <td th:text="${task.title}"></td>
+                        <td th:text="${task.description}"></td>
+                        <td th:text="${task.assignedManager != null ? task.assignedManager.fullname : 'Không xác định'}"></td>
+                        <td th:text="${#dates.format(task.dueDate, 'dd/MM/yyyy')}"></td>
+                        <td>
+                            <span th:class="'status-badge status-' + ${task.status.name().toLowerCase()}"
+                                  th:text="${task.status.name() == 'PENDING' ? 'Đã giao' :
+                                           (task.status.name() == 'RESOLVED' ? 'Đã hoàn thành' : 'Đã hủy')}"></span>
+                        </td>
+                        <td>
+                            <a th:href="@{/staff/tasks/view/{id}(id=${task.id})}" class="btn btn-info btn-sm">
+                                <i class="fas fa-eye"></i> Xem
+                            </a>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(tasks)}">
+                        <td colspan="7" style="text-align: center; padding: 20px;">
+                            Bạn chưa có công việc nào được giao.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="pagination" th:if="${totalPages > 0}">
+                <button th:if="${currentPage > 0}" th:onclick="'window.location.href=\'/staff/tasks?page=' + ${currentPage - 1} + '\''">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <button th:if="${currentPage == 0}" disabled>
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+
+                <span th:each="i : ${#numbers.sequence(0, totalPages - 1)}">
+                    <button th:if="${i != currentPage}" th:onclick="'window.location.href=\'/staff/tasks?page=' + ${i} + '\''" th:text="${i + 1}"></button>
+                    <button th:if="${i == currentPage}" class="active" th:text="${i + 1}"></button>
+                </span>
+
+                <button th:if="${currentPage < totalPages - 1}" th:onclick="'window.location.href=\'/staff/tasks?page=' + ${currentPage + 1} + '\''">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+                <button th:if="${currentPage >= totalPages - 1}" disabled>
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function filterTasks() {
+            const statusFilter = document.getElementById('statusFilter').value;
+
+            if (statusFilter === '') {
+                window.location.href = '/staff/tasks?page=0';
+            } else {
+                window.location.href = '/staff/tasks?page=0&status=' + statusFilter;
+            }
+        }
+
+        function sortTasks() {
+            const sortValue = document.getElementById('sortFilter').value;
+            const tbody = document.querySelector('.task-table tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+
+            if (sortValue === 'date') {
+                rows.sort((a, b) => {
+                    const dateA = new Date(a.cells[4].textContent);
+                    const dateB = new Date(b.cells[4].textContent);
+                    return dateB - dateA;
+                });
+            } else if (sortValue === 'status') {
+                rows.sort((a, b) => {
+                    const statusA = a.querySelector('.status-badge').textContent.trim();
+                    const statusB = b.querySelector('.status-badge').textContent.trim();
+                    return statusA.localeCompare(statusB);
+                });
+            }
+
+            rows.forEach(row => tbody.appendChild(row));
+        }
+
+        function exportTasksExcel() {
+            const table = document.querySelector('.task-table');
+            const visibleRows = Array.from(table.querySelectorAll('tbody tr')).filter(row => row.style.display !== 'none');
+
+            const data = [];
+            data.push(['Tiêu đề', 'Mô tả', 'Người giao', 'Hạn hoàn thành', 'Trạng thái']);
+
+            visibleRows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                const rowData = [
+                    cells[0].textContent.trim(),
+                    cells[1].textContent.trim(),
+                    cells[2].textContent.trim(),
+                    cells[3].textContent.trim(),
+                    cells[4].textContent.trim()
+                ];
+                data.push(rowData);
+            });
+
+            const ws = XLSX.utils.aoa_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Tasks');
+
+            const fileName = 'danh_sach_cong_viec_duoc_giao' + new Date().toISOString().slice(0, 10) + '.xlsx';
+            XLSX.writeFile(wb, fileName);
+        }
+    </script>
+</body>
+</html>
