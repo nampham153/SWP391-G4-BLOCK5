@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Chi tiết order</title>
+    <link rel="stylesheet" th:href="@{/css/order-detail.css}">
+</head>
+<body>
+<!-- Navigation Bar -->
+<nav class="navbar">
+    <ul>
+        <li><a href="/SWP">Home</a></li>
+        <li><a href="/SWP/orders">Orders</a></li>
+    </ul>
+</nav>
+
+<div class="container">
+    <!-- Hiển thị thông báo thành công -->
+    <div th:if="${message}" class="alert alert-success">
+        [[${message}]]
+    </div>
+
+    <!-- Hiển thị thông báo lỗi -->
+    <div th:if="${error}" class="alert alert-error">
+        [[${error}]]
+    </div>
+
+    <div class="detail-container">
+        <!-- Khối icon đơn hàng -->
+        <div class="order-icon-section">
+            <div class="order-icon">
+                <svg viewBox="0 0 24 24">
+                    <path d="M19 7h-3V6a4 4 0 0 0-8 0v1H5a1 1 0 0 0-1 1v11a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3V8a1 1 0 0 0-1-1zM10 6a2 2 0 0 1 4 0v1h-4V6zm8 13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V9h2v1a1 1 0 0 0 2 0V9h4v1a1 1 0 0 0 2 0V9h2v10z"/>
+                </svg>
+            </div>
+            <div class="order-number">
+                Order #<span th:text="${order.getId()}">001</span>
+            </div>
+        </div>
+
+        <!-- Khối thông tin đơn hàng -->
+        <div class="info-section">
+            <h2 class="order-title">Chi tiết order</h2>
+
+            <div class="status-badge" th:class="'status-badge ' + ${order.getStatus().toLowerCase()}">
+                <span th:text="${order.getStatus()}">Pending</span>
+            </div>
+
+            <div class="info-grid">
+                <div class="info-item">
+                    <label>Order ID:</label>
+                    <span th:text="${order.getId()}">001</span>
+                </div>
+
+                <div class="info-item">
+                    <label>Ngày đặt thuê:</label>
+                    <span th:text="${order.getOrderDate()}">2024-01-15</span>
+                </div>
+
+                <div class="info-item">
+                    <label>Ngày bắt đầu thuê:</label>
+                    <span th:text="${order.getStartDate()}">2024-01-20</span>
+                </div>
+
+                <div class="info-item">
+                    <label>Ngày kết thúc thuê:</label>
+                    <span th:text="${order.getEndDate()}">2024-01-30</span>
+                </div>
+
+                <div class="info-item price-item">
+                    <label>Tổng tiền:</label>
+                    <span class="price" th:text="${order.getTotalAmount()} + ' VND'">500,000 VND</span>
+                </div>
+            </div>
+
+            <div class="customer-info">
+                <label>Thông tin khách hàng:</label>
+                <p th:text="${order.customer.fullname}">Nguyễn Văn A</p>
+            </div>
+
+            <div class="action-buttons">
+                <!-- Nếu status là Pending thì hiện nút approve/reject -->
+                <div th:if="${order.getStatus()?.toLowerCase() == 'pending'}">
+                    <form th:action="@{'/SWP/orders/' + ${order.id} + '/approve'}" method="post" style="display:inline;">
+                        <button type="submit" class="approve-btn">
+                            ✓ Phê duyệt
+                        </button>
+                    </form>
+                    <form method="post" th:action="@{/SWP/orders/{id}/reject(id=${order.id})}" style="display: inline;">
+                        <button type="submit" class="reject-btn">
+                            ✗ Từ chối
+                        </button>
+                    </form>
+                </div>
+                <!-- Nếu status là Rejected thì hiện thông báo -->
+                <div th:if="${order.getStatus()?.toLowerCase() == 'rejected'}" style="font-weight:600;color:#c82333;padding:12px 0;">
+                    Order này đã bị từ chối
+                </div>
+                <!-- Nếu status là Paid thì hiện thông báo -->
+                <div th:if="${order.getStatus()?.toLowerCase() == 'paid'}" style="font-weight:600;color:#20c997;padding:12px 0;">
+                    Order này đã được thanh toán
+                </div>
+                <!-- Nếu status là Approved thì hiện thông báo cần thanh toán -->
+                <div th:if="${order.getStatus()?.toLowerCase() == 'approved'}" style="font-weight:600;color:#007bff;padding:12px 0;">
+                    Order này cần được thanh toán
+                </div>
+
+                <!-- Nút quay lại danh sách xuống dòng riêng -->
+                <div style="width:100%;margin-top:20px;">
+                    <a href="/SWP/orders" class="back-btn">
+                        Quay lại danh sách
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
