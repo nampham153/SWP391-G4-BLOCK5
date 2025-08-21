@@ -24,6 +24,7 @@ import com.cloudinary.Cloudinary;
 import com.example.swp.annotation.LogActivity;
 import com.example.swp.dto.StorageRequest;
 import com.example.swp.entity.Customer;
+import com.example.swp.entity.EContract;
 import com.example.swp.entity.Manager;
 import com.example.swp.entity.Order;
 import com.example.swp.entity.Staff;
@@ -32,6 +33,7 @@ import com.example.swp.repository.FeedbackRepository;
 import com.example.swp.repository.OrderRepository;
 import com.example.swp.service.CloudinaryService;
 import com.example.swp.service.CustomerService;
+import com.example.swp.service.EContractService;
 import com.example.swp.service.OrderService;
 import com.example.swp.service.StaffService;
 import com.example.swp.service.StorageService;
@@ -65,6 +67,9 @@ public class ManagerController {
 
     @Autowired
     private StaffService staffService;
+
+    @Autowired
+    private EContractService eContractService;
 
     @GetMapping("/manager-dashboard")
     public String showDashboard(Model model, HttpSession session) {
@@ -353,6 +358,38 @@ public class ManagerController {
         }
 
         return "manager-setting";
+    }
+
+    /**
+     * Hiển thị danh sách tất cả hợp đồng cho admin
+     */
+    @GetMapping("/contracts")
+    public String showAllContracts(Model model, HttpSession session) {
+        // Populate user info for manager taskbar
+        Manager loggedInManager = (Manager) session.getAttribute("loggedInManager");
+        if (loggedInManager != null) {
+            model.addAttribute("user", loggedInManager.getFullname());
+            model.addAttribute("userName", loggedInManager.getEmail());
+            model.addAttribute("userRole", "MANAGER");
+        }
+
+        // Lấy tất cả hợp đồng
+        List<EContract> contracts = eContractService.findAll();
+        
+        // Thống kê hợp đồng
+        long signedContracts = contracts.stream()
+                .filter(contract -> contract.getStatus().name().equals("SIGNED"))
+                .count();
+        long pendingContracts = contracts.stream()
+                .filter(contract -> contract.getStatus().name().equals("PENDING"))
+                .count();
+
+        model.addAttribute("contracts", contracts);
+        model.addAttribute("totalContracts", contracts.size());
+        model.addAttribute("signedContracts", signedContracts);
+        model.addAttribute("pendingContracts", pendingContracts);
+
+        return "admin-contracts";
     }
 
 //    @GetMapping("/manager/profile")

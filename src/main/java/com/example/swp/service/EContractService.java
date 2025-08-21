@@ -28,4 +28,8 @@ public interface EContractService {
     EContract save(EContract contract);
     
     long countSignedContractsByCustomer(Integer customerId);
+    
+    List<EContract> findAll();
+    
+    List<EContract> findByStatus(EContractStatus status);
 }

@@ -93,4 +93,14 @@ public class EContractServiceImpl implements EContractService {
     public long countSignedContractsByCustomer(Integer customerId) {
         return eContractRepository.countByOrderCustomerIdAndStatus(customerId, EContractStatus.SIGNED);
     }
+    
+    @Override
+    public List<EContract> findAll() {
+        return eContractRepository.findAll();
+    }
+    
+    @Override
+    public List<EContract> findByStatus(EContractStatus status) {
+        return eContractRepository.findByStatus(status);
+    }
 }

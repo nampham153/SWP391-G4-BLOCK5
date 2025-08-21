@@ -527,4 +527,36 @@ public class BookingController {
             return "redirect:/SWP/customers/my-bookings";
         }
     }
+
+    /**
+     * Hiển thị danh sách hợp đồng của khách hàng
+     */
+    @GetMapping("/customers/my-contracts")
+    public String myContracts(Model model, HttpSession session) {
+        
+        // Kiểm tra customer đã đăng nhập chưa
+        Customer customer = getLoggedInCustomer(session);
+        if (customer == null) {
+            return "redirect:/api/login";
+        }
+
+        // Lấy danh sách hợp đồng của khách hàng
+        List<EContract> contracts = eContractService.findByCustomerId(customer.getId());
+        
+        // Tính toán thống kê
+        long signedCount = contracts.stream()
+                .filter(contract -> contract.getStatus().name().equals("SIGNED"))
+                .count();
+        long pendingCount = contracts.stream()
+                .filter(contract -> contract.getStatus().name().equals("PENDING"))
+                .count();
+        
+        // Thêm attributes vào model
+        model.addAttribute("contracts", contracts);
+        model.addAttribute("customer", customer);
+        model.addAttribute("signedCount", signedCount);
+        model.addAttribute("pendingCount", pendingCount);
+
+        return "my-contracts";
+    }
 }
