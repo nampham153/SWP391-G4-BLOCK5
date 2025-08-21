@@ -1,52 +1,44 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.w3.org/1999/xhtml">
 <head>
     <title>Danh sách đơn hàng</title>
     <link rel="stylesheet" th:href="@{/css/order-list.css}">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
-<!-- Navbar đồng bộ home-page -->
-<div th:replace="taskbar/staff-taskbar :: staffTaskbar"></div>
+
+<div sec:authorize="hasAuthority('MANAGER')"
+     th:replace="~{taskbar/manager-taskbar :: managerTaskbar}"></div>
+<div sec:authorize="hasAuthority('STAFF')"
+     th:replace="~{taskbar/staff-taskbar :: staffTaskbar}"></div>
 <!-- Main Content -->
 <main class="main-content">
-    <!-- Header -->
-    <header class="header">
-        <div class="header-left">
-            <button class="sidebar-toggle">
-                <i class="fas fa-bars"></i>
-            </button>
-            <h1>Issue Management</h1>
-        </div>
-        <div class="header-right">
-            <div class="search-box">
-                <i class="fas fa-search"></i>
-                <input type="text" placeholder="Tìm kiếm Issue..." id="searchInput">
-            </div>
-        </div>
-    </header>
+
 
 <!-- Container -->
 <div class="container">
     <h1>Danh sách đơn hàng</h1>
     <div class="form-row-spacebetween">
-        <!-- Filter bên trái -->
-        <form action="/SWP/orders" method="get" class="filter-form">
+
+        <!-- Filter (left) -->
+        <form th:action="@{${base} + '/orders'}" method="get" class="filter-form">
             <label for="status">Lọc theo trạng thái:</label>
             <select id="status" name="status" onchange="this.form.submit()">
-                <option value="ALL" th:selected="${selectedStatus == 'ALL'}">Tất cả</option>
-                <option value="PENDING" th:selected="${selectedStatus == 'Pending'}">PENDING</option>
-                <option value="APPROVED" th:selected="${selectedStatus == 'Approved'}">APPROVED</option>
-                <option value="REJECTED" th:selected="${selectedStatus == 'Rejected'}">REJECTED</option>
-                <option value="PAID" th:selected="${selectedStatus == 'Paid'}">PAID</option>
+                <option value="ALL"      th:selected="${selectedStatus == 'ALL'}">Tất cả</option>
+                <option value="PENDING"  th:selected="${selectedStatus == 'PENDING'}">PENDING</option>
+                <option value="APPROVED" th:selected="${selectedStatus == 'APPROVED'}">APPROVED</option>
+                <option value="REJECTED" th:selected="${selectedStatus == 'REJECTED'}">REJECTED</option>
+                <option value="PAID"     th:selected="${selectedStatus == 'PAID'}">PAID</option>
             </select>
         </form>
-        <!-- Tìm kiếm bên phải -->
-        <form action="/SWP/orders" method="get" class="search-form">
+
+        <!-- Search (right) -->
+        <form th:action="@{${base} + '/orders'}" method="get" class="search-form">
             <label for="orderId">Tìm kiếm theo ID:</label>
             <input type="number" id="orderId" name="orderId" placeholder="Nhập mã đơn..." required>
             <button type="submit" class="btn btn-dark">Tìm</button>
         </form>
+
     </div>
 
     <!-- Bảng danh sách đơn hàng -->
@@ -70,7 +62,7 @@
                           th:class="'status-badge ' + ${order.getStatus()?.toLowerCase()}"></span>
             </td>
             <td>
-                <a th:href="@{/SWP/orders/{id}(id=${order.getId()})}" class="text-blue-500">Xem chi tiết</a>
+                <a th:href="@{${base} + '/orders/' + ${order.id}}">Xem chi tiết</a>
             </td>
         </tr>
         </tbody>
