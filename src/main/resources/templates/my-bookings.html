@@ -312,7 +312,7 @@
                                         Tổng tiền
                                     </div>
                                     <div class="info-value amount-highlight"
-                                         th:text="${#numbers.formatDecimal(order.totalAmount, 0, 'POINT', 2, 'COMMA')} + ' VNĐ'"></div>
+                                         th:text="${#numbers.formatDecimal(order.totalAmount, 1, 'POINT', 2, 'COMMA')} + ' VNĐ'"></div>
                                 </div>
 
                                 <div class="info-item">
@@ -358,7 +358,7 @@
                     <div th:if="${orders != null and !orders.empty}" class="total-summary">
                         <h3><i class="fas fa-chart-line"></i> Tổng kết đơn hàng</h3>
                         <div class="total-amount">
-                            Tổng giá trị: <span th:text="${#numbers.formatDecimal(totalAmount, 0, 'POINT', 2, 'COMMA')} + ' VNĐ'"></span>
+                            Tổng giá trị: <span th:text="${#numbers.formatDecimal(totalAmount, 1, 'POINT', 2, 'COMMA')} + ' VNĐ'"></span>
                         </div>
                         <p th:text="'Số đơn hàng: ' + ${orders.size()}"></p>
                         <button class="btn btn-success"

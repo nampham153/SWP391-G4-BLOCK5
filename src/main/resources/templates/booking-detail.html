@@ -115,7 +115,7 @@
                                     Tổng tiền
                                 </div>
                                 <div class="info-value amount-highlight"
-                                     th:text="${#numbers.formatDecimal(order.totalAmount, 0, 'POINT', 2, 'COMMA')} + ' VNĐ'"></div>
+                                     th:text="${#numbers.formatDecimal(order.totalAmount, 1, 'POINT', 2, 'COMMA')} + ' VNĐ'"></div>
 
                             </div>
                         </div>
