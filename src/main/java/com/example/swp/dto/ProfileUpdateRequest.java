@@ -8,7 +8,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class CustomerProfileUpdateRequest {
+public class ProfileUpdateRequest {
     @NotBlank(message = "Họ tên không được để trống")
     @Size(max = 50, message = "Họ tên tối đa 50 ký tự")
     private String fullname;

@@ -62,12 +62,58 @@
                           th:class="'status-badge ' + ${order.getStatus()?.toLowerCase()}"></span>
             </td>
             <td>
-                <a th:href="@{${base} + '/orders/' + ${order.id}}">Xem chi tiết</a>
+                <a class="btn-view" th:href="@{${base} + '/orders/' + ${order.id}}">
+                    <span>👁</span> Xem chi tiết
+                </a>
             </td>
         </tr>
         </tbody>
     </table>
+    <div id="simplePager" style="margin-top:16px; display:flex; gap:10px; align-items:center;">
+        <button type="button" id="prevPage" class="page-btn">‹</button>
+        <span id="pageInfo">1 / 1</span>
+        <button type="button" id="nextPage" class="page-btn">›</button>
+    </div>
 </div>
 </main>
+<script>
+    (function initClientPager(){
+        const PAGE_SIZE = 10; // ← change page size here
+        const table = document.querySelector('table');
+        if (!table) return;
+
+        const tbody = table.querySelector('tbody');
+        const rows  = Array.from(tbody.querySelectorAll('tr'));
+        const prev  = document.getElementById('prevPage');
+        const next  = document.getElementById('nextPage');
+        const info  = document.getElementById('pageInfo');
+
+        if (rows.length === 0) {
+            // nothing to paginate (maybe searching by ID returned 0 or 1 row)
+            if (prev) prev.disabled = true;
+            if (next) next.disabled = true;
+            if (info) info.textContent = '0 / 0';
+            return;
+        }
+
+        let current = 1;
+        const total = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+
+        function render() {
+            rows.forEach((tr, idx) => {
+                const page = Math.floor(idx / PAGE_SIZE) + 1;
+                tr.style.display = (page === current) ? '' : 'none';
+            });
+            if (info) info.textContent = `${current} / ${total}`;
+            if (prev) prev.disabled = (current <= 1);
+            if (next) next.disabled = (current >= total);
+        }
+
+        if (prev) prev.addEventListener('click', () => { if (current > 1) { current--; render(); }});
+        if (next) next.addEventListener('click', () => { if (current < total) { current++; render(); }});
+
+        render();
+    })();
+</script>
 </body>
 </html>

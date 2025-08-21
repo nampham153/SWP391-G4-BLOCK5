@@ -1,7 +1,7 @@
 package com.example.swp.controller.website;
 
 import com.example.swp.dto.ChangePasswordRequest;
-import com.example.swp.dto.CustomerProfileUpdateRequest;
+import com.example.swp.dto.ProfileUpdateRequest;
 import com.example.swp.dto.ForgotPasswordRequest;
 import com.example.swp.entity.Customer;
 import com.example.swp.service.ActivityLogService;
@@ -60,7 +60,7 @@ public class ProfileController {
 
         Customer customer = customerService.findByEmail(email);
 
-        CustomerProfileUpdateRequest customerProfile = new CustomerProfileUpdateRequest();
+        ProfileUpdateRequest customerProfile = new ProfileUpdateRequest();
         ForgotPasswordRequest forgotPasswordRequest = new ForgotPasswordRequest();
         ChangePasswordRequest changePasswordRequest = new ChangePasswordRequest();
 
@@ -84,7 +84,7 @@ public class ProfileController {
      */
     @PostMapping("/update-profile")
     public String updateProfile(
-            @ModelAttribute("customerProfile") @Valid CustomerProfileUpdateRequest form,
+            @ModelAttribute("customerProfile") @Valid ProfileUpdateRequest form,
             BindingResult bindingResult,
             @RequestParam(value = "avatarFile", required = false) MultipartFile avatarFile,
             Model model,
@@ -171,7 +171,7 @@ public class ProfileController {
             BindingResult bindingResult,
             Model model
     ) {
-        model.addAttribute("customerProfile", new CustomerProfileUpdateRequest());
+        model.addAttribute("customerProfile", new ProfileUpdateRequest());
         model.addAttribute("forgotPasswordRequest", form);
         model.addAttribute("changePasswordRequest", new ChangePasswordRequest());
         model.addAttribute("customer", null);
@@ -213,7 +213,7 @@ public class ProfileController {
             Model model
     ) {
         String email = (String) session.getAttribute("email");
-        model.addAttribute("customerProfile", new CustomerProfileUpdateRequest());
+        model.addAttribute("customerProfile", new ProfileUpdateRequest());
         model.addAttribute("forgotPasswordRequest", new ForgotPasswordRequest());
         model.addAttribute("changePasswordRequest", form);
         model.addAttribute("activeTab", "changePassword");
