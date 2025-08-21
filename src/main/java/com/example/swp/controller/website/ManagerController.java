@@ -296,7 +296,7 @@ public class ManagerController {
     public String showStaffList(
             Model model,
             @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int size
+            @RequestParam(defaultValue = "3") int size
     ) {
         Page<Staff> staffPage = staffService.getStaffsByPage(page - 1, size);
 
