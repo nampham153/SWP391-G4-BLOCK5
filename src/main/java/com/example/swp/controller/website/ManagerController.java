@@ -191,14 +191,42 @@ public class ManagerController {
     }
 
     @GetMapping("/manager-dashboard/storages/{id}")
-    public String viewStorageDetail(@PathVariable int id, Model model) {
+    public String viewStorageDetail(@PathVariable int id, Model model, HttpSession session) {
+        // Populate user info for manager taskbar
+        Manager loggedInManager = (Manager) session.getAttribute("loggedInManager");
+        if (loggedInManager != null) {
+            model.addAttribute("user", loggedInManager.getFullname());
+            model.addAttribute("userName", loggedInManager.getEmail());
+            model.addAttribute("userRole", "MANAGER");
+        } else {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth != null && auth.isAuthenticated() && "anonymousUser".equals(auth.getPrincipal()) == false) {
+                UserDetails userDetails = (UserDetails) auth.getPrincipal();
+                model.addAttribute("userName", userDetails.getUsername());
+                model.addAttribute("userRole", auth.getAuthorities().iterator().next().getAuthority());
+            }
+        }
+
         Optional<Storage> optionalStorage = storageService.findByID(id);
         if (optionalStorage.isPresent()) {
-            model.addAttribute("storage", optionalStorage.get());
+            Storage storage = optionalStorage.get();
+            model.addAttribute("storage", storage);
+
+            double totalArea = storage.getArea();
+            double rentedArea = orderService.getTotalRentedArea(id);
+            double remainingArea = Math.max(0.0, totalArea - rentedArea);
+            String staffName = (storage.getStaff() != null && storage.getStaff().getFullname() != null)
+                    ? storage.getStaff().getFullname()
+                    : "Chưa có nhân viên quản lý";
+
+            model.addAttribute("totalArea", totalArea);
+            model.addAttribute("rentedArea", rentedArea);
+            model.addAttribute("remainingArea", remainingArea);
+            model.addAttribute("staffName", staffName);
         } else {
             return "redirect:/admin/manager-dashboard";
         }
-        return "manager-storagedetail";
+        return "manager-storage-detail";
     }
 
     @GetMapping("/manager-dashboard/storages/{id}/edit")
