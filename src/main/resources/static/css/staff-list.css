@@ -479,3 +479,32 @@ body {
 .pagination .active{ background:#2c3e50; color:#fff; border-color:#2c3e50 }
 .pagination .disabled{ opacity:.5; pointer-events:none }
 .page-size{ padding:6px 10px; border:1px solid #e9ecef; border-radius:6px }
+.pagination-arrows {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.pager-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px; height: 36px;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    background: #fff;
+    text-decoration: none;
+}
+
+.pager-btn:hover { background: #f5f6f8; }
+.pager-btn.disabled {
+    opacity: .4;
+    pointer-events: none;
+}
+
+.pager-indicator {
+    font-weight: 600;
+    color: #444;
+}

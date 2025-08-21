@@ -37,11 +37,16 @@
             </div>
         </div>
         <!-- Filter Section -->
-        <div class="filter-section" style="margin: 16px 0;">
-            <div class="filter-group" style="display:flex; gap: 10px; align-items:center;">
-
-                <input type="text" id="searchInput" placeholder="Tìm kiếm..." class="filter-select"
-                       style="max-width: 360px; padding: 8px 10px; border: 1px solid #e9ecef; border-radius: 6px;">
+        <div class="filter-section" style="margin:16px 0;">
+            <!-- Search + Clear in one row -->
+            <div class="filter-group search-row">
+                <input
+                        type="text"
+                        id="searchInput"
+                        placeholder="Tìm kiếm..."
+                        class="filter-input"
+                />
+                <button type="button" id="clearSearchBtn" class="btn-clear">Xóa</button>
             </div>
             <div class="filter-group">
                 <label>Sắp xếp theo tên:</label>
@@ -108,29 +113,21 @@
         </div>
 
 
-    <!-- Pagination -->
-    <div class="pagination">
-        <div class="pagination">
-            <a th:classappend="${currentPage == 1} ? ' disabled'"
-               th:href="@{staff-list(page=1, size=${size})}">« Đầu</a>
+        <div class="pagination pagination-arrows">
+            <a class="pager-btn"
+               th:classappend="${currentPage == 1} ? ' disabled'"
+               th:href="@{/admin/staff-list(page=${currentPage - 1}, size=${size})}">
+                <i class="fas fa-chevron-left"></i>
+            </a>
 
-            <a th:if="${currentPage > 1}"
-               th:href="@{staff-list(page=${currentPage - 1}, size=${size})}">‹ Trước</a>
-            <!-- Show up to 5 page numbers centered around currentPage -->
-            <span th:each="p : ${#numbers.sequence(
-                        currentPage > 3 ? currentPage - 2 : 1,
-                        currentPage < totalPages - 2 ? currentPage + 2 : totalPages)}">
-    <a th:if="${p != currentPage}" th:text="${p}"
-       th:href="@{staff-list(page=${p}, size=${size})}"></a>
-    <span th:if="${p == currentPage}" th:text="${p}" class="active"></span>
-  </span>
+            <span class="pager-indicator" th:text="${currentPage} + ' / ' + ${totalPages}"></span>
 
-            <a th:if="${currentPage < totalPages}"
-               th:href="@{staff-list(page=${currentPage + 1}, size=${size})}">Sau ›</a>
-
-            <a th:classappend="${currentPage == totalPages} ? ' disabled'"
-               th:href="@{staff-list(page=${totalPages}, size=${size})}">Cuối »</a>
-    </div>
+            <a class="pager-btn"
+               th:classappend="${currentPage == totalPages} ? ' disabled'"
+               th:href="@{/admin/staff-list(page=${currentPage + 1}, size=${size})}">
+                <i class="fas fa-chevron-right"></i>
+            </a>
+        </div>
     </div>
     </div>
 </main>
@@ -180,6 +177,7 @@
     // Live search on current page (filters rows by multiple fields)
     function attachStaffSearch() {
         const input = document.getElementById('searchInput');
+        const clearBtn = document.getElementById('clearSearchBtn');
         const table = document.getElementById('staffTable');
         if (!input || !table) return;
 
@@ -187,17 +185,21 @@
 
         input.addEventListener('input', function (e) {
             const q = e.target.value.trim().toLowerCase();
-
             rows.forEach(row => {
                 const name = row.querySelector('.staff-name')?.textContent.toLowerCase() || '';
                 const email = row.querySelector('.staff-email')?.textContent.toLowerCase() || '';
                 const phone = row.querySelector('.staff-phone')?.textContent.toLowerCase() || '';
                 const cccd = row.querySelector('.staff-cccd')?.textContent.toLowerCase() || '';
                 const role = row.querySelector('.staff-role')?.textContent.toLowerCase() || '';
-
                 const match = !q || name.includes(q) || email.includes(q) || phone.includes(q) || cccd.includes(q) || role.includes(q);
                 row.style.display = match ? '' : 'none';
             });
+        });
+
+        clearBtn?.addEventListener('click', () => {
+            input.value = '';
+            input.dispatchEvent(new Event('input'));
+            input.focus();
         });
     }
 

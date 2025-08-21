@@ -202,3 +202,16 @@ td {
     .logo { font-size: 1.3rem;}
     h1 { font-size: 1.3rem;}
 }
+.page-btn {
+    padding: 6px 10px; border: 1px solid #e0e0e0; background:#fff; border-radius:6px; cursor:pointer;
+}
+.page-btn:disabled { opacity: .5; cursor: not-allowed; }
+.btn-view {
+    display:inline-flex; align-items:center; gap:6px;
+    padding:8px 12px; border-radius:6px;
+    background:#4a6fa5; color:#fff; text-decoration:none;
+    font-weight:600; border:0; cursor:pointer;
+}
+.btn-view:hover { background:#385a84; }
+.page-btn { padding:6px 10px; border:1px solid #e0e0e0; background:#fff; border-radius:6px; cursor:pointer; }
+.page-btn:disabled { opacity:.5; cursor:not-allowed; }
