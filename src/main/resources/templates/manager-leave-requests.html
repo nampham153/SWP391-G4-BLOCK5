@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leave Request Management - QVL Storage</title>
+    <link rel="stylesheet" th:href="@{/css/manager-leave-requests.css}">
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+<!-- Sidebar -->
+<nav class="sidebar">
+    <div class="sidebar-header">
+        <div class="logo">
+            <i class="fas fa-database"></i>
+            <span>QVL Storage</span>
+        </div>
+    </div>
+    <ul class="sidebar-menu">
+        <li class="menu-item">
+            <a href="/SWP">
+                <i class="fas fa-home"></i>
+                <span>Trang chủ</span>
+            </a>
+        </li>
+        <li class="menu-item">
+            <a href="/SWP/orders">
+                <i class="fas fa-shopping-cart"></i>
+                <span>Đơn hàng</span>
+            </a>
+        </li>
+        <li class="menu-item">
+            <a href="/SWP/feedbacks">
+                <i class="fas fa-comments"></i>
+                <span>Phản hồi</span>
+            </a>
+        </li>
+        <li class="menu-item">
+            <a href="/SWP/customers">
+                <i class="fas fa-users"></i>
+                <span>Khách hàng</span>
+            </a>
+        </li>
+        <li class="menu-item active" id="leave-requests-menu">
+            <a href="/SWP/leave-requests">
+                <i class="fas fa-calendar-alt"></i>
+                <span>Đơn nghỉ phép</span>
+            </a>
+        </li>
+        <li class="menu-item">
+            <a href="/SWP/revenue-statistics">
+                <i class="fas fa-chart-line"></i>
+                <span>Thống kê</span>
+            </a>
+        </li>
+        <li class="menu-item">
+            <a href="#settings">
+                <i class="fas fa-cog"></i>
+                <span>Cài đặt</span>
+            </a>
+        </li>
+    </ul>
+
+    <div class="sidebar-footer">
+        <div class="user-info">
+            <div class="user-avatar">
+                <i class="fas fa-user-tie"></i>
+            </div>
+            <div class="user-details">
+                <span class="user-name">Manager</span>
+                <span class="user-role">Quản lý</span>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- Main Content -->
+<main class="main-content">
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <button class="sidebar-toggle">
+                <i class="fas fa-bars"></i>
+            </button>
+            <h1>Leave Request Management</h1>
+        </div>
+
+        <div class="header-right">
+            <div class="notification-badge">
+                <i class="fas fa-bell"></i>
+                <span class="badge" id="pendingCount">0</span>
+            </div>
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Tìm kiếm đơn nghỉ phép..." id="searchInput">
+            </div>
+        </div>
+    </header>
+
+    <!-- Page Content -->
+    <div class="page-content">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h2 class="page-title">Quản lý đơn nghỉ phép</h2>
+            <div class="page-actions">
+                <button class="btn-secondary btn-back">
+                    <a href="/SWP" style="color: inherit; text-decoration: none;">
+                        <i class="fas fa-arrow-left"></i>
+                        Quay lại
+                    </a>
+                </button>
+                <button class="btn-secondary" onclick="refreshRequests()">
+                    <i class="fas fa-sync-alt"></i>
+                    Làm mới
+                </button>
+                <button class="btn-primary">
+                    <i class="fas fa-download"></i>
+                    Xuất báo cáo
+                </button>
+            </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="stats-container">
+            <div class="stat-card pending">
+                <div class="stat-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stat-info">
+                    <h3 id="pendingRequestsCount">0</h3>
+                    <p>Chờ duyệt</p>
+                </div>
+            </div>
+            <div class="stat-card approved">
+                <div class="stat-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="stat-info">
+                    <h3 id="approvedRequestsCount">0</h3>
+                    <p>Đã duyệt</p>
+                </div>
+            </div>
+            <div class="stat-card rejected">
+                <div class="stat-icon">
+                    <i class="fas fa-times-circle"></i>
+                </div>
+                <div class="stat-info">
+                    <h3 id="rejectedRequestsCount">0</h3>
+                    <p>Từ chối</p>
+                </div>
+            </div>
+            <div class="stat-card total">
+                <div class="stat-icon">
+                    <i class="fas fa-calendar-check"></i>
+                </div>
+                <div class="stat-info">
+                    <h3 id="totalRequestsCount">0</h3>
+                    <p>Tổng cộng</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter Section -->
+        <div class="filter-section">
+            <form class="filter-form">
+                <div class="filter-group">
+                    <label for="statusFilter">Trạng thái:</label>
+                    <select id="statusFilter" class="filter-select" onchange="filterRequests()">
+                        <option value="all">Tất cả</option>
+                        <option value="pending" selected>Chờ duyệt</option>
+                        <option value="approved">Đã duyệt</option>
+                        <option value="rejected">Từ chối</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="leaveTypeFilter">Loại phép:</label>
+                    <select id="leaveTypeFilter" class="filter-select" onchange="filterRequests()">
+                        <option value="all">Tất cả loại</option>
+                        <option value="annual">Phép năm</option>
+                        <option value="sick">Phép ốm</option>
+                        <option value="personal">Phép cá nhân</option>
+                        <option value="emergency">Phép khẩn cấp</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="dateFilter">Từ ngày:</label>
+                    <input type="date" id="dateFilter" class="filter-select" onchange="filterRequests()">
+                </div>
+            </form>
+            <button class="btn-secondary" onclick="clearFilters()">
+                <i class="fas fa-times"></i>
+                Xóa bộ lọc
+            </button>
+        </div>
+
+        <!-- Leave Requests Table -->
+        <div class="card">
+            <div class="card-header">
+                <h3>Danh sách đơn nghỉ phép (<span id="totalCount">0</span>)</h3>
+                <div class="card-actions">
+                    <button class="btn-secondary" onclick="bulkApprove()">
+                        <i class="fas fa-check-double"></i>
+                        Duyệt hàng loạt
+                    </button>
+                    <button class="btn-secondary">
+                        <i class="fas fa-download"></i>
+                        Xuất
+                    </button>
+                </div>
+            </div>
+
+            <!-- Loading State -->
+            <div class="loading-state" id="loadingState" style="display: none;">
+                <div class="loading-content">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p>Đang tải dữ liệu...</p>
+                </div>
+            </div>
+
+            <!-- Empty State -->
+            <div class="empty-state" id="emptyState" style="display: none;">
+                <div class="empty-content">
+                    <i class="fas fa-calendar-times"></i>
+                    <h3>Không có đơn nghỉ phép nào</h3>
+                    <p>Chưa có đơn nghỉ phép nào cần xử lý</p>
+                </div>
+            </div>
+
+            <!-- Table Container -->
+            <div class="table-container" id="tableContainer">
+                <table class="data-table" id="requestsTable">
+                    <thead>
+                    <tr>
+                        <th>
+                            <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
+                        </th>
+                        <th>ID</th>
+                        <th>Nhân viên</th>
+                        <th>Từ ngày</th>
+                        <th>Đến ngày</th>
+                        <th>Số ngày</th>
+                        <th>Loại phép</th>
+                        <th>Lý do</th>
+                        <th>Trạng thái</th>
+                        <th>Thao tác</th>
+                    </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination" id="pagination">
+                <button onclick="previousPage()"><i class="fas fa-chevron-left"></i></button>
+                <span id="pageInfo">Trang 1 / 1</span>
+                <button onclick="nextPage()"><i class="fas fa-chevron-right"></i></button>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Modal for Request Details -->
+<div class="modal" id="requestModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Chi tiết đơn nghỉ phép</h3>
+            <button class="modal-close" onclick="closeModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body" id="modalBody">
+            <!-- Request details will be loaded here -->
+        </div>
+        <div class="modal-footer">
+            <button class="btn-secondary" onclick="closeModal()">Đóng</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentRequests = [];
+    let filteredRequests = [];
+    let currentPage = 1;
+    const itemsPerPage = 10;
+
+    async function loadRequests() {
+        showLoading(true);
+        try {
+            const res = await fetch('/api/leave-requests');
+            const data = await res.json();
+
+            // Chuyển đổi status từ backend về format frontend
+            currentRequests = data.map(r => ({
+                ...r,
+                status: mapStatus(r.status)
+            }));
+
+            filteredRequests = [...currentRequests];
+            updateStats();
+            renderTable();
+            updatePagination();
+        } catch (error) {
+            console.error('Error loading requests:', error);
+            showError('Không thể tải dữ liệu đơn nghỉ phép');
+        } finally {
+            showLoading(false);
+        }
+    }
+
+
+
+    function mapStatus(status) {
+        if (status === 'CHO_DUYET') return 'Chờ duyệt';
+        if (status === 'DA_DUYET') return 'Đã duyệt';
+        if (status === 'TU_CHOI') return 'Từ chối';
+        return status;
+    }
+
+
+
+    function showLoading(show) {
+        document.getElementById('loadingState').style.display = show ? 'block' : 'none';
+        document.getElementById('tableContainer').style.display = show ? 'none' : 'block';
+    }
+
+    function updateStats() {
+        const pending = currentRequests.filter(r => r.status === 'pending').length;
+        const approved = currentRequests.filter(r => r.status === 'approved').length;
+        const rejected = currentRequests.filter(r => r.status === 'rejected').length;
+
+        document.getElementById('pendingRequestsCount').textContent = pending;
+        document.getElementById('approvedRequestsCount').textContent = approved;
+        document.getElementById('rejectedRequestsCount').textContent = rejected;
+        document.getElementById('totalRequestsCount').textContent = currentRequests.length;
+        document.getElementById('pendingCount').textContent = pending;
+    }
+
+    function renderTable() {
+        const tbody = document.querySelector("#requestsTable tbody");
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        const pageRequests = filteredRequests.slice(startIndex, endIndex);
+
+        if (pageRequests.length === 0) {
+            document.getElementById('emptyState').style.display = 'block';
+            document.getElementById('tableContainer').style.display = 'none';
+            return;
+        }
+
+        document.getElementById('emptyState').style.display = 'none';
+        document.getElementById('tableContainer').style.display = 'block';
+
+        tbody.innerHTML = "";
+        pageRequests.forEach(r => {
+            const daysDiff = calculateDaysDifference(r.fromDate, r.toDate);
+            const statusBadge = getStatusBadge(r.status);
+            const leaveTypeBadge = getLeaveTypeBadge(r.leaveType);
+
+            tbody.innerHTML += `
+                <tr data-id="${r.id}">
+                    <td>
+                        <input type="checkbox" class="row-checkbox" value="${r.id}">
+                    </td>
+                    <td>
+                        <span class="request-id">#${r.id}</span>
+                    </td>
+                    <td>
+                        <div class="employee-info">
+                            <div class="employee-details">
+                                <span class="employee-name">${r.staff.fullname}</span>
+                                <span class="employee-dept">${r.staff.department || 'N/A'}</span>
+                            </div>
+                        </div>
+                    </td>
+                    <td>${formatDate(r.fromDate)}</td>
+                    <td>${formatDate(r.toDate)}</td>
+                    <td>
+                        <span class="days-badge">${daysDiff} ngày</span>
+                    </td>
+                    <td>${leaveTypeBadge}</td>
+                    <td>
+                        <span class="reason-text" title="${r.reason}">${truncateText(r.reason, 30)}</span>
+                    </td>
+                    <td>${statusBadge}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn-icon" onclick="viewRequest(${r.id})" title="Xem chi tiết">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            ${r.status === 'pending' || r.status === 'CHO_DUYET' ? `
+                                <div class="action-group">
+                                    <input class="note-input" type="text" placeholder="Ghi chú" id="note-${r.id}">
+                                    <button class="btn-approve" onclick="approve(${r.id})" title="Duyệt">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                    <button class="btn-reject" onclick="reject(${r.id})" title="Từ chối">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
+
+        document.getElementById('totalCount').textContent = filteredRequests.length;
+    }
+
+    function getStatusBadge(status) {
+        const badges = {
+            'pending': '<span class="status-badge pending"><i class="fas fa-clock"></i> Chờ duyệt</span>',
+            'approved': '<span class="status-badge approved"><i class="fas fa-check"></i> Đã duyệt</span>',
+            'rejected': '<span class="status-badge rejected"><i class="fas fa-times"></i> Từ chối</span>'
+        };
+        return badges[status] || status;
+    }
+
+    function getLeaveTypeBadge(type) {
+        const badges = {
+            'annual': '<span class="leave-type-badge annual">Phép năm</span>',
+            'sick': '<span class="leave-type-badge sick">Phép ốm</span>',
+            'personal': '<span class="leave-type-badge personal">Phép cá nhân</span>',
+            'emergency': '<span class="leave-type-badge emergency">Phép khẩn cấp</span>'
+        };
+        return badges[type] || type;
+    }
+
+    function calculateDaysDifference(fromDate, toDate) {
+        const from = new Date(fromDate);
+        const to = new Date(toDate);
+        const diffTime = Math.abs(to - from);
+        return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+    }
+
+    function formatDate(dateString) {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('vi-VN');
+    }
+
+    function truncateText(text, maxLength) {
+        return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+    }
+
+    async function approve(id) {
+        const note = document.getElementById('note-' + id).value;
+        if (!confirm('Bạn có chắc chắn muốn duyệt đơn nghỉ phép này?')) return;
+
+        try {
+            await fetch(`/api/leave-requests/${id}/approve`, {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ managerNote: note })
+            });
+            showSuccess('Đã duyệt đơn nghỉ phép thành công!');
+            loadRequests();
+        } catch (error) {
+            showError('Có lỗi xảy ra khi duyệt đơn nghỉ phép');
+        }
+    }
+
+    async function reject(id) {
+        const note = document.getElementById('note-' + id).value;
+        if (!note.trim()) {
+            showError('Vui lòng nhập lý do từ chối');
+            return;
+        }
+        if (!confirm('Bạn có chắc chắn muốn từ chối đơn nghỉ phép này?')) return;
+
+        try {
+            await fetch(`/api/leave-requests/${id}/reject`, {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ managerNote: note })
+            });
+            showSuccess('Đã từ chối đơn nghỉ phép!');
+            loadRequests();
+        } catch (error) {
+            showError('Có lỗi xảy ra khi từ chối đơn nghỉ phép');
+        }
+    }
+
+    function viewRequest(id) {
+        const request = currentRequests.find(r => r.id === id);
+        if (!request) return;
+
+        const modalBody = document.getElementById('modalBody');
+        modalBody.innerHTML = `
+            <div class="request-details">
+                <div class="detail-row">
+                    <label>ID đơn:</label>
+                    <span>#${request.id}</span>
+                </div>
+                <div class="detail-row">
+                    <label>Nhân viên:</label>
+                    <span>${request.staff.fullname}</span>
+                </div>
+                <div class="detail-row">
+                    <label>Từ ngày:</label>
+                    <span>${formatDate(request.fromDate)}</span>
+                </div>
+                <div class="detail-row">
+                    <label>Đến ngày:</label>
+                    <span>${formatDate(request.toDate)}</span>
+                </div>
+                <div class="detail-row">
+                    <label>Loại phép:</label>
+                    <span>${request.leaveType}</span>
+                </div>
+                <div class="detail-row">
+                    <label>Lý do:</label>
+                    <span>${request.reason}</span>
+                </div>
+                <div class="detail-row">
+                    <label>Trạng thái:</label>
+                    ${getStatusBadge(request.status)}
+                </div>
+            </div>
+        `;
+        document.getElementById('requestModal').style.display = 'flex';
+    }
+
+    function closeModal() {
+        document.getElementById('requestModal').style.display = 'none';
+    }
+
+    function filterRequests() {
+        const statusFilter = document.getElementById('statusFilter').value;
+        const leaveTypeFilter = document.getElementById('leaveTypeFilter').value;
+        const dateFilter = document.getElementById('dateFilter').value;
+
+        filteredRequests = currentRequests.filter(request => {
+            const statusMatch = statusFilter === 'all' || request.status === statusFilter;
+            const typeMatch = leaveTypeFilter === 'all' || request.leaveType === leaveTypeFilter;
+            const dateMatch = !dateFilter || request.fromDate >= dateFilter;
+
+            return statusMatch && typeMatch && dateMatch;
+        });
+
+        currentPage = 1;
+        renderTable();
+        updatePagination();
+    }
+
+    function clearFilters() {
+        document.getElementById('statusFilter').value = 'pending';
+        document.getElementById('leaveTypeFilter').value = 'all';
+        document.getElementById('dateFilter').value = '';
+        filterRequests();
+    }
+
+    function updatePagination() {
+        const totalPages = Math.ceil(filteredRequests.length / itemsPerPage);
+        document.getElementById('pageInfo').textContent = `Trang ${currentPage} / ${totalPages}`;
+    }
+
+    function previousPage() {
+        if (currentPage > 1) {
+            currentPage--;
+            renderTable();
+            updatePagination();
+        }
+    }
+
+    function nextPage() {
+        const totalPages = Math.ceil(filteredRequests.length / itemsPerPage);
+        if (currentPage < totalPages) {
+            currentPage++;
+            renderTable();
+            updatePagination();
+        }
+    }
+
+    function toggleSelectAll() {
+        const selectAll = document.getElementById('selectAll');
+        const checkboxes = document.querySelectorAll('.row-checkbox');
+        checkboxes.forEach(cb => cb.checked = selectAll.checked);
+    }
+
+    function bulkApprove() {
+        const selectedIds = Array.from(document.querySelectorAll('.row-checkbox:checked')).map(cb => cb.value);
+        if (selectedIds.length === 0) {
+            showError('Vui lòng chọn ít nhất một đơn nghỉ phép');
+            return;
+        }
+        if (confirm(`Bạn có chắc chắn muốn duyệt ${selectedIds.length} đơn nghỉ phép đã chọn?`)) {
+            // Implement bulk approve logic
+            showSuccess(`Đã duyệt ${selectedIds.length} đơn nghỉ phép!`);
+            loadRequests();
+        }
+    }
+
+    function refreshRequests() {
+        loadRequests();
+    }
+
+    function showSuccess(message) {
+        // Simple success notification - you can enhance this
+        alert('✅ ' + message);
+    }
+
+    function showError(message) {
+        // Simple error notification - you can enhance this
+        alert('❌ ' + message);
+    }
+
+    // Search functionality
+    document.getElementById('searchInput').addEventListener('input', function(e) {
+        const searchTerm = e.target.value.toLowerCase();
+        filteredRequests = currentRequests.filter(request =>
+            request.staff.fullname.toLowerCase().includes(searchTerm) ||
+            request.reason.toLowerCase().includes(searchTerm) ||
+            request.id.toString().includes(searchTerm)
+        );
+        currentPage = 1;
+        renderTable();
+        updatePagination();
+    });
+
+    // Sidebar toggle for mobile
+    document.querySelector('.sidebar-toggle').addEventListener('click', function() {
+        document.querySelector('.sidebar').classList.toggle('open');
+    });
+
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+        const modal = document.getElementById('requestModal');
+        if (event.target === modal) {
+            closeModal();
+        }
+    }
+
+    // Initialize
+    loadRequests();
+</script>
+</body>
+</html>

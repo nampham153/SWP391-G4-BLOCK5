@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Leave Request - QVL Storage</title>
+    <link rel="stylesheet" th:href="@{/css/staff-leave-request.css}">
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+<!-- Sidebar -->
+<div th:replace="taskbar/staff-taskbar :: staffTaskbar"></div>
+
+<!-- Main Content -->
+<main class="main-content">
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <button class="sidebar-toggle">
+                <i class="fas fa-bars"></i>
+            </button>
+            <h1>Leave Request System</h1>
+        </div>
+
+    </header>
+
+    <!-- Page Content -->
+    <div class="page-content">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h2 class="page-title">Xin nghỉ phép</h2>
+            <div class="page-actions">
+                <button class="btn-secondary btn-back">
+                    <a href="/SWP" style="color: inherit; text-decoration: none;">
+                        <i class="fas fa-arrow-left"></i>
+                        Quay lại
+                    </a>
+                </button>
+                <button class="btn-secondary" onclick="loadLeaveHistory()">
+                    <i class="fas fa-sync-alt"></i>
+                    Làm mới
+                </button>
+            </div>
+        </div>
+
+        <!-- Leave Request Form -->
+        <div class="form-container">
+            <div class="form-card">
+                <div class="form-header">
+                    <div class="form-icon">
+                        <i class="fas fa-calendar-plus"></i>
+                    </div>
+                    <div class="form-title">
+                        <h3>Gửi đơn xin nghỉ phép</h3>
+                        <p>Vui lòng điền đầy đủ thông tin để gửi đơn nghỉ phép</p>
+                    </div>
+                </div>
+
+                <form id="leaveForm" class="leave-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="fromDate">
+                                <i class="fas fa-calendar-day"></i>
+                                Từ ngày <span class="required">*</span>
+                            </label>
+                            <input type="date" id="fromDate" name="fromDate" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="toDate">
+                                <i class="fas fa-calendar-day"></i>
+                                Đến ngày <span class="required">*</span>
+                            </label>
+                            <input type="date" id="toDate" name="toDate" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="leaveType">
+                                <i class="fas fa-tags"></i>
+                                Loại phép <span class="required">*</span>
+                            </label>
+                            <select id="leaveType" name="leaveType" required>
+                                <option value="">Chọn loại phép</option>
+                                <option value="annual">Nghỉ phép năm</option>
+                                <option value="sick">Nghỉ ốm</option>
+                                <option value="personal">Nghỉ việc riêng</option>
+                                <option value="emergency">Nghỉ khẩn cấp</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="totalDays">
+                                <i class="fas fa-clock"></i>
+                                Tổng số ngày
+                            </label>
+                            <input type="text" id="totalDays" readonly placeholder="Tự động tính">
+                        </div>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label for="reason">
+                            <i class="fas fa-comment-alt"></i>
+                            Lý do nghỉ phép <span class="required">*</span>
+                        </label>
+                        <textarea id="reason" name="reason" rows="4" placeholder="Nhập lý do nghỉ phép..." required></textarea>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn-secondary" onclick="resetForm()">
+                            <i class="fas fa-undo"></i>
+                            Làm lại
+                        </button>
+                        <button type="submit" class="btn-primary" id="submitBtn">
+                            <i class="fas fa-paper-plane"></i>
+                            Gửi đơn
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Message Display -->
+        <div id="messageContainer" class="message-container" style="display: none;">
+            <div id="message" class="message"></div>
+        </div>
+
+        <!-- Leave History -->
+        <div class="history-container">
+            <div class="card">
+                <div class="card-header">
+                    <h3>
+                        <i class="fas fa-history"></i>
+                        Lịch sử đơn nghỉ phép
+                    </h3>
+                    <div class="card-actions">
+                        <button class="btn-secondary" onclick="exportHistory()">
+                            <i class="fas fa-download"></i>
+                            Xuất
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Loading State -->
+                <div class="loading-state" id="loadingState" style="display: none;">
+                    <div class="loading-content">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <p>Đang tải lịch sử...</p>
+                    </div>
+                </div>
+
+                <!-- Empty State -->
+                <div class="empty-state" id="emptyState" style="display: none;">
+                    <div class="empty-content">
+                        <i class="fas fa-calendar-times"></i>
+                        <h3>Chưa có đơn nghỉ phép nào</h3>
+                        <p>Bạn chưa gửi đơn nghỉ phép nào. Hãy tạo đơn mới ở trên!</p>
+                    </div>
+                </div>
+
+                <!-- History Table -->
+                <div class="table-container" id="tableContainer">
+                    <table class="data-table" id="leave-history">
+                        <thead>
+                        <tr>
+                            <th>Mã đơn</th>
+                            <th>Từ ngày</th>
+                            <th>Đến ngày</th>
+                            <th>Số ngày</th>
+                            <th>Loại phép</th>
+                            <th>Lý do</th>
+                            <th>Trạng thái</th>
+                            <th>Ghi chú</th>
+                            <th>Thao tác</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td colspan="9" class="loading-cell">Đang tải...</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Modal for Request Details -->
+<div class="modal" id="requestModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Chi tiết đơn nghỉ phép</h3>
+            <button class="modal-close" onclick="closeModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body" id="modalBody">
+            <!-- Request details will be loaded here -->
+        </div>
+        <div class="modal-footer">
+            <button class="btn-secondary" onclick="closeModal()">Đóng</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let leaveHistory = [];
+
+    // Calculate days between dates
+    function calculateDays() {
+        const fromDate = document.getElementById('fromDate').value;
+        const toDate = document.getElementById('toDate').value;
+
+        if (fromDate && toDate) {
+            const from = new Date(fromDate);
+            const to = new Date(toDate);
+
+            if (to >= from) {
+                const diffTime = Math.abs(to - from);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+                document.getElementById('totalDays').value = diffDays + ' ngày';
+            } else {
+                document.getElementById('totalDays').value = '';
+                showMessage('Ngày kết thúc phải sau ngày bắt đầu', 'error');
+            }
+        }
+    }
+
+    // Event listeners for date calculation
+    document.getElementById('fromDate').addEventListener('change', calculateDays);
+    document.getElementById('toDate').addEventListener('change', calculateDays);
+
+    async function loadLeaveHistory() {
+        showLoading(true);
+        try {
+            const res = await fetch('/api/leave-requests/my');
+            const tbody = document.querySelector("#leave-history tbody");
+
+            if (res.ok) {
+                const data = await res.json();
+                leaveHistory = data;
+
+                if (data.length === 0) {
+                    showEmptyState(true);
+                    return;
+                }
+
+                showEmptyState(false);
+                tbody.innerHTML = "";
+
+                data.forEach((item, index) => {
+                    const daysDiff = calculateDaysDifference(item.fromDate, item.toDate);
+                    const statusBadge = getStatusBadge(item.status);
+                    const leaveTypeBadge = getLeaveTypeBadge(item.leaveType);
+
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>
+                                <span class="request-id">#${item.id || (index + 1)}</span>
+                            </td>
+                            <td>${formatDate(item.fromDate)}</td>
+                            <td>${formatDate(item.toDate)}</td>
+                            <td>
+                                <span class="days-badge">${daysDiff} ngày</span>
+                            </td>
+                            <td>${leaveTypeBadge}</td>
+                            <td>
+                                <span class="reason-text" title="${item.reason}">${truncateText(item.reason, 30)}</span>
+                            </td>
+                            <td>${statusBadge}</td>
+                            <td>
+                                <span class="manager-note">${item.managerNote || '-'}</span>
+                            </td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="btn-icon" onclick="viewRequest(${index})" title="Xem chi tiết">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    ${item.status === 'CHO_DUYET' ? `
+                                        <button class="btn-icon danger" onclick="cancelRequest(${item.id})" title="Hủy đơn">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    ` : ''}
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } else {
+                tbody.innerHTML = "<tr><td colspan='9' class='error-cell'>Không thể tải lịch sử đơn nghỉ phép</td></tr>";
+            }
+        } catch (error) {
+            console.error('Error loading leave history:', error);
+            const tbody = document.querySelector("#leave-history tbody");
+            tbody.innerHTML = "<tr><td colspan='9' class='error-cell'>Có lỗi xảy ra khi tải dữ liệu</td></tr>";
+        } finally {
+            showLoading(false);
+        }
+    }
+
+    function showLoading(show) {
+        document.getElementById('loadingState').style.display = show ? 'block' : 'none';
+        document.getElementById('tableContainer').style.display = show ? 'none' : 'block';
+    }
+
+    function showEmptyState(show) {
+        document.getElementById('emptyState').style.display = show ? 'block' : 'none';
+        document.getElementById('tableContainer').style.display = show ? 'none' : 'block';
+    }
+
+    function getStatusBadge(status) {
+        const badges = {
+            'CHO_DUYET': '<span class="status-badge pending"><i class="fas fa-clock"></i> Chờ duyệt</span>',
+            'DUYET': '<span class="status-badge approved"><i class="fas fa-check"></i> Đã duyệt</span>',
+            'TU_CHOI': '<span class="status-badge rejected"><i class="fas fa-times"></i> Từ chối</span>'
+        };
+        return badges[status] || `<span class="status-badge">${status}</span>`;
+    }
+
+    function getLeaveTypeBadge(type) {
+        const badges = {
+            'annual': '<span class="leave-type-badge annual">Phép năm</span>',
+            'sick': '<span class="leave-type-badge sick">Phép ốm</span>',
+            'personal': '<span class="leave-type-badge personal">Phép cá nhân</span>',
+            'emergency': '<span class="leave-type-badge emergency">Phép khẩn cấp</span>'
+        };
+        return badges[type] || `<span class="leave-type-badge">${type}</span>`;
+    }
+
+    function calculateDaysDifference(fromDate, toDate) {
+        if (!fromDate || !toDate) return 0;
+        const from = new Date(fromDate);
+        const to = new Date(toDate);
+        const diffTime = Math.abs(to - from);
+        return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+    }
+
+    function formatDate(dateString) {
+        if (!dateString) return '-';
+        const date = new Date(dateString);
+        return date.toLocaleDateString('vi-VN');
+    }
+
+    function truncateText(text, maxLength) {
+        if (!text) return '-';
+        return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+    }
+
+    function viewRequest(index) {
+        const request = leaveHistory[index];
+        if (!request) return;
+
+        const modalBody = document.getElementById('modalBody');
+        modalBody.innerHTML = `
+            <div class="request-details">
+                <div class="detail-row">
+                    <label>Mã đơn:</label>
+                    <span>#${request.id || (index + 1)}</span>
+                </div>
+                <div class="detail-row">
+                    <label>Từ ngày:</label>
+                    <span>${formatDate(request.fromDate)}</span>
+                </div>
+                <div class="detail-row">
+                    <label>Đến ngày:</label>
+                    <span>${formatDate(request.toDate)}</span>
+                </div>
+                <div class="detail-row">
+                    <label>Số ngày:</label>
+                    <span>${calculateDaysDifference(request.fromDate, request.toDate)} ngày</span>
+                </div>
+                <div class="detail-row">
+                    <label>Loại phép:</label>
+                    ${getLeaveTypeBadge(request.leaveType)}
+                </div>
+                <div class="detail-row">
+                    <label>Lý do:</label>
+                    <span>${request.reason}</span>
+                </div>
+                <div class="detail-row">
+                    <label>Trạng thái:</label>
+                    ${getStatusBadge(request.status)}
+                </div>
+                <div class="detail-row">
+                    <label>Ghi chú quản lý:</label>
+                    <span>${request.managerNote || 'Chưa có ghi chú'}</span>
+                </div>
+            </div>
+        `;
+        document.getElementById('requestModal').style.display = 'flex';
+    }
+
+    function closeModal() {
+        document.getElementById('requestModal').style.display = 'none';
+    }
+
+    async function cancelRequest(id) {
+        if (!confirm('Bạn có chắc chắn muốn hủy đơn nghỉ phép này?')) return;
+
+        try {
+            const res = await fetch(`/api/leave-requests/${id}/cancel`, {
+                method: 'PUT'
+            });
+
+            if (res.ok) {
+                showMessage('Đã hủy đơn nghỉ phép thành công!', 'success');
+                loadLeaveHistory();
+            } else {
+                showMessage('Không thể hủy đơn nghỉ phép', 'error');
+            }
+        } catch (error) {
+            showMessage('Có lỗi xảy ra khi hủy đơn', 'error');
+        }
+    }
+
+    function exportHistory() {
+        // Simple CSV export
+        let csv = 'Mã đơn,Từ ngày,Đến ngày,Loại phép,Lý do,Trạng thái,Ghi chú\n';
+        leaveHistory.forEach((item, index) => {
+            csv += `#${item.id || (index + 1)},${item.fromDate},${item.toDate},${item.leaveType},${item.reason},${item.status},${item.managerNote || ''}\n`;
+        });
+
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'lich-su-nghi-phep.csv';
+        a.click();
+        window.URL.revokeObjectURL(url);
+    }
+
+    function resetForm() {
+        document.getElementById('leaveForm').reset();
+        document.getElementById('totalDays').value = '';
+        hideMessage();
+    }
+
+    function showMessage(text, type) {
+        const messageContainer = document.getElementById('messageContainer');
+        const message = document.getElementById('message');
+
+        message.className = `message ${type}`;
+        message.innerHTML = `
+            <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>
+            ${text}
+        `;
+
+        messageContainer.style.display = 'block';
+
+        // Auto hide after 5 seconds
+        setTimeout(() => {
+            hideMessage();
+        }, 5000);
+    }
+
+    function hideMessage() {
+        document.getElementById('messageContainer').style.display = 'none';
+    }
+
+    // Form submission
+    document.getElementById("leaveForm").onsubmit = async function(e) {
+        e.preventDefault();
+
+        const submitBtn = document.getElementById('submitBtn');
+        const originalText = submitBtn.innerHTML;
+
+        // Show loading state
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang gửi...';
+
+        const data = {
+            fromDate: this.fromDate.value,
+            toDate: this.toDate.value,
+            leaveType: this.leaveType.value,
+            reason: this.reason.value
+        };
+
+        try {
+            const res = await fetch('/api/leave-requests', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            });
+
+            if (res.ok) {
+                showMessage('Gửi đơn nghỉ phép thành công! Đơn của bạn đang chờ duyệt.', 'success');
+                this.reset();
+                document.getElementById('totalDays').value = '';
+                loadLeaveHistory();
+            } else {
+                const err = await res.json();
+                showMessage('Có lỗi xảy ra: ' + (err.message || 'Không thể gửi đơn'), 'error');
+            }
+        } catch (error) {
+            showMessage('Có lỗi xảy ra khi gửi đơn. Vui lòng thử lại.', 'error');
+        } finally {
+            // Restore button state
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+        }
+    };
+
+    // Sidebar toggle for mobile
+    document.querySelector('.sidebar-toggle').addEventListener('click', function() {
+        document.querySelector('.sidebar').classList.toggle('open');
+    });
+
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+        const modal = document.getElementById('requestModal');
+        if (event.target === modal) {
+            closeModal();
+        }
+    }
+
+    // Initialize
+    loadLeaveHistory();
+</script>
+</body>
+</html>
