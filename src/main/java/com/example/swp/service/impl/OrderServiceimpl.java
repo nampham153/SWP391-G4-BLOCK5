@@ -222,7 +222,16 @@ public class OrderServiceimpl implements OrderService {
 
         orderRepository.updateOrderStatusToPaid(orderId);
         Storage storage = order.getStorage();
-        storage.setStatus(false); // Đang được thuê
+        // Trừ diện tích đã thuê khỏi tổng diện tích kho (không để âm)
+        double rentedArea = order.getRentalArea() > 0 ? order.getRentalArea() : 0.0;
+        double newArea = Math.max(0.0, storage.getArea() - rentedArea);
+        storage.setArea(newArea);
+        // Nếu diện tích còn lại = 0 thì đánh dấu kho đã thuê hết
+        if (newArea == 0.0) {
+            storage.setStatus(false); // đã thuê hết
+        } else {
+            storage.setStatus(true);  // vẫn còn trống
+        }
         storageReponsitory.save(storage); // lưu lại thay đổi
 
         // Tạo StorageTransaction khi đơn hàng được đánh dấu là PAID
