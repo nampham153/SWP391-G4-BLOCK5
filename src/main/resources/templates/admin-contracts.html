@@ -342,7 +342,7 @@
                             <th>Tổng tiền</th>
                             <th>Trạng thái</th>
                             <th>Ngày ký</th>
-                            <th>Thao tác</th>
+<!--                            <th>Thao tác</th>-->
                         </tr>
                     </thead>
                     <tbody>
@@ -373,13 +373,13 @@
                                 <div class="date-info" th:if="${contract.signedAt != null}" th:text="${#temporals.format(contract.signedAt, 'dd/MM/yyyy HH:mm')}"></div>
                                 <div class="date-info" th:if="${contract.signedAt == null}">-</div>
                             </td>
-                            <td>
-                                <div class="actions">
-                                    <a th:href="@{'/SWP/booking/contract?orderId=' + ${contract.order.id}}" class="btn btn-view">
-                                        <i class="fas fa-eye"></i> Xem
-                                    </a>
-                                </div>
-                            </td>
+<!--                            <td>-->
+<!--                                <div class="actions">-->
+<!--                                    <a th:href="@{'/SWP/booking/contract?orderId=' + ${contract.order.id}}" class="btn btn-view">-->
+<!--                                        <i class="fas fa-eye"></i> Xem-->
+<!--                                    </a>-->
+<!--                                </div>-->
+<!--                            </td>-->
                         </tr>
                     </tbody>
                 </table>
