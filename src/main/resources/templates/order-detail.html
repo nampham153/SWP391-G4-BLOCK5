@@ -16,13 +16,7 @@
 <!-- Derive base if the controller didn’t set it -->
 <div th:with="b=${base != null ? base : (#strings.startsWith(#httpServletRequest.requestURI, '/admin') ? '/admin' : '/staff')}">
 
-    <!-- Navigation Bar -->
-    <nav class="navbar">
-        <ul>
-            <li><a th:href="@{${b}}">Home</a></li>
-            <li><a th:href="@{${b} + '/orders'}">Orders</a></li>
-        </ul>
-    </nav>
+
 
     <div class="container">
         <!-- Alerts -->

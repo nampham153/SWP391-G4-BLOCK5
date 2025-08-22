@@ -78,6 +78,22 @@
             </label>
         </div>
     </section>
+    <section class="readonly-card">
+        <h2 class="section-title">
+            <i class="fas fa-user-shield"></i> Hành động
+        </h2>
+        <div>
+            <form th:action="@{'/admin/staffs/' + ${staff.staffid} + '/toggle-block'}" method="post"
+                  th:onsubmit="return confirm('Bạn có chắc chắn muốn ' + ( (${#strings.toUpperCase(staff.roleName)} == 'BLOCKED') ? 'mở khóa' : 'khóa') + ' tài khoản nhân viên này?')">
+                <button type="submit" class="btn-action btn-danger"
+                        th:text="${#strings.toUpperCase(staff.roleName)} == 'BLOCKED' ? 'Mở khóa tài khoản' : 'Khóa tài khoản'">
+                    Khóa tài khoản
+                </button>
+                <!-- if you want to stay on detail after toggle -->
+                <input type="hidden" name="from" value="detail">
+            </form>
+        </div>
+    </section>
 
 </main>
 

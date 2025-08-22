@@ -3,6 +3,7 @@ package com.example.swp.controller.website;
 import java.util.List;
 import java.util.Optional;
 
+import com.example.swp.enums.RoleName;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.security.core.Authentication;
@@ -296,7 +297,7 @@ public class ManagerController {
     public String showStaffList(
             Model model,
             @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "3") int size
+            @RequestParam(defaultValue = "6") int size
     ) {
         Page<Staff> staffPage = staffService.getStaffsByPage(page - 1, size);
 
@@ -322,39 +323,31 @@ public class ManagerController {
         return "staff-detail";
     }
 
-    @GetMapping("/staff-list/edit/{id}")
-    public String showEditStaffForm(@PathVariable int id, Model model, RedirectAttributes redirectAttributes) {
-        Optional<Staff> staffOpt = staffService.findById(id);
-        if (staffOpt.isPresent()) {
-            model.addAttribute("staff", staffOpt.get());
-            return "edit-staff";
-        } else {
-            redirectAttributes.addFlashAttribute("error", "Staff not found!");
-            return "redirect:/admin/staff-list";
-        }
-    }
 
-    @PostMapping("/staff-list/edit/{id}")
-    public String editStaff(
+
+     @PostMapping("/staffs/{id}/toggle-block")
+    public String toggleStaffBlock(
             @PathVariable int id,
-            @ModelAttribute("staff") Staff staff,
-            RedirectAttributes redirectAttributes
-    ) {
-        Optional<Staff> staffOpt = staffService.findById(id);
-        if (staffOpt.isPresent()) {
-            Staff existingStaff = staffOpt.get();
-            existingStaff.setFullname(staff.getFullname());
-            existingStaff.setEmail(staff.getEmail());
-            existingStaff.setPhone(staff.getPhone());
-            existingStaff.setIdCitizenCard(staff.getIdCitizenCard());
+            @RequestParam(value = "from", required = false) String from,
+            RedirectAttributes ra) {
 
-            staffService.save(existingStaff);
-            redirectAttributes.addFlashAttribute("message", "Cập nhật staff thành công!");
+        Staff s = staffService.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Staff not found"));
+
+        if (s.getRoleName() == RoleName.BLOCKED) {
+            s.setRoleName(RoleName.STAFF);
+            ra.addFlashAttribute("success", "Đã mở khóa nhân viên #" + id);
         } else {
-            redirectAttributes.addFlashAttribute("error", "Không tìm thấy nhân viên!");
+            s.setRoleName(RoleName.BLOCKED);
+            ra.addFlashAttribute("success", "Đã khóa nhân viên #" + id);
         }
-        return "redirect:/admin/staff-list";
+        staffService.save(s);
+
+        return "detail".equals(from)
+                ? ("redirect:/admin/staff-list/detail/" + id)
+                : "redirect:/admin/staff-list";
     }
+
 
     @GetMapping("/manager-inbox")
     public String managerInbox() {
