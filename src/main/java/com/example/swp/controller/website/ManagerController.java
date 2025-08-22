@@ -153,6 +153,12 @@ public class ManagerController {
         return "manager-all-storage"; // Tên file HTML tương ứng
     }
 
+    // Alias route to satisfy redirect to /admin/manager-dashboard/storages/
+    @GetMapping({"/manager-dashboard/storages", "/manager-dashboard/storages/"})
+    public String redirectStoragesList() {
+        return "redirect:/admin/manager-all-storage";
+    }
+
     @GetMapping("/addstorage")
     public String showAddStorageForm(Model model, HttpSession session) {
         // Populate user info for taskbar
@@ -262,7 +268,8 @@ public class ManagerController {
     @PutMapping("/manager-dashboard/storages/{id}")
     public String updateStorage(@PathVariable int id,
             RedirectAttributes redirectAttributes,
-            @ModelAttribute StorageRequest storageRequest) {
+            @ModelAttribute StorageRequest storageRequest,
+            @RequestParam(value = "returnUrl", required = false) String returnUrl) {
         Optional<Storage> optional = storageService.findByID(id);
         if (optional.isEmpty()) {
             redirectAttributes.addFlashAttribute("error", "Không tìm thấy kho!");
@@ -272,13 +279,17 @@ public class ManagerController {
         storageService.updateStorage(storageRequest, optional.get());
         redirectAttributes.addFlashAttribute("message", "Cập nhật thành công!");
 
-        return "manager-storagedetail";
+        if (returnUrl != null && !returnUrl.isBlank()) {
+            return "redirect:" + returnUrl;
+        }
+        return "redirect:/admin/manager-dashboard/storages/";
     }
 
     @PostMapping("/manager-dashboard/storages/{id}")
     public String updateStoragePost(@PathVariable int id,
             RedirectAttributes redirectAttributes,
             @ModelAttribute StorageRequest storageRequest,
+            @RequestParam(value = "returnUrl", required = false) String returnUrl,
             Model model) {
         Optional<Storage> optional = storageService.findByID(id);
         if (optional.isEmpty()) {
@@ -288,7 +299,10 @@ public class ManagerController {
         Storage updated = storageService.updateStorage(storageRequest, optional.get());
         model.addAttribute("storage", updated);
         redirectAttributes.addFlashAttribute("message", "Cập nhật thành công!");
-        return "manager-storagedetail";
+        if (returnUrl != null && !returnUrl.isBlank()) {
+            return "redirect:" + returnUrl;
+        }
+        return "redirect:/admin/manager-dashboard/storages/";
     }
 
     //danh sách staff
