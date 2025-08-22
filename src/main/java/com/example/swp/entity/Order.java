@@ -56,14 +56,12 @@ public class Order {
         private Manager manager;
 
         @ManyToOne
-        @JoinColumn(name = "storage_id", nullable = true)
+        @JoinColumn(name = "zone_id", nullable = true)
         @JsonIgnore
-        private Storage storage;
-        @Column(length = 500) // Tùy nhu cầu, có thể dài/ngắn hơn
+        private Zone zone;
+        @Column(length = 500)
         private String cancelReason;
 
-        @Column(nullable = true)
-        private Double rentalArea;
 
         @OneToOne(mappedBy = "order", cascade = CascadeType.ALL)
         private EContract eContract;

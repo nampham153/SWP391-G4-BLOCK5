@@ -51,9 +51,6 @@ public class Customer implements UserDetails {
     @Enumerated(EnumType.STRING)
     private RoleName roleName;
 
-    @Size(max = 20, message = "CCCD tối đa 20 ký tự")
-    private String id_citizen;
-
     @NotBlank(message = "Mật khẩu không được để trống")
     @Size(min = 6, max = 100, message = "Mật khẩu phải từ 6-100 ký tự")
     private String password;

@@ -40,7 +40,6 @@ public class Staff implements UserDetails {
     @Enumerated(EnumType.STRING)
     private RoleName roleName;
     private Boolean sex;
-    private String idCitizenCard;
 
 
     @OneToMany(mappedBy = "staff")
