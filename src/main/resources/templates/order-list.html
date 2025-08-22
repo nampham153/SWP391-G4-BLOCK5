@@ -30,14 +30,25 @@
                 <option value="REJECTED" th:selected="${selectedStatus == 'REJECTED'}">REJECTED</option>
                 <option value="PAID"     th:selected="${selectedStatus == 'PAID'}">PAID</option>
             </select>
+
+            <!-- NEW: sort selector -->
+            <label for="sort" style="margin-left:12px;">Sắp xếp:</label>
+            <select id="sort" name="sort" onchange="this.form.submit()">
+                <option value="newest" th:selected="${selectedSort == 'newest'}">Mới → Cũ</option>
+                <option value="oldest" th:selected="${selectedSort == 'oldest'}">Cũ → Mới</option>
+            </select>
         </form>
 
         <!-- Search (right) -->
         <form th:action="@{${base} + '/orders'}" method="get" class="search-form">
             <label for="orderId">Tìm kiếm theo ID:</label>
             <input type="number" id="orderId" name="orderId" placeholder="Nhập mã đơn..." required>
+            <!-- keep current filters when searching -->
+            <input type="hidden" name="status" th:value="${selectedStatus}">
+            <input type="hidden" name="sort" th:value="${selectedSort}">
             <button type="submit" class="btn btn-dark">Tìm</button>
         </form>
+
 
     </div>
 
