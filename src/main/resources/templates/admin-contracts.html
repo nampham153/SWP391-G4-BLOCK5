@@ -328,6 +328,12 @@
                     <button class="filter-btn active" onclick="filterContracts('all')">Tất cả</button>
                     <button class="filter-btn" onclick="filterContracts('SIGNED')">Đã ký</button>
 <!--                    <button class="filter-btn" onclick="filterContracts('PENDING')">Chờ ký</button>-->
+                    <button id="sortAreaBtn" class="filter-btn" onclick="sortByArea(this)" data-dir="asc">
+                        Sắp xếp diện tích ↑
+                    </button>
+                    <button id="sortPriceBtn" class="filter-btn" onclick="sortByPrice(this)" data-dir="asc">
+                        Sắp xếp giá ↑
+                    </button>
                 </div>
             </div>
 
@@ -411,6 +417,59 @@
                     row.style.display = 'none';
                 }
             });
+        }
+
+        // Helpers to extract numeric values
+        function extractArea(row) {
+            // Area is 4th column (index 3), formatted like "123 m²"
+            const cell = row.children[3];
+            if (!cell) return 0;
+            const text = cell.textContent || '';
+            const num = parseFloat(text.replace(/[^0-9.]/g, ''));
+            return isNaN(num) ? 0 : num;
+        }
+
+        function extractPrice(row) {
+            // Price is 5th column (index 4), formatted like "1,234.56 VNĐ" (POINT decimal, COMMA grouping)
+            const cell = row.children[4];
+            if (!cell) return 0;
+            const text = cell.textContent || '';
+            // Remove thousands separators, keep decimal point
+            const normalized = text.replace(/,/g, '').replace(/[^0-9.]/g, '');
+            const num = parseFloat(normalized);
+            return isNaN(num) ? 0 : num;
+        }
+
+        function applySort(extractor, dir) {
+            const tbody = document.querySelector('.contracts-table tbody');
+            if (!tbody) return;
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+            rows.sort((a, b) => {
+                const va = extractor(a);
+                const vb = extractor(b);
+                if (va === vb) return 0;
+                return (va < vb ? -1 : 1) * (dir === 'asc' ? 1 : -1);
+            });
+            rows.forEach(r => tbody.appendChild(r));
+        }
+
+        function toggleDir(btn) {
+            const current = btn.getAttribute('data-dir') === 'asc' ? 'asc' : 'desc';
+            const next = current === 'asc' ? 'desc' : 'asc';
+            btn.setAttribute('data-dir', next);
+            // Update visual arrow
+            btn.textContent = btn.textContent.replace(/[↑↓]$/, '') + (next === 'asc' ? ' ↑' : ' ↓');
+            return next;
+        }
+
+        function sortByArea(btn) {
+            const dir = toggleDir(btn);
+            applySort(extractArea, dir);
+        }
+
+        function sortByPrice(btn) {
+            const dir = toggleDir(btn);
+            applySort(extractPrice, dir);
         }
 
         // Add search functionality
