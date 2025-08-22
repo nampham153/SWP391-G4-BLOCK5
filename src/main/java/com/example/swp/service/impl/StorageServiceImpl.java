@@ -58,7 +58,9 @@ public class StorageServiceImpl implements StorageService {
         storage.setArea(storageRequest.getArea());
         storage.setPricePerDay(storageRequest.getPricePerDay());
         storage.setDescription(storageRequest.getDescription());
-        storage.setStatus(storageRequest.isStatus());
+        if (storageRequest.getStatus() != null) {
+            storage.setStatus(storageRequest.getStatus());
+        }
 
         if (storageRequest.getStaffid() != null) {
             Optional<Staff> staffOpt = staffRepository.findById(storageRequest.getStaffid());
@@ -87,7 +89,9 @@ public class StorageServiceImpl implements StorageService {
         storage.setAddress(storageRequest.getAddress());
         storage.setCity(storageRequest.getCity());
         storage.setState(storageRequest.getState());
-        storage.setStatus(storageRequest.isStatus());
+        if (storageRequest.getStatus() != null) {
+            storage.setStatus(storageRequest.getStatus());
+        }
         storage.setArea(storageRequest.getArea());
         storage.setPricePerDay(storageRequest.getPricePerDay());
         storage.setDescription(storageRequest.getDescription());
