@@ -201,6 +201,7 @@
                                     </div>
                                 </div>
                                 <input type="hidden" id="preSelectedArea" name="preSelectedArea" />
+                                <input type="hidden" id="selectedUnitIndices" name="selectedUnitIndices" />
                                 <div id="unitGrid" class="grid gap-2"></div>
                                 <div class="text-xs text-gray-500 mt-1">Giữ chuột và kéo để chọn theo hình chữ nhật. Mỗi ô = 50 m².</div>
                             </div>
@@ -365,14 +366,20 @@
             });
 
             function updateUnitSelectionCount() {
-                const count = unitGrid.querySelectorAll('.unit-tile.selected').length;
+                const selectedTiles = unitGrid.querySelectorAll('.unit-tile.selected');
+                const count = selectedTiles.length;
                 const area = count * UNIT_SIZE;
                 const cntEl = document.getElementById('unitSelectedCount');
                 const areaEl = document.getElementById('unitSelectedArea');
-                const hidden = document.getElementById('preSelectedArea');
+                const hiddenArea = document.getElementById('preSelectedArea');
+                const hiddenIndices = document.getElementById('selectedUnitIndices');
                 if (cntEl) cntEl.textContent = String(count);
                 if (areaEl) areaEl.textContent = String(area);
-                if (hidden) hidden.value = String(area);
+                if (hiddenArea) hiddenArea.value = String(area);
+                if (hiddenIndices) {
+                    const indices = Array.from(selectedTiles).map(t => t.dataset.index).join(',');
+                    hiddenIndices.value = indices;
+                }
                 // If user selected tiles, clear zone selection to avoid conflicts
                 if (area > 0) {
                     const zoneHidden = document.getElementById('zoneIdHidden');

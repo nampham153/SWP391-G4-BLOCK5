@@ -126,6 +126,7 @@ public class BookingController {
             @RequestParam("endDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             @RequestParam(value = "zoneId", required = false) Integer zoneId,
             @RequestParam(value = "preSelectedArea", required = false) Integer preSelectedArea,
+            @RequestParam(value = "selectedUnitIndices", required = false) String selectedUnitIndices,
             Model model,
             HttpSession session,
             RedirectAttributes redirectAttributes) {
@@ -174,6 +175,9 @@ public class BookingController {
         model.addAttribute("orderToken", orderToken);
         if (preSelectedArea != null && preSelectedArea > 0) {
             model.addAttribute("preSelectedArea", preSelectedArea);
+        }
+        if (selectedUnitIndices != null && !selectedUnitIndices.isBlank()) {
+            model.addAttribute("selectedUnitIndices", selectedUnitIndices);
         }
 
         // Zone đã chọn (nếu có)
