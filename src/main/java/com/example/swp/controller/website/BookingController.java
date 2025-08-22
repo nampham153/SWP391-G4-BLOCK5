@@ -25,6 +25,7 @@ import com.example.swp.entity.EContract;
 import com.example.swp.entity.Order;
 import com.example.swp.entity.Storage;
 import com.example.swp.entity.Voucher;
+import com.example.swp.entity.Zone;
 import com.example.swp.entity.VoucherUsage;
 import com.example.swp.enums.EContractStatus;
 import com.example.swp.enums.VoucherStatus;
@@ -33,6 +34,7 @@ import com.example.swp.service.EContractService;
 import com.example.swp.service.OrderService;
 import com.example.swp.service.StorageService;
 import com.example.swp.service.VoucherService;
+import com.example.swp.repository.ZoneRepository;
 import com.example.swp.service.VoucherUsageService;
 
 import jakarta.servlet.http.HttpSession;
@@ -65,6 +67,9 @@ public class BookingController {
 
     @Autowired
     private CustomerService customerService;
+
+    @Autowired
+    private ZoneRepository zoneRepository;
 
     /**
      * Helper method để kiểm tra và lấy customer từ session
@@ -119,6 +124,8 @@ public class BookingController {
     public String processDateSelection(@PathVariable int storageId,
             @RequestParam("startDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam("endDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam(value = "zoneId", required = false) Integer zoneId,
+            @RequestParam(value = "preSelectedArea", required = false) Integer preSelectedArea,
             Model model,
             HttpSession session,
             RedirectAttributes redirectAttributes) {
@@ -165,6 +172,16 @@ public class BookingController {
         model.addAttribute("endDate", endDate);
         model.addAttribute("remainArea", remainArea);
         model.addAttribute("orderToken", orderToken);
+        if (preSelectedArea != null && preSelectedArea > 0) {
+            model.addAttribute("preSelectedArea", preSelectedArea);
+        }
+
+        // Zone đã chọn (nếu có)
+        if (zoneId != null) {
+            Optional<Zone> zoneOpt = zoneRepository.findById(zoneId);
+            zoneOpt.ifPresent(z -> model.addAttribute("selectedZone", z));
+            model.addAttribute("zoneId", zoneId);
+        }
         // Danh sách voucher khả dụng cho khách (đang ACTIVE và đủ điểm)
         try {
             int customerPoint = customer.getPoints() != null ? customer.getPoints() : 0;
@@ -185,6 +202,7 @@ public class BookingController {
     public String showBookingForm(@PathVariable int storageId,
             @RequestParam("startDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam("endDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam(value = "zoneId", required = false) Integer zoneId,
             Model model,
             HttpSession session) {
 
@@ -242,6 +260,7 @@ public class BookingController {
             @RequestParam("startDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam("endDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             @RequestParam("rentalArea") double rentalArea,
+            @RequestParam(value = "zoneId", required = false) Integer zoneId,
             @RequestParam("name") String name,
             @RequestParam("email") String email,
             @RequestParam("phone") String phone,
@@ -370,6 +389,10 @@ public class BookingController {
             order.setOrderDate(LocalDate.now());
             order.setTotalAmount(totalCost);
             order.setStatus("PENDING");
+            // Gán zone nếu người dùng đã chọn
+            if (zoneId != null) {
+                zoneRepository.findById(zoneId).ifPresent(order::setZone);
+            }
             if (appliedVoucher != null) {
                 order.setVoucher(appliedVoucher);
             }

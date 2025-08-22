@@ -72,19 +72,13 @@
                     <input type="hidden" name="startDate" th:value="${startDate}" />
                     <input type="hidden" name="endDate" th:value="${endDate}" />
                     <input type="hidden" name="orderToken" th:value="${orderToken}" />
+                    <input type="hidden" name="zoneId" th:value="${zoneId}" />
+                    <input type="hidden" name="preSelectedArea" th:value="${preSelectedArea}" />
 
                     <!-- Storage Info -->
                     <div class="form-section">
                         <h3 class="section-title"><i class="fas fa-warehouse"></i> Thông tin kho</h3>
                         <div class="storage-info">
-<!--                            &lt;!&ndash; Ảnh kho mặc định &ndash;&gt;-->
-<!--                            <div class="info-card" style="text-align:center;">-->
-<!--                                <img-->
-<!--                                        th:src="${storage.imUrl != null && !storage.imUrl.isEmpty() ? storage.imUrl : 'https://img.freepik.com/premium-photo/warehouse-with-shelves-filled-with-boxes-storage-facility-ai_97167-3669.jpg'}"-->
-<!--                                        alt="Ảnh kho"-->
-<!--                                        class="storage-img"-->
-<!--                                        style="max-width: 100%; height: 200px; object-fit:cover; border-radius:8px; margin-bottom:10px;">-->
-<!--                            </div>-->
                             <div class="info-card">
                                 <div class="info-label">TÊN KHO</div>
                                 <div class="info-value" th:text="${storage.storagename}">Tên kho</div>
@@ -157,8 +151,13 @@
                                th:placeholder="'Tối đa ' + ${remainArea} + ' m² '"
                                required
                                step="1"
+                               th:value="${preSelectedArea} != null ? preSelectedArea : null"
+                               th:readonly="${preSelectedArea} != null"
                                oninput="validateIntegerRentalArea(this)" />
                         <small class="form-text" th:text="'Có thể thuê tối đa ' + ${remainArea} + ' m².'"></small>
+                        <small class="form-text" th:if="${preSelectedArea} != null">
+                            Diện tích đã được chọn từ lưới ô (không thể sửa trực tiếp). Quay lại để chọn lại nếu cần.
+                        </small>
                         <small class="error-text" id="rentalAreaError" style="display: none;">
                             Diện tích phải là số nguyên từ 1 đến diện tích còn lại.
                         </small>
