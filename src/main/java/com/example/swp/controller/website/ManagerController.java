@@ -360,7 +360,6 @@ public class ManagerController {
             existingStaff.setFullname(staff.getFullname());
             existingStaff.setEmail(staff.getEmail());
             existingStaff.setPhone(staff.getPhone());
-            existingStaff.setIdCitizenCard(staff.getIdCitizenCard());
 
             staffService.save(existingStaff);
             redirectAttributes.addFlashAttribute("message", "Cập nhật staff thành công!");

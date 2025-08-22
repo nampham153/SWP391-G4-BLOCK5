@@ -1,16 +1,17 @@
 package com.example.swp.service.impl;
 
-import com.example.swp.dto.StaffRequest;
-import com.example.swp.entity.Staff;
-import com.example.swp.repository.StaffRepository;
-import com.example.swp.service.StaffService;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
-import java.util.Optional;
+import com.example.swp.dto.StaffRequest;
+import com.example.swp.entity.Staff;
+import com.example.swp.repository.StaffRepository;
+import com.example.swp.service.StaffService;
 
 @Component
 public class StaffServiceimpl implements StaffService {
@@ -30,7 +31,6 @@ private StaffRepository staffRepository;
         staff.setPhone(staffRequest.getPhone());
         staff.setRoleName(staffRequest.getRoleName());
         staff.setSex(staffRequest.isSex());
-        staff.setIdCitizenCard(staffRequest.getIdCitizenCard());
         return staffRepository.save(staff);
     }
 

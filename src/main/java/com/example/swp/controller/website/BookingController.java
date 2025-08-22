@@ -1,35 +1,41 @@
 package com.example.swp.controller.website;
 
-import com.example.swp.entity.Storage;
-import com.example.swp.entity.Customer;
-import com.example.swp.entity.Order;
-import com.example.swp.entity.EContract;
-import com.example.swp.enums.EContractStatus;
-import com.example.swp.service.StorageService;
-import com.example.swp.service.OrderService;
-import com.example.swp.service.EContractService;
-import com.example.swp.entity.Voucher;
-import com.example.swp.entity.VoucherUsage;
-import com.example.swp.enums.VoucherStatus;
-import com.example.swp.service.VoucherService;
-import com.example.swp.service.VoucherUsageService;
-import com.example.swp.service.CustomerService;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpSession;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.math.BigDecimal;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import com.example.swp.entity.Customer;
+import com.example.swp.entity.EContract;
+import com.example.swp.entity.Order;
+import com.example.swp.entity.Storage;
+import com.example.swp.entity.Voucher;
+import com.example.swp.entity.VoucherUsage;
+import com.example.swp.enums.EContractStatus;
+import com.example.swp.enums.VoucherStatus;
+import com.example.swp.service.CustomerService;
+import com.example.swp.service.EContractService;
+import com.example.swp.service.OrderService;
+import com.example.swp.service.StorageService;
+import com.example.swp.service.VoucherService;
+import com.example.swp.service.VoucherUsageService;
+
+import jakarta.servlet.http.HttpSession;
 
 // Comment: Các import khác tạm thời ẩn
 /*
@@ -358,14 +364,12 @@ public class BookingController {
 
             // Tạo và lưu đơn hàng vào database
             Order order = new Order();
-            order.setStorage(storage);
             order.setCustomer(customer);
             order.setStartDate(startDate);
             order.setEndDate(endDate);
             order.setOrderDate(LocalDate.now());
             order.setTotalAmount(totalCost);
             order.setStatus("PENDING");
-            order.setRentalArea(rentalArea);
             if (appliedVoucher != null) {
                 order.setVoucher(appliedVoucher);
             }

@@ -71,9 +71,6 @@ public class StorageServiceImpl implements StorageService {
             storage.setImUrl(storageRequest.getImUrl());
         }
 
-        // Tạm thời set coordinates mặc định
-        storage.setLatitude(10.762622); // Tọa độ TP.HCM
-        storage.setLongitude(106.660172);
 
         return storageRepository.save(storage);
     }
