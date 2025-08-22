@@ -144,7 +144,7 @@
 
         .storage-content {
             display: grid;
-            grid-template-columns: 350px 1fr;
+            grid-template-columns: 250px 1fr;
             gap: 30px;
             padding: 30px;
         }
@@ -154,11 +154,13 @@
             border-radius: 16px;
             overflow: hidden;
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            width: 250px;
+            height: 250px;
         }
 
         .storage-image {
             width: 100%;
-            height: 280px;
+            height: 100%;
             object-fit: cover;
             transition: transform 0.3s ease;
             pointer-events: none;
@@ -322,7 +324,7 @@
             }
             
             .storage-image-container {
-                max-width: 400px;
+                max-width: 300px;
                 margin: 0 auto;
             }
         }
@@ -490,9 +492,9 @@
                         </div>
                         
                                                  <div class="storage-actions">
-                             <form th:action="@{'/staff/storages/' + ${storage.getStorageid()} + '/toggle-status'}" 
+                             <form th:action="@{'/SWP/staff/storages/' + ${storage.getStorageid()} + '/toggle-status'}" 
                                    method="post" style="display: inline;">
-                                 <input type="hidden" name="returnUrl" value="/staff/staff-all-storage"/>
+                                 <input type="hidden" name="returnUrl" value="/SWP/staff/staff-all-storage"/>
                                  <button type="submit" class="btn btn-secondary">
                                      <i class="fas fa-exchange-alt"></i>
                                      Chuyển trạng thái

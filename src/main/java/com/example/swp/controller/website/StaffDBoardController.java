@@ -164,18 +164,24 @@ public class StaffDBoardController {
             
             // Tính toán diện tích đã thuê cho mỗi storage
             for (Storage storage : storages) {
-                double rentedArea = orderService.getTotalRentedArea(storage.getStorageid());
-                double availableArea = Math.max(0, storage.getArea() - rentedArea);
-                
-                // Thêm thông tin diện tích vào model
-                model.addAttribute("rentedArea_" + storage.getStorageid(), rentedArea);
-                model.addAttribute("availableArea_" + storage.getStorageid(), availableArea);
+                try {
+                    double rentedArea = orderService.getTotalRentedArea(storage.getStorageid());
+                    double availableArea = Math.max(0, storage.getArea() - rentedArea);
+                    
+                    // Thêm thông tin diện tích vào model
+                    model.addAttribute("rentedArea_" + storage.getStorageid(), rentedArea);
+                    model.addAttribute("availableArea_" + storage.getStorageid(), availableArea);
+                } catch (Exception e) {
+                    // Nếu có lỗi, sử dụng giá trị mặc định
+                    model.addAttribute("rentedArea_" + storage.getStorageid(), 0.0);
+                    model.addAttribute("availableArea_" + storage.getStorageid(), storage.getArea());
+                }
             }
         } else {
             storages = List.of();
         }
         model.addAttribute("storages", storages);
-        return "staff-all-storage"; // Tên file HTML tương ứng
+        return "staff-all-storage";
     }
 
     @GetMapping("/all-recent-activity")
@@ -283,14 +289,24 @@ public class StaffDBoardController {
     public String toggleStorageStatus(@PathVariable("id") int id,
             @RequestParam(value = "returnUrl", required = false) String returnUrl,
             RedirectAttributes redirectAttributes) {
-        Optional<Storage> optionalStorage = storageService.findByID(id);
-        if (optionalStorage.isPresent()) {
-            Storage storage = optionalStorage.get();
-            storage.setStatus(!storage.isStatus());
-            storageService.save(storage);
-            redirectAttributes.addFlashAttribute("message", "Trạng thái kho đã được cập nhật.");
-        } else {
-            redirectAttributes.addFlashAttribute("message", "Không tìm thấy kho để cập nhật.");
+        try {
+            Optional<Storage> optionalStorage = storageService.findByID(id);
+            if (optionalStorage.isPresent()) {
+                Storage storage = optionalStorage.get();
+                boolean oldStatus = storage.isStatus();
+                storage.setStatus(!oldStatus);
+                storageService.save(storage);
+                
+                String statusMessage = oldStatus ? "Đã chuyển từ CÒN TRỐNG sang ĐÃ THUÊ" : "Đã chuyển từ ĐÃ THUÊ sang CÒN TRỐNG";
+                redirectAttributes.addFlashAttribute("message", "Trạng thái kho đã được cập nhật: " + statusMessage);
+                redirectAttributes.addFlashAttribute("messageType", "success");
+            } else {
+                redirectAttributes.addFlashAttribute("message", "Không tìm thấy kho để cập nhật.");
+                redirectAttributes.addFlashAttribute("messageType", "error");
+            }
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("message", "Lỗi khi cập nhật trạng thái kho: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("messageType", "error");
         }
 
         if (returnUrl == null || returnUrl.isEmpty()) {
