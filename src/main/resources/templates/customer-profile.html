@@ -130,6 +130,8 @@
     </style>
 </head>
 <body>
+<!-- Customer header -->
+<div th:replace="taskbar/customer-navbar :: customerNavbar"></div>
 <a href="javascript:history.back()" class="back-button">← Quay lại</a>
 
 <div class="shell">
@@ -332,7 +334,8 @@
         </div>
     </section>
 </div>
-
+<!-- Customer footer -->
+<div th:replace="taskbar/customer-footer :: customerFooter"></div>
 <script>
     function showTab(tab){
       document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));

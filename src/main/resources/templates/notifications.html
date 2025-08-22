@@ -5,153 +5,35 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Thông báo của tôi</title>
     <style>
-        /* Reset / base */
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", Arial, sans-serif;
-            background: #ffffff;             /* White background as requested */
-            color: #2d3748;
-            line-height: 1.55;
-            padding: 20px;
-        }
-
-        /* Back button */
-        .back-button {
-            position: sticky;
-            top: 12px;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 10px 16px;
-            border-radius: 999px;
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            text-decoration: none;
-            color: #2d3748;
-            font-weight: 600;
-            margin-bottom: 16px;
-        }
-        .back-button:hover { background: #eef2f7; }
-
-        /* Shell */
-        .wrap { max-width: 920px; margin: 0 auto; }
-
-        /* Header */
-        .head {
-            border: 1px solid #e2e8f0;
-            border-radius: 16px;
-            padding: 20px;
-            background: #ffffff;
-            margin-bottom: 20px;
-        }
-        .head-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 16px;
-            flex-wrap: wrap;
-        }
-        .title {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #1a202c;
-        }
-        .badge {
-            min-width: 28px;
-            height: 28px;
-            padding: 0 8px;
-            border-radius: 999px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 0.9rem;
-            color: #721c24;
-            background: #f8d7da;
-            border: 1px solid #f1b0b7;
-        }
-
-        /* Actions */
-        .btn {
-            border: 1px solid #cbd5e0;
-            background: #2c3e50;
-            color: #fff;
-            padding: 10px 14px;
-            border-radius: 10px;
-            font-weight: 600;
-            cursor: pointer;
-        }
-        .btn:disabled { opacity: .6; cursor: default; }
-
-        /* List */
-        .list {
-            border: 1px solid #e2e8f0;
-            border-radius: 16px;
-            overflow: hidden;
-            background: #fff;
-        }
-        .item {
-            display: grid;
-            grid-template-columns: 1fr auto;
-            gap: 16px;
-            padding: 16px;
-            border-bottom: 1px solid #edf2f7;
-        }
-        .item:last-child { border-bottom: none; }
-
-        .item.unread {
-            background: #f7fafc;
-            border-left: 4px solid #a3bffa;
-            padding-left: 12px;
-        }
-
-        .meta {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 6px;
-            flex-wrap: wrap;
-        }
-        .time {
-            font-size: 0.9rem;
-            color: #4a5568;
-            background: #edf2f7;
-            padding: 3px 10px;
-            border-radius: 999px;
-        }
-        .type {
-            font-size: 0.8rem;
-            font-weight: 600;
-            color: #2a4365;
-            background: #ebf8ff;
-            padding: 3px 10px;
-            border-radius: 999px;
-            border: 1px solid #bee3f8;
-        }
-        .msg {
-            color: #1a202c;
-            font-size: 1.02rem;
-            word-wrap: break-word;
-        }
-
-        .empty {
-            text-align: center;
-            padding: 56px 12px;
-            color: #4a5568;
-        }
-        .empty h3 { font-size: 1.2rem; margin-bottom: 6px; color: #2d3748; }
-
-        @media (max-width: 640px) {
-            body { padding: 12px; }
-            .item { grid-template-columns: 1fr; }
-        }
+        *{box-sizing:border-box;margin:0;padding:0}
+        body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans",Arial,sans-serif;background:#fff;color:#2d3748;line-height:1.55;padding:20px}
+        .back-button{position:sticky;top:12px;display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:999px;background:#f8fafc;border:1px solid #e2e8f0;text-decoration:none;color:#2d3748;font-weight:600;margin-bottom:16px}
+        .back-button:hover{background:#eef2f7}
+        .wrap{max-width:920px;margin:0 auto}
+        .head{border:1px solid #e2e8f0;border-radius:16px;padding:20px;background:#fff;margin-bottom:20px}
+        .head-row{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+        .title{display:flex;align-items:center;gap:12px;font-size:1.5rem;font-weight:700;color:#1a202c}
+        .badge{min-width:28px;height:28px;padding:0 8px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:.9rem;color:#721c24;background:#f8d7da;border:1px solid #f1b0b7}
+        .btn{border:1px solid #cbd5e0;background:#2c3e50;color:#fff;padding:10px 14px;border-radius:10px;font-weight:600;cursor:pointer}
+        .btn:disabled{opacity:.6;cursor:default}
+        .list{border:1px solid #e2e8f0;border-radius:16px;overflow:hidden;background:#fff}
+        .item{display:grid;grid-template-columns:1fr auto;gap:16px;padding:16px;border-bottom:1px solid #edf2f7}
+        .item:last-child{border-bottom:none}
+        .item.unread{background:#f7fafc;border-left:4px solid #a3bffa;padding-left:12px}
+        .meta{display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap}
+        .time{font-size:.9rem;color:#4a5568;background:#edf2f7;padding:3px 10px;border-radius:999px}
+        .type{font-size:.8rem;font-weight:600;color:#2a4365;background:#ebf8ff;padding:3px 10px;border-radius:999px;border:1px solid #bee3f8}
+        .msg{color:#1a202c;font-size:1.02rem;word-wrap:break-word}
+        .empty{text-align:center;padding:56px 12px;color:#4a5568}
+        .empty h3{font-size:1.2rem;margin-bottom:6px;color:#2d3748}
+        /* pager */
+        .pager{margin:16px 0;display:flex;gap:10px;align-items:center;justify-content:center}
+        @media(max-width:640px){body{padding:12px}.item{grid-template-columns:1fr}}
     </style>
 </head>
 <body>
-
+<!-- Customer header -->
+<div th:replace="taskbar/customer-navbar :: customerNavbar"></div>
 <a th:href="@{/SWP}" class="back-button">← Trang chủ</a>
 
 <div class="wrap">
@@ -178,12 +60,12 @@
              th:classappend="${noti.read} ? '' : ' unread'">
             <div>
                 <div class="meta">
-          <span class="time"
-                th:text="${noti.createdAt != null} ?
-                         ${noti.createdAt.format(T(java.time.format.DateTimeFormatter).ofPattern('dd/MM/yyyy HH:mm'))}
-                         : ''">
-            01/01/2025 12:00
-          </span>
+            <span class="time"
+                  th:text="${noti.createdAt != null} ?
+                           ${noti.createdAt.format(T(java.time.format.DateTimeFormatter).ofPattern('dd/MM/yyyy HH:mm'))}
+                           : ''">
+              01/01/2025 12:00
+            </span>
                     <span class="type">Thông báo</span>
                 </div>
                 <div class="msg" th:text="${noti.message}">Nội dung thông báo…</div>
@@ -197,23 +79,73 @@
         </div>
     </div>
 
+    <!-- Pager (only when there are notifications) -->
+    <div id="notifPager" class="pager"
+         th:if="${notifications != null and !#lists.isEmpty(notifications)}">
+        <button type="button" id="npPrev" class="btn" aria-label="Trang trước">‹ Trước</button>
+        <span id="npInfo" style="min-width:80px;text-align:center;">1 / 1</span>
+        <button type="button" id="npNext" class="btn" aria-label="Trang sau">Sau ›</button>
+    </div>
+
     <!-- Empty state -->
     <div class="empty"
          th:if="${notifications == null or #lists.isEmpty(notifications)}">
-        <div style="font-size: 40px; margin-bottom: 10px;">🔔</div>
+        <div style="font-size:40px;margin-bottom:10px;">🔔</div>
         <h3>Không có thông báo nào</h3>
         <div>Bạn đã xem hết tất cả thông báo!</div>
     </div>
 </div>
 
+<!-- Customer footer -->
+<div th:replace="taskbar/customer-footer :: customerFooter"></div>
+
 <script>
-    // Small UX touch: disable submit button while posting
+    // Disable submit buttons briefly to avoid double post
     document.addEventListener('click', function (e) {
         const btn = e.target.closest('button[type="submit"]');
-        if (btn) {
-            setTimeout(()=> { btn.disabled = true; }, 0);
-        }
+        if (btn) { setTimeout(() => { btn.disabled = true; }, 0); }
     });
+
+    // Simple client-side pager
+    (function initNotifPager(){
+        const PAGE_SIZE = 10;                 // ← tweak page size
+        const list  = document.querySelector('.list');
+        const pager = document.getElementById('notifPager');
+        if (!list || !pager) return;
+
+        const items = Array.from(list.querySelectorAll('.item'));
+        const prev  = document.getElementById('npPrev');
+        const next  = document.getElementById('npNext');
+        const info  = document.getElementById('npInfo');
+
+        if (items.length <= PAGE_SIZE) {
+            pager.style.display = 'none';       // hide pager if not needed
+            return;
+        }
+
+        const url = new URL(window.location);
+        let current = Math.max(1, parseInt(url.searchParams.get('p') || '1', 10));
+        const total  = Math.max(1, Math.ceil(items.length / PAGE_SIZE));
+        if (current > total) current = total;
+
+        function render() {
+            items.forEach((row, idx) => {
+                const page = Math.floor(idx / PAGE_SIZE) + 1;
+                row.style.display = (page === current) ? '' : 'none';
+            });
+            info.textContent = `${current} / ${total}`;
+            prev.disabled = (current <= 1);
+            next.disabled = (current >= total);
+
+            url.searchParams.set('p', current);
+            history.replaceState(null, '', url.toString());
+        }
+
+        prev.addEventListener('click', () => { if (current > 1)   { current--; render(); }});
+        next.addEventListener('click', () => { if (current < total){ current++; render(); }});
+
+        render();
+    })();
 </script>
 </body>
 </html>
