@@ -37,11 +37,9 @@ public class Storage {
     private String description;
     private String imUrl;
 
-    private boolean status; // true: còn trống, false: đang bị thuê
-    private Double latitude;
-    private Double longitude;
+    private boolean status;
 
-    // private String imageUrl; // hoặc dùng List<StorageImage> nếu nhiều ảnh
+    // private String imageUrl;
     public Storage(Integer id) {
         this.storageid = id;
     }
