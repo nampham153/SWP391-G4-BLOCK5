@@ -130,6 +130,8 @@
     </style>
 </head>
 <body>
+<!-- Customer header -->
+<div th:replace="taskbar/customer-navbar :: customerNavbar"></div>
 <a href="javascript:history.back()" class="back-button">← Quay lại</a>
 
 <div class="shell">
@@ -261,7 +263,7 @@
                 </div>
 
                 <div th:if="${customer == null}" class="banner bad">
-                    Bạn cần <a th:href="@{/login}" style="text-decoration:underline">đăng nhập</a> để cập nhật.
+                    Bạn cần <a th:href="@{/api/login}" style="text-decoration:underline">đăng nhập</a> để cập nhật.
                 </div>
             </div>
         </div>
@@ -326,13 +328,14 @@
                 </div>
 
                 <div th:if="${customer == null}" class="banner bad">
-                    Bạn cần <a th:href="@{/login}" style="text-decoration:underline">đăng nhập</a> để đổi mật khẩu!
+                    Bạn cần <a th:href="@{/api/login}" style="text-decoration:underline">đăng nhập</a> để đổi mật khẩu!
                 </div>
             </div>
         </div>
     </section>
 </div>
-
+<!-- Customer footer -->
+<div th:replace="taskbar/customer-footer :: customerFooter"></div>
 <script>
     function showTab(tab){
       document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));

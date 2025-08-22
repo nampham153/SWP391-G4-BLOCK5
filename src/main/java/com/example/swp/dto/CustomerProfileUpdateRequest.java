@@ -5,10 +5,9 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
-
 @Getter
 @Setter
-public class ProfileUpdateRequest {
+public class CustomerProfileUpdateRequest {
     @NotBlank(message = "Họ tên không được để trống")
     @Size(max = 50, message = "Họ tên tối đa 50 ký tự")
     private String fullname;

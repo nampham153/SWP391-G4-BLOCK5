@@ -127,9 +127,9 @@
                                 Về danh sách đơn hàng
                             </a>
                             <!-- Nút hủy đơn chỉ hiển thị cho đơn hàng PENDING -->
-                            <form th:if="${order.status == 'PENDING'}" 
-                                  th:action="@{'/SWP/customers/cancel-order/' + ${order.id}}" 
-                                  method="post" 
+                            <form th:if="${order.status == 'PENDING'}"
+                                  th:action="@{'/SWP/customers/cancel-order/' + ${order.id}}"
+                                  method="post"
                                   style="display: inline;"
                                   onsubmit="return confirm('Bạn có chắc chắn muốn hủy đơn hàng này?')">
                                 <button type="submit" class="btn btn-danger">

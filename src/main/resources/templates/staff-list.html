@@ -37,27 +37,36 @@
             </div>
         </div>
         <!-- Filter Section -->
-        <div class="filter-section" style="margin:16px 0;">
-            <!-- Search + Clear in one row -->
-            <div class="filter-group search-row">
-                <input
-                        type="text"
-                        id="searchInput"
-                        placeholder="Tìm kiếm..."
-                        class="filter-input"
-                />
-                <button type="button" id="clearSearchBtn" class="btn-clear">Xóa</button>
+        <div class="filter-section">
+            <div class="filter-group">
+                <label for="searchInput">Tìm theo tên / email / SĐT/ role:</label>
+                <div class="search-container">
+                    <input type="text" id="searchInput" placeholder="Nhập từ khóa..." class="filter-select">
+                    <button type="button" id="searchBtn" class="btn-search">
+                        <i class="fas fa-search"></i> Tìm kiếm
+                    </button>
+                    <button type="button" id="clearBtn" class="btn-clear">
+                        <i class="fas fa-times"></i> Xóa
+                    </button>
+                </div>
             </div>
             <div class="filter-group">
                 <label>Sắp xếp theo tên:</label>
-                <div class="sort-container" style="display:flex; gap:8px; align-items:center;">
-                    <button type="button" id="sortAscBtn" class="btn-sort">A-Z</button>
-                    <button type="button" id="sortDescBtn" class="btn-sort">Z-A</button>
-                    <button type="button" id="sortResetBtn" class="btn-sort active">Mặc định</button>
+                <div class="sort-container">
+                    <button type="button" id="sortAscBtn" class="btn-sort">
+                        <i class="fas fa-sort-alpha-down"></i> A-Z
+                    </button>
+                    <button type="button" id="sortDescBtn" class="btn-sort">
+                        <i class="fas fa-sort-alpha-up"></i> Z-A
+                    </button>
+                    <button type="button" id="sortResetBtn" class="btn-sort active">
+                        <i class="fas fa-sort"></i> Mặc định
+                    </button>
                 </div>
             </div>
         </div>
-    <!-- Staff Table -->
+
+        <!-- Staff Table -->
     <div class="card">
         <div class="card-header">
             <div class="staff-count">
@@ -77,33 +86,38 @@
                     <th>Tên nhân viên</th>
                     <th>Email</th>
                     <th>SĐT</th>
-                    <th>CCCD</th>
                     <th>Role</th>
                     <th>Hành động</th>
                 </tr>
                 </thead>
                 <tbody>
                 <tr th:each="staff : ${staffs}">
+                    <td><span class="staff-name"  th:text="${staff.fullname}"></span></td>
+                    <td><span class="staff-email" th:text="${staff.email}"></span></td>
+                    <td><span class="staff-phone" th:text="${staff.phone}"></span></td>
                     <td>
-                        <span class="staff-name" th:text="${staff.fullname}"></span>
-                    </td>
-                    <td>
-                        <span class="staff-email" th:text="${staff.email}"></span>
-                    </td>
-                    <td>
-                        <span class="staff-phone" th:text="${staff.phone}"></span>
-                    </td>
-                    <td>
-                        <span class="staff-cccd" th:text="${staff.idCitizenCard}"></span>
-                    </td>
-                    <td>
-                        <span class="staff-role" th:text="${staff.roleName}"></span>
+  <span class="status-badge staff-role"
+        th:classappend="${#strings.toUpperCase(staff.roleName)} == 'BLOCKED' ? ' blocked' : ''"
+        th:text="${staff.roleName}">STAFF</span>
                     </td>
                     <td>
                         <div class="action-buttons">
+                            <!-- View -->
                             <a th:href="@{'/admin/staff-list/detail/' + ${staff.staffid}}" class="btn-icon" title="Xem chi tiết">
                                 <i class="fas fa-eye"></i>
                             </a>
+
+                            <!-- Toggle Block -->
+                            <form th:action="@{'/admin/staffs/' + ${staff.staffid} + '/toggle-block'}" method="post"
+                                  th:onsubmit="return confirm('Bạn có chắc chắn muốn ' + ( (${#strings.toUpperCase(staff.roleName)} == 'BLOCKED') ? 'mở khóa' : 'khóa') + ' nhân viên này?')"
+                                  style="display:inline;">
+                                <button type="submit" class="btn-icon"
+                                        th:title="${#strings.toUpperCase(staff.roleName)} == 'BLOCKED' ? 'Mở khóa' : 'Khóa'">
+                                    <i class="fas"
+                                       th:classappend="${#strings.toUpperCase(staff.roleName)} == 'BLOCKED' ? ' fa-lock-open' : ' fa-lock'"></i>
+                                </button>
+                            </form>
+
 
                         </div>
                     </td>
@@ -113,7 +127,7 @@
         </div>
 
 
-        <div class="pagination pagination-arrows">
+        <div id="serverPager" class="pagination pagination-arrows">
             <a class="pager-btn"
                th:classappend="${currentPage == 1} ? ' disabled'"
                th:href="@{/admin/staff-list(page=${currentPage - 1}, size=${size})}">
@@ -128,10 +142,16 @@
                 <i class="fas fa-chevron-right"></i>
             </a>
         </div>
+
+        <!-- shows only while searching -->
+        <div id="searchPagerNote" style="display:none; text-align:center; margin-top:10px; color:#6c757d;">
+            Đang lọc kết quả trên trang hiện tại. Điều hướng phân trang đã được tắt.
+        </div>
+
     </div>
     </div>
 </main>
-<script>
+<script th:inline="none">
     (function initStaffSorting(){
         const table = document.getElementById('staffTable');
         if (!table) return;
@@ -141,102 +161,119 @@
         const sortDescBtn  = document.getElementById('sortDescBtn');
         const sortResetBtn = document.getElementById('sortResetBtn');
 
-        // Mark original order so we can reset later
+        // mark original order
         Array.from(tbody.querySelectorAll('tr')).forEach((row, i) => {
             row.dataset.origIndex = String(i);
         });
 
         function setActive(btn){
             [sortAscBtn, sortDescBtn, sortResetBtn].forEach(b => b && b.classList.remove('active'));
-            btn && btn.classList.add('active');
+            if (btn) btn.classList.add('active');
         }
 
         function sortRows(order) {
             const rows = Array.from(tbody.querySelectorAll('tr'));
-
             rows.sort((a, b) => {
                 if (order === 'none') {
                     return Number(a.dataset.origIndex) - Number(b.dataset.origIndex);
                 }
-                const aName = (a.querySelector('.staff-name')?.textContent || '').trim().toLowerCase();
-                const bName = (b.querySelector('.staff-name')?.textContent || '').trim().toLowerCase();
-
+                const aName = ((a.querySelector('.staff-name') || {}).textContent || '').trim().toLowerCase();
+                const bName = ((b.querySelector('.staff-name') || {}).textContent || '').trim().toLowerCase();
                 const cmp = aName.localeCompare(bName, 'vi', { sensitivity: 'base' });
-                return order === 'asc' ? cmp : -cmp; // 'desc'
+                return order === 'asc' ? cmp : -cmp;
             });
-
-            // Re-append in new order (keeps any row.style.display set by your search)
             rows.forEach(r => tbody.appendChild(r));
         }
 
-        // Hook buttons
-        sortAscBtn  && sortAscBtn.addEventListener('click',  () => { sortRows('asc');  setActive(sortAscBtn);  });
-        sortDescBtn && sortDescBtn.addEventListener('click', () => { sortRows('desc'); setActive(sortDescBtn); });
-        sortResetBtn&& sortResetBtn.addEventListener('click', () => { sortRows('none'); setActive(sortResetBtn); });
+        // expose so clear can reset sort
+        window._staffSort = { sortRows, setActive, sortResetBtn };
+
+        if (sortAscBtn)   sortAscBtn.addEventListener('click',  () => { sortRows('asc');  setActive(sortAscBtn);  });
+        if (sortDescBtn)  sortDescBtn.addEventListener('click', () => { sortRows('desc'); setActive(sortDescBtn); });
+        if (sortResetBtn) sortResetBtn.addEventListener('click', () => { sortRows('none'); setActive(sortResetBtn); });
     })();
-    // Live search on current page (filters rows by multiple fields)
-    function attachStaffSearch() {
-        const input = document.getElementById('searchInput');
-        const clearBtn = document.getElementById('clearSearchBtn');
-        const table = document.getElementById('staffTable');
-        if (!input || !table) return;
 
-        const rows = Array.from(table.querySelectorAll('tbody tr'));
+    // helpers
+    function textLower(el){ return (el && el.textContent ? el.textContent : '').trim().toLowerCase(); }
 
-        input.addEventListener('input', function (e) {
-            const q = e.target.value.trim().toLowerCase();
-            rows.forEach(row => {
-                const name = row.querySelector('.staff-name')?.textContent.toLowerCase() || '';
-                const email = row.querySelector('.staff-email')?.textContent.toLowerCase() || '';
-                const phone = row.querySelector('.staff-phone')?.textContent.toLowerCase() || '';
-                const cccd = row.querySelector('.staff-cccd')?.textContent.toLowerCase() || '';
-                const role = row.querySelector('.staff-role')?.textContent.toLowerCase() || '';
-                const match = !q || name.includes(q) || email.includes(q) || phone.includes(q) || cccd.includes(q) || role.includes(q);
-                row.style.display = match ? '' : 'none';
-            });
-        });
+    function updatePagerVisibility() {
+        const searching = (document.getElementById('searchInput')?.value || '').trim().length > 0;
+        const serverPager = document.getElementById('serverPager');
+        const note = document.getElementById('searchPagerNote');
 
-        clearBtn?.addEventListener('click', () => {
-            input.value = '';
-            input.dispatchEvent(new Event('input'));
-            input.focus();
-        });
+        if (serverPager) serverPager.style.display = searching ? 'none' : '';
+        if (note) note.style.display = searching ? '' : 'none';
     }
 
-    // Export to Excel (only visible rows)
+    // call this whenever search text changes or you clear it
+    function performStaffSearch() {
+        const q = (document.getElementById('searchInput')?.value || '').trim().toLowerCase();
+        const rows = Array.from(document.querySelectorAll('#staffTable tbody tr'));
+        rows.forEach(row => {
+            const name  = row.querySelector('.staff-name') ?.textContent.toLowerCase() || '';
+            const email = row.querySelector('.staff-email')?.textContent.toLowerCase() || '';
+            const phone = row.querySelector('.staff-phone')?.textContent.toLowerCase() || '';
+
+            const role  = row.querySelector('.staff-role') ?.textContent.toLowerCase() || '';
+            const match = !q || name.includes(q) || email.includes(q) || phone.includes(q) || role.includes(q);
+            row.style.display = match ? '' : 'none';
+        });
+        updatePagerVisibility();
+    }
+
+    function clearStaffSearch() {
+        const input = document.getElementById('searchInput');
+        if (input) input.value = '';
+        performStaffSearch();                      // shows all rows again
+        if (window._staffSort) {                   // reset sorting UI + order if you exposed it earlier
+            window._staffSort.sortRows('none');
+            window._staffSort.setActive(window._staffSort.sortResetBtn);
+        }
+        input?.focus();
+    }
+
+    // Export to Excel (visible rows only)
+    function cellText(row, sel){
+        const el = row.querySelector(sel);
+        return el ? el.textContent.trim() : '';
+    }
     function exportStaffExcel() {
         const table = document.querySelector('.data-table');
-        const visibleRows = Array.from(table.querySelectorAll('tbody tr')).filter(row => row.style.display !== 'none');
-
-        const data = [];
-        data.push(['Tên nhân viên', 'Email', 'SĐT', 'CCCD', 'Role']);
-
+        const visibleRows = Array.from(table.querySelectorAll('tbody tr')).filter(r => r.style.display !== 'none');
+        const data = [['Tên nhân viên','Email','SĐT','Role']];
         visibleRows.forEach(row => {
-            const rowData = [
-                row.querySelector('.staff-name')?.textContent.trim() || '',
-                row.querySelector('.staff-email')?.textContent.trim() || '',
-                row.querySelector('.staff-phone')?.textContent.trim() || '',
-                row.querySelector('.staff-cccd')?.textContent.trim() || '',
-                row.querySelector('.staff-role')?.textContent.trim() || ''
-            ];
-            data.push(rowData);
-        });
+            data.push([
+                cellText(row, '.staff-name'),
+                cellText(row, '.staff-email'),
+                cellText(row, '.staff-phone'),
 
+                cellText(row, '.staff-role')
+            ]);
+        });
         const ws = XLSX.utils.aoa_to_sheet(data);
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, 'Nhân viên');
-
-        const fileName = 'danh_sach_nhan_vien_' + new Date().toISOString().slice(0, 10) + '.xlsx';
-        XLSX.writeFile(wb, fileName);
+        XLSX.writeFile(wb, 'danh_sach_nhan_vien_' + new Date().toISOString().slice(0,10) + '.xlsx');
     }
-
-    // Expose export function to the global scope (called by onclick in HTML)
     window.exportStaffExcel = exportStaffExcel;
 
-    // Init
-    window.addEventListener('DOMContentLoaded', attachStaffSearch);
+    // wire up
+    window.addEventListener('DOMContentLoaded', () => {
+        const searchBtn = document.getElementById('searchBtn');
+        const clearBtn  = document.getElementById('clearBtn');
+        const input     = document.getElementById('searchInput');
+
+        if (input) {
+            input.addEventListener('input', performStaffSearch);
+            input.addEventListener('keypress', e => { if (e.key === 'Enter') performStaffSearch(); });
+        }
+        if (searchBtn) searchBtn.addEventListener('click', performStaffSearch);
+        if (clearBtn)  clearBtn.addEventListener('click', clearStaffSearch);
+    });
 
 </script>
+
+
 
 </body>
 </html>
