@@ -3,13 +3,394 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Storage List - Staff Manager</title>
+    <title>Kho của tôi - Staff Dashboard</title>
     <link rel="stylesheet" th:href="@{/css/staff-dashboard.css}">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Custom styles for enhanced storage detail page */
+        .page-content {
+            padding: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .page-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 16px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .page-header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(180deg); }
+        }
+
+        .page-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .page-subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+        }
+
+        .page-actions {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            z-index: 1;
+        }
+
+        .btn-back {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-back:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .storage-grid {
+            display: grid;
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        .storage-card {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .storage-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Ensure no clickable elements in storage card */
+        .storage-card {
+            pointer-events: none;
+            cursor: default;
+        }
+
+        .storage-card .btn,
+        .storage-card form {
+            pointer-events: auto;
+        }
+
+        .storage-card *:not(.btn):not(form):not(button) {
+            cursor: default !important;
+            pointer-events: none;
+        }
+
+        .storage-card .btn,
+        .storage-card form,
+        .storage-card button {
+            pointer-events: auto;
+            cursor: pointer;
+        }
+
+        .storage-header {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            padding: 25px 30px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .storage-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 5px;
+        }
+
+        .storage-subtitle {
+            color: #64748b;
+            font-size: 0.95rem;
+        }
+
+        .storage-content {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 30px;
+            padding: 30px;
+        }
+
+        .storage-image-container {
+            position: relative;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .storage-image {
+            width: 100%;
+            height: 280px;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+            pointer-events: none;
+            cursor: default;
+        }
+
+        .storage-card:hover .storage-image {
+            transform: scale(1.05);
+        }
+
+
+
+        .storage-details {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .detail-item {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            transition: all 0.3s ease;
+        }
+
+        .detail-item:hover {
+            background: #f1f5f9;
+            border-color: #cbd5e1;
+            transform: translateY(-2px);
+        }
+
+        .detail-item.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .detail-label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .detail-value {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-badge.active {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        }
+
+        .status-badge.warning {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+        }
+
+        .storage-actions {
+            grid-column: 1 / -1;
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            font-size: 0.95rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(100, 116, 139, 0.3);
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(100, 116, 139, 0.4);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 30px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .empty-icon {
+            font-size: 4rem;
+            color: #cbd5e1;
+            margin-bottom: 20px;
+        }
+
+        .empty-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #64748b;
+            margin-bottom: 10px;
+        }
+
+        .empty-description {
+            color: #94a3b8;
+            font-size: 1.1rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .storage-content {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .storage-image-container {
+                max-width: 400px;
+                margin: 0 auto;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .page-content {
+                padding: 20px;
+            }
+            
+            .page-header {
+                padding: 20px;
+                text-align: center;
+            }
+            
+            .page-actions {
+                position: static;
+                margin-top: 20px;
+            }
+            
+            .storage-details {
+                grid-template-columns: 1fr;
+            }
+            
+            .storage-actions {
+                flex-direction: column;
+            }
+            
+            .page-title {
+                font-size: 2rem;
+            }
+        }
+
+        /* Animation for cards */
+        .storage-card {
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Loading animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
 </head>
 <body>
 <!-- Sidebar -->
 <div th:replace="taskbar/staff-taskbar :: staffTaskbar"></div>
+
 <main class="main-content">
     <!-- Header -->
     <header class="header">
@@ -20,14 +401,16 @@
             <h1>Kho của tôi</h1>
         </div>
     </header>
+
     <!-- Page Content -->
     <div class="page-content">
         <!-- Page Header -->
         <div class="page-header">
             <h2 class="page-title">Thông tin kho được giao</h2>
+            <p class="page-subtitle">Quản lý và theo dõi các kho bãi được phân công</p>
             <div class="page-actions">
-                <button class="btn-secondary btn-back">
-                    <a href="/SWP/staff/staff-dashboard" style="color: inherit; text-decoration: none;">
+                <button class="btn-back">
+                    <a href="/staff/staff-dashboard" style="color: inherit; text-decoration: none;">
                         <i class="fas fa-arrow-left"></i>
                         Quay Lại Dashboard
                     </a>
@@ -36,58 +419,86 @@
         </div>
         
         <!-- Storage Detail Cards -->
-        <div class="card" th:if="${#lists.isEmpty(storages)}">
-            <div class="card-header"><h3>Kho của bạn</h3></div>
-            <div style="padding:20px; color:#64748b;">Hiện chưa có kho nào được gán cho bạn.</div>
-        </div>
-
-        <div th:each="storage : ${storages}" class="card">
-            <div class="card-header">
-                <h3 th:text="'Kho #' + ${storage.storageid} + ' - ' + ${storage.storagename}">Kho</h3>
-            </div>
-            <div style="display:grid; grid-template-columns: 320px 1fr; gap:20px; padding: 20px; align-items:start;">
-                <div>
-                    <img th:src="${storage.imUrl} ?: '/images/default-storage.jpg'" alt="Storage image"
-                         style="width:100%; height:220px; object-fit:cover; border-radius:12px;"/>
+        <div class="storage-grid">
+            <!-- Empty State -->
+            <div class="empty-state" th:if="${#lists.isEmpty(storages)}">
+                <div class="empty-icon">
+                    <i class="fas fa-warehouse"></i>
                 </div>
-                <div class="detail-grid" style="display:grid; grid-template-columns: 1fr 1fr; gap:14px;">
-                    <div class="detail-row"><span class="detail-label">Trạng thái</span>
-                        <span class="detail-value">
-                            <span th:class="${storage.status} ? 'status-badge active' : 'status-badge warning'"
-                                  th:text="${storage.status} ? 'Còn trống' : 'Đã thuê'"></span>
-                        </span>
-                    </div>
-                    <div class="detail-row"><span class="detail-label">Giá/ngày</span>
-                        <span class="detail-value" th:text="${#numbers.formatDecimal(storage.pricePerDay, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'"></span>
-                    </div>
-                    <div class="detail-row"><span class="detail-label">Diện tích</span>
-                        <span class="detail-value" th:text="${storage.area} + ' m²'"></span>
-                    </div>
-                    <div class="detail-row"><span class="detail-label">Tọa độ</span>
-                        <span class="detail-value" th:text="(${storage.latitude} != null ? ${storage.latitude} : 'N/A') + ', ' + (${storage.longitude} != null ? ${storage.longitude} : 'N/A')"></span>
-                    </div>
-                    <div class="detail-row" style="grid-column:1 / -1;"><span class="detail-label">Địa chỉ</span>
-                        <span class="detail-value" th:text="${storage.address} + ', ' + ${storage.state} + ', ' + ${storage.city}"></span>
-                    </div>
-                    <div class="detail-row" style="grid-column:1 / -1;"><span class="detail-label">Mô tả</span>
-                        <span class="detail-value" th:text="${storage.description}"></span>
-                    </div>
-                    <div class="detail-row" style="grid-column:1 / -1; display:flex; gap:8px;">
-                        <a th:href="@{'/SWP/staff/storages/' + ${storage.getStorageid()} + '/detail'}" class="btn-primary" style="text-decoration:none; padding:10px 14px; border-radius:8px; color:#fff; display:inline-flex; align-items:center; gap:8px;">
-                            <i class="fas fa-eye"></i> Xem chi tiết
-                        </a>
-                        <form th:action="@{'/SWP/staff/storages/' + ${storage.getStorageid()} + '/toggle-status'}" method="post" style="display:inline;">
-                            <input type="hidden" name="returnUrl" value="/SWP/staff/staff-all-storage"/>
-                            <button type="submit" class="btn-secondary" style="padding:10px 14px; border-radius:8px; display:inline-flex; align-items:center; gap:8px;">
-                                <i class="fas fa-exchange-alt"></i> Chuyển trạng thái
-                            </button>
-                        </form>
-                        <form th:if="${storage.status}" th:action="@{'/SWP/staff/storages/' + ${storage.getStorageid()} + '/delete'}" method="post" style="display:inline;" onsubmit="return confirm('Bạn có chắc là xóa kho này không?');">
-                            <input type="hidden" name="returnUrl" value="/SWP/staff/staff-all-storage"/>
-                            <button type="submit" class="btn-danger" style="padding:10px 14px; border-radius:8px; color:#fff; background:#ef4444; display:inline-flex; align-items:center; gap:8px;">
-                                <i class="fas fa-trash"></i> Xóa kho
-                            </button>
-                        </form>
+                <h3 class="empty-title">Chưa có kho nào được gán</h3>
+                <p class="empty-description">Hiện tại bạn chưa được phân công quản lý kho bãi nào. Vui lòng liên hệ quản lý để được phân công.</p>
+            </div>
+
+            <!-- Storage Cards -->
+            <div th:each="storage : ${storages}" class="storage-card">
+                <div class="storage-header">
+                    <h3 class="storage-title" th:text="'Kho #' + ${storage.storageid} + ' - ' + ${storage.storagename}">Kho</h3>
+                    <p class="storage-subtitle">Kho bãi được phân công quản lý</p>
+                </div>
+                
+                <div class="storage-content">
+                                         <div class="storage-image-container">
+                         <img th:src="${storage.imUrl} ?: '/images/default-storage.jpg'" 
+                              alt="Storage image" 
+                              class="storage-image"/>
+                     </div>
+                    
+                    <div class="storage-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Trạng thái</span>
+                            <div class="detail-value">
+                                <span th:class="${storage.status} ? 'status-badge active' : 'status-badge warning'"
+                                      th:text="${storage.status} ? 'CÒN TRỐNG' : 'ĐÃ THUÊ'"></span>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-item">
+                            <span class="detail-label">Giá thuê/ngày</span>
+                            <div class="detail-value" th:text="${#numbers.formatDecimal(storage.pricePerDay, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'">0 VNĐ</div>
+                        </div>
+                        
+                                                 <div class="detail-item">
+                             <span class="detail-label">Diện tích tổng</span>
+                             <div class="detail-value" th:text="${#numbers.formatDecimal(storage.area, 1, 'COMMA', 1, 'POINT')} + ' m²'">0 m²</div>
+                         </div>
+                         
+                         <div class="detail-item">
+                             <span class="detail-label">Diện tích đã thuê</span>
+                             <div class="detail-value" th:with="rentedArea=${#vars['rentedArea_' + storage.storageid]}, availableArea=${#vars['availableArea_' + storage.storageid]}" 
+                                  th:text="${#numbers.formatDecimal(rentedArea != null ? rentedArea : 0, 1, 'COMMA', 1, 'POINT')} + ' m²'">0 m²</div>
+                         </div>
+                         
+                         <div class="detail-item">
+                             <span class="detail-label">Diện tích còn lại</span>
+                             <div class="detail-value" th:with="rentedArea=${#vars['rentedArea_' + storage.storageid]}, availableArea=${#vars['availableArea_' + storage.storageid]}" 
+                                  th:text="${#numbers.formatDecimal(availableArea != null ? availableArea : storage.area, 1, 'COMMA', 1, 'POINT')} + ' m²'">0 m²</div>
+                         </div>
+                         
+                         <div class="detail-item">
+                             <span class="detail-label">Tọa độ</span>
+                             <div class="detail-value" th:text="(${storage.latitude} != null ? ${storage.latitude} : 'N/A') + ', ' + (${storage.longitude} != null ? ${storage.longitude} : 'N/A')">N/A, N/A</div>
+                         </div>
+                        
+                        <div class="detail-item full-width">
+                            <span class="detail-label">Địa chỉ</span>
+                            <div class="detail-value" th:text="${storage.address} + ', ' + ${storage.state} + ', ' + ${storage.city}">Địa chỉ</div>
+                        </div>
+                        
+                        <div class="detail-item full-width">
+                            <span class="detail-label">Mô tả</span>
+                            <div class="detail-value" th:text="${storage.description}">Mô tả kho bãi</div>
+                        </div>
+                        
+                                                 <div class="storage-actions">
+                             <form th:action="@{'/staff/storages/' + ${storage.getStorageid()} + '/toggle-status'}" 
+                                   method="post" style="display: inline;">
+                                 <input type="hidden" name="returnUrl" value="/staff/staff-all-storage"/>
+                                 <button type="submit" class="btn btn-secondary">
+                                     <i class="fas fa-exchange-alt"></i>
+                                     Chuyển trạng thái
+                                 </button>
+                             </form>
+                         </div>
                     </div>
                 </div>
             </div>
@@ -96,154 +507,103 @@
 </main>
 
 <script>
-    const COLUMN_COUNT = 7;
-    const rowsPerPage = 10;
-    let currentPage = 1;
-
-    document.addEventListener('DOMContentLoaded', function () {
-        // Gán sự kiện lọc, sắp xếp
-        document.getElementById('statusFilter').addEventListener('change', applyFiltersAndPaginate);
-        document.getElementById('areaFilter').addEventListener('change', applyFiltersAndPaginate);
-        document.getElementById('priceFilter').addEventListener('change', applyFiltersAndPaginate);
-        document.getElementById('sortSelect').addEventListener('change', applyFiltersAndPaginate);
-
-        // Gọi lần đầu
-        applyFiltersAndPaginate();
-    });
-
-    function applyFiltersAndPaginate() {
-        const status = document.getElementById('statusFilter').value;
-        const area = document.getElementById('areaFilter').value;
-        const price = document.getElementById('priceFilter').value;
-        const sort = document.getElementById('sortSelect').value;
-
-        const rows = Array.from(document.querySelectorAll('.data-table tbody tr'));
-        let visibleRows = [];
-
-        rows.forEach(row => {
-            const statusText = row.querySelector('.status-badge')?.textContent.trim().toLowerCase() || '';
-            const areaValue = parseFloat(row.children[3].textContent.replace(/[^\d.]/g, '')) || 0;
-            const priceValue = parseFloat(row.children[4].textContent.replace(/[^\d.]/g, '')) || 0;
-
-            let show = true;
-
-            if (status === 'available' && !statusText.includes('còn trống')) show = false;
-            if (status === 'occupied' && !statusText.includes('đã thuê')) show = false;
-
-            if (area === 'small' && !(areaValue < 200)) show = false;
-            if (area === 'medium' && !(areaValue >= 200 && areaValue <= 800)) show = false;
-            if (area === 'large' && !(areaValue > 800)) show = false;
-
-            if (price === 'low' && !(priceValue < 150000)) show = false;
-            if (price === 'medium' && !(priceValue >= 150000 && priceValue <= 300000)) show = false;
-            if (price === 'high' && !(priceValue > 300000)) show = false;
-
-            row.style.display = show ? '' : 'none';
-            row.dataset.filtered = show ? 'true' : 'false';
-
-            if (show) visibleRows.push(row);
-        });
-
-        // Sắp xếp
-        if (sort) {
-            visibleRows.sort((a, b) => {
-                const areaA = parseFloat(a.children[3].textContent.replace(/[^\d.]/g, '')) || 0;
-                const areaB = parseFloat(b.children[3].textContent.replace(/[^\d.]/g, '')) || 0;
-                const priceA = parseFloat(a.children[4].textContent.replace(/[^\d.]/g, '')) || 0;
-                const priceB = parseFloat(b.children[4].textContent.replace(/[^\d.]/g, '')) || 0;
-
-                switch (sort) {
-                    case 'priceAsc': return priceA - priceB;
-                    case 'priceDesc': return priceB - priceA;
-                    case 'areaAsc': return areaA - areaB;
-                    case 'areaDesc': return areaB - areaA;
-                    default: return 0;
+    // Enhanced JavaScript with smooth animations and interactions
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add loading states to buttons
+        const buttons = document.querySelectorAll('.btn');
+        buttons.forEach(button => {
+            button.addEventListener('click', function() {
+                if (!this.classList.contains('btn-back')) {
+                    const originalContent = this.innerHTML;
+                    this.innerHTML = '<span class="loading"></span> Đang xử lý...';
+                    this.disabled = true;
+                    
+                    // Re-enable after a delay (for demo purposes)
+                    setTimeout(() => {
+                        this.innerHTML = originalContent;
+                        this.disabled = false;
+                    }, 2000);
                 }
             });
-
-            // Re-append to tbody
-            const tbody = document.querySelector('.data-table tbody');
-            visibleRows.forEach(row => tbody.appendChild(row));
-        }
-
-        currentPage = 1;
-        const totalPages = Math.max(1, Math.ceil(visibleRows.length / rowsPerPage));
-        renderPagination(totalPages);
-        showPage(currentPage);
-        document.getElementById('totalCount').textContent = visibleRows.length;
-    }
-
-    function showPage(page) {
-        const rows = Array.from(document.querySelectorAll('.data-table tbody tr'))
-            .filter(row => row.dataset.filtered === 'true');
-
-        const totalPages = Math.max(1, Math.ceil(rows.length / rowsPerPage));
-        currentPage = Math.min(Math.max(1, page), totalPages);
-
-        rows.forEach((row, index) => {
-            row.style.display = (index >= (currentPage - 1) * rowsPerPage && index < currentPage * rowsPerPage)
-                ? '' : 'none';
         });
 
-        highlightCurrentPage();
-    }
-
-    function renderPagination(totalPages) {
-        const pagination = document.querySelector('.pagination');
-        pagination.innerHTML = '';
-
-        const prevBtn = document.createElement('button');
-        prevBtn.innerHTML = '<i class="fas fa-chevron-left"></i>';
-        prevBtn.disabled = currentPage === 1;
-        prevBtn.addEventListener('click', () => {
-            if (currentPage > 1) {
-                currentPage--;
-                showPage(currentPage);
-            }
-        });
-        pagination.appendChild(prevBtn);
-
-        for (let i = 1; i <= totalPages; i++) {
-            const btn = document.createElement('button');
-            btn.textContent = i;
-            if (i === currentPage) btn.classList.add('active');
-            btn.addEventListener('click', () => {
-                currentPage = i;
-                showPage(currentPage);
+        // Add hover effects to storage cards
+        const storageCards = document.querySelectorAll('.storage-card');
+        storageCards.forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-8px) scale(1.02)';
             });
-            pagination.appendChild(btn);
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0) scale(1)';
+            });
+        });
+
+        // Smooth scroll to top when clicking back button
+        const backButton = document.querySelector('.btn-back');
+        if (backButton) {
+            backButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                const href = this.querySelector('a').getAttribute('href');
+                
+                // Add smooth scroll animation
+                document.body.style.scrollBehavior = 'smooth';
+                window.scrollTo(0, 0);
+                
+                // Navigate after animation
+                setTimeout(() => {
+                    window.location.href = href;
+                }, 300);
+            });
         }
 
-        const nextBtn = document.createElement('button');
-        nextBtn.innerHTML = '<i class="fas fa-chevron-right"></i>';
-        nextBtn.disabled = currentPage === totalPages;
-        nextBtn.addEventListener('click', () => {
-            if (currentPage < totalPages) {
-                currentPage++;
-                showPage(currentPage);
-            }
+        // Add confirmation for delete actions
+        const deleteButtons = document.querySelectorAll('.btn-danger');
+        deleteButtons.forEach(button => {
+            button.addEventListener('click', function(e) {
+                if (!confirm('Bạn có chắc muốn xóa kho này không? Hành động này không thể hoàn tác.')) {
+                    e.preventDefault();
+                }
+            });
         });
-        pagination.appendChild(nextBtn);
-    }
 
-    function highlightCurrentPage() {
-        const buttons = document.querySelectorAll('.pagination button');
-        buttons.forEach(btn => {
-            if (btn.textContent === String(currentPage)) {
-                btn.classList.add('active');
-            } else {
-                btn.classList.remove('active');
-            }
-        });
-    }
+        // Add success notification (you can customize this)
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 25px;
+                border-radius: 10px;
+                color: white;
+                font-weight: 600;
+                z-index: 10000;
+                transform: translateX(100%);
+                transition: transform 0.3s ease;
+                background: ${type === 'success' ? 'linear-gradient(135deg, #10b981, #059669)' : 'linear-gradient(135deg, #ef4444, #dc2626)'};
+            `;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            // Animate in
+            setTimeout(() => {
+                notification.style.transform = 'translateX(0)';
+            }, 100);
+            
+            // Remove after 3 seconds
+            setTimeout(() => {
+                notification.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 3000);
+        }
 
-    function clearFilters() {
-        document.getElementById('statusFilter').value = '';
-        document.getElementById('areaFilter').value = '';
-        document.getElementById('priceFilter').value = '';
-        document.getElementById('sortSelect').value = '';
-        applyFiltersAndPaginate();
-    }
+        // Example usage of notification
+        // showNotification('Thao tác thành công!', 'success');
+    });
 </script>
 </body>
 </html>

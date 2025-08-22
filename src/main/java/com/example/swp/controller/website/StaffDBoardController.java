@@ -161,6 +161,16 @@ public class StaffDBoardController {
         if (loggedInStaffObj instanceof Staff) {
             int staffId = ((Staff) loggedInStaffObj).getStaffid();
             storages = storageService.findByStaffId(staffId);
+            
+            // Tính toán diện tích đã thuê cho mỗi storage
+            for (Storage storage : storages) {
+                double rentedArea = orderService.getTotalRentedArea(storage.getStorageid());
+                double availableArea = Math.max(0, storage.getArea() - rentedArea);
+                
+                // Thêm thông tin diện tích vào model
+                model.addAttribute("rentedArea_" + storage.getStorageid(), rentedArea);
+                model.addAttribute("availableArea_" + storage.getStorageid(), availableArea);
+            }
         } else {
             storages = List.of();
         }
