@@ -23,6 +23,7 @@ public interface StorageService {
     void save(Storage storage);
 
     void deleteStorageById(int id);
+    void toggleStatusById(int id);
     List<Storage> findAvailableStorages(
             LocalDate startDate,
             LocalDate endDate,

@@ -13,7 +13,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.example.swp.dto.OrderRequest;
-import com.example.swp.dto.StorageRequest;
 import com.example.swp.entity.Customer;
 import com.example.swp.entity.Order;
 import com.example.swp.entity.Storage;
@@ -28,18 +27,6 @@ import com.example.swp.service.StorageService;
 import com.example.swp.service.StorageTransactionService;
 
 import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
 
 @Component
 public class OrderServiceimpl implements OrderService {
@@ -47,8 +34,6 @@ public class OrderServiceimpl implements OrderService {
     private OrderRepository orderRepository;
     @Autowired
     private StorageRepository storageReponsitory;
-    @Autowired
-    private StorageRequest storageRequest;
     @Autowired
     private CustomerRepository customerRepository;
     @Autowired
@@ -113,10 +98,9 @@ public class OrderServiceimpl implements OrderService {
         order.setStartDate(orderRequest.getStartDate());
         order.setEndDate(orderRequest.getEndDate());
         order.setOrderDate(orderRequest.getOrderDate());
-        rentalDays = ChronoUnit.DAYS.between(orderRequest.getStartDate(), orderRequest.getEndDate());
         // Tính tổng tiền thuê
-         dailyRate =storage.getPricePerDay(); // hoặc giá cố định
-         totalAmount = rentalDays * dailyRate;
+        dailyRate = storage.getPricePerDay(); // hoặc giá cố định
+        totalAmount = rentalDays * dailyRate;
         order.setTotalAmount(totalAmount);
         order.setStatus(orderRequest.getStatus().toUpperCase());
         order.setCustomer(customer);
@@ -135,7 +119,6 @@ public class OrderServiceimpl implements OrderService {
         // -----------------------------------------
 
         return savedOrder;
-
 
 
     }
@@ -199,13 +182,15 @@ public class OrderServiceimpl implements OrderService {
 //        long days = ChronoUnit.DAYS.between(startDate, endDate);
 //        if (days <= 0) {
 //            throw new IllegalArgumentException("Ngày kết thúc phải sau ngày bắt đầu");
+//
+//
 //        }
-//        return pricePerDay.multiply(BigDecimal.valueOf(days));
 //
 //
 //    }
 
     @Transactional
+    @Override
     public void markOrderAsPaid(int orderId) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy Order với ID: " + orderId));
@@ -222,7 +207,16 @@ public class OrderServiceimpl implements OrderService {
 
         orderRepository.updateOrderStatusToPaid(orderId);
         Storage storage = order.getStorage();
-        storage.setStatus(false); // Đang được thuê
+        // Trừ diện tích đã thuê khỏi tổng diện tích kho (không để âm)
+        double rentedArea = order.getRentalArea() > 0 ? order.getRentalArea() : 0.0;
+        double newArea = Math.max(0.0, storage.getArea() - rentedArea);
+        storage.setArea(newArea);
+        // Nếu diện tích còn lại = 0 thì đánh dấu kho đã thuê hết
+        if (newArea == 0.0) {
+            storage.setStatus(false); // đã thuê hết
+        } else {
+            storage.setStatus(true);  // vẫn còn trống
+        }
         storageReponsitory.save(storage); // lưu lại thay đổi
 
         // Tạo StorageTransaction khi đơn hàng được đánh dấu là PAID
@@ -351,6 +345,7 @@ public class OrderServiceimpl implements OrderService {
         }
         return Math.max(0, totalArea - maxUsed);
     }
+    @Override
     public Optional<Order> findOrderByCustomerAndStorage(int customerId, int storageId) {
         return orderRepository.findByCustomer_IdAndStorage_Storageid(customerId, storageId);
     }

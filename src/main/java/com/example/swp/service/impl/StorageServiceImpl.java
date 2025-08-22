@@ -58,7 +58,9 @@ public class StorageServiceImpl implements StorageService {
         storage.setArea(storageRequest.getArea());
         storage.setPricePerDay(storageRequest.getPricePerDay());
         storage.setDescription(storageRequest.getDescription());
-        storage.setStatus(storageRequest.isStatus());
+        if (storageRequest.getStatus() != null) {
+            storage.setStatus(storageRequest.getStatus());
+        }
 
         if (storageRequest.getStaffid() != null) {
             Optional<Staff> staffOpt = staffRepository.findById(storageRequest.getStaffid());
@@ -69,9 +71,6 @@ public class StorageServiceImpl implements StorageService {
             storage.setImUrl(storageRequest.getImUrl());
         }
 
-        // Tạm thời set coordinates mặc định
-        storage.setLatitude(10.762622); // Tọa độ TP.HCM
-        storage.setLongitude(106.660172);
 
         return storageRepository.save(storage);
     }
@@ -87,7 +86,9 @@ public class StorageServiceImpl implements StorageService {
         storage.setAddress(storageRequest.getAddress());
         storage.setCity(storageRequest.getCity());
         storage.setState(storageRequest.getState());
-        storage.setStatus(storageRequest.isStatus());
+        if (storageRequest.getStatus() != null) {
+            storage.setStatus(storageRequest.getStatus());
+        }
         storage.setArea(storageRequest.getArea());
         storage.setPricePerDay(storageRequest.getPricePerDay());
         storage.setDescription(storageRequest.getDescription());
@@ -112,6 +113,11 @@ public class StorageServiceImpl implements StorageService {
     @Override
     public void deleteStorageById(int id) {
         storageRepository.deleteById(id);
+    }
+
+    @Override
+    public void toggleStatusById(int id) {
+        storageRepository.toggleStatusById(id);
     }
 
     @Override

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chỉnh sửa kho</title>
+    <link rel="stylesheet" href="/css/staff-dashboard.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .edit-wrapper { max-width: 960px; margin: 24px auto; padding: 24px; background: #fff; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,.08); }
+        .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .title { font-size: 1.4rem; font-weight: 700; color: #1e293b; }
+        .form-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+        .field { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; }
+        .label { display:block; font-weight: 600; color:#334155; margin-bottom:6px; font-size:.9rem; }
+        .input, .textarea { width:100%; border:1px solid #cbd5e1; border-radius:8px; padding:10px 12px; background:#fff; }
+        .textarea { min-height: 96px; resize: vertical; }
+        .row-3 { display:grid; grid-template-columns: 2fr 1fr 1fr; gap: 12px; }
+        .actions { display:flex; gap:12px; margin-top: 8px; }
+        .btn { display:inline-flex; align-items:center; gap:8px; padding:10px 16px; border:none; border-radius:10px; cursor:pointer; font-weight:600; }
+        .btn-primary { background: linear-gradient(135deg,#667eea,#764ba2); color:#fff; }
+        .btn-secondary { background:#e2e8f0; color:#0f172a; }
+        .hint { color:#64748b; font-size:.85rem; margin-top:6px; }
+        /* Manager taskbar overrides to match detail page */
+        .sidebar .logo i { color: #fff !important; }
+        .sidebar .menu-item a { gap: 0 !important; }
+        .sidebar .menu-item i { margin-right: 12px !important; }
+    </style>
+    <script>
+        function goBackDetail(id){ window.location.href = '/admin/manager-dashboard/storages/' + id; }
+    </script>
+</head>
+<body>
+<div th:replace="taskbar/manager-taskbar :: managerTaskbar"></div>
+<main class="main-content">
+    <header class="header">
+        <div class="header-left">
+            <button class="sidebar-toggle">
+                <i class="fas fa-bars"></i>
+            </button>
+            <h1>Manager Storage Detail</h1>
+        </div>
+        <div class="header-right">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Search storage units, items...">
+            </div>
+        </div>
+    </header>
+
+    <div class="page-content">
+        <div class="page-header">
+            <a th:href="@{'/admin/manager-all-storage'}" class="btn-back">
+                <i class="fas fa-arrow-left"></i>
+                Quay lại danh sách kho
+            </a>
+            <h1 class="page-title">Edit Storage</h1>
+            <p class="page-subtitle">Update storage unit information</p>
+        </div>
+
+        <div class="edit-wrapper">
+        <div class="header-row">
+            <div class="title">Chỉnh sửa kho <span th:text="${storage.storageid}">#</span></div>
+            <button type="button" class="btn btn-secondary" th:onclick="|goBackDetail(${storage.storageid})|"><i class="fas fa-arrow-left"></i> Quay lại</button>
+        </div>
+
+        <form th:action="@{'/admin/manager-dashboard/storages/' + ${storage.storageid}}" th:object="${storage}" method="post">
+            <input type="hidden" name="returnUrl" value="/admin/manager-dashboard/storages/" />
+            <input type="hidden" th:field="*{status}" />
+            <div class="form-grid">
+                <div class="field">
+                    <label class="label">Tên kho</label>
+                    <input class="input" type="text" th:field="*{storagename}" required>
+                </div>
+
+                <div class="field">
+                    <label class="label">Địa chỉ</label>
+                    <div class="row-3">
+                        <input class="input" type="text" th:field="*{address}" placeholder="Số nhà, đường" required>
+                        <input class="input" type="text" th:field="*{state}" placeholder="Tỉnh/Thành" required>
+                        <input class="input" type="text" th:field="*{city}" placeholder="Quận/Huyện/TP" required>
+                    </div>
+                    <div class="hint">Ví dụ: 123 Hoàng Quốc Việt • Hà Nội • Cầu Giấy</div>
+                </div>
+
+                <div class="field">
+                    <label class="label">Thông tin thuê</label>
+                    <div class="row-3">
+                        <input class="input" type="number" step="0.01" min="0" th:field="*{area}" placeholder="Diện tích (m²)" required>
+                        <input class="input" type="number" step="0.01" min="0" th:field="*{pricePerDay}" placeholder="Giá/ngày (VND)" required>
+                        <div></div>
+                    </div>
+                    <div class="hint">Cập nhật diện tích và đơn giá thuê theo ngày</div>
+                </div>
+
+                <div class="field">
+                    <label class="label">Mô tả</label>
+                    <textarea class="textarea" th:field="*{description}" placeholder="Mô tả kho..."></textarea>
+                </div>
+            </div>
+
+            <div class="actions">
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Lưu thay đổi</button>
+                <button type="button" class="btn btn-secondary" th:onclick="|goBackDetail(${storage.storageid})|"><i class="fas fa-times"></i> Hủy</button>
+            </div>
+        </form>
+        </div>
+    </div>
+</main>
+</body>
+</html>
+
+

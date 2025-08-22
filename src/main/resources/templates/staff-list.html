@@ -39,7 +39,7 @@
         <!-- Filter Section -->
         <div class="filter-section">
             <div class="filter-group">
-                <label for="searchInput">Tìm theo tên / email / SĐT/ CCCD/ role:</label>
+                <label for="searchInput">Tìm theo tên / email / SĐT/ role:</label>
                 <div class="search-container">
                     <input type="text" id="searchInput" placeholder="Nhập từ khóa..." class="filter-select">
                     <button type="button" id="searchBtn" class="btn-search">
@@ -86,7 +86,6 @@
                     <th>Tên nhân viên</th>
                     <th>Email</th>
                     <th>SĐT</th>
-                    <th>CCCD</th>
                     <th>Role</th>
                     <th>Hành động</th>
                 </tr>
@@ -96,8 +95,6 @@
                     <td><span class="staff-name"  th:text="${staff.fullname}"></span></td>
                     <td><span class="staff-email" th:text="${staff.email}"></span></td>
                     <td><span class="staff-phone" th:text="${staff.phone}"></span></td>
-                    <td><span class="staff-cccd"  th:text="${staff.idCitizenCard}"></span></td>
-                    <td>
                     <td>
   <span class="status-badge staff-role"
         th:classappend="${#strings.toUpperCase(staff.roleName)} == 'BLOCKED' ? ' blocked' : ''"
@@ -216,9 +213,9 @@
             const name  = row.querySelector('.staff-name') ?.textContent.toLowerCase() || '';
             const email = row.querySelector('.staff-email')?.textContent.toLowerCase() || '';
             const phone = row.querySelector('.staff-phone')?.textContent.toLowerCase() || '';
-            const cccd  = row.querySelector('.staff-cccd') ?.textContent.toLowerCase() || '';
+
             const role  = row.querySelector('.staff-role') ?.textContent.toLowerCase() || '';
-            const match = !q || name.includes(q) || email.includes(q) || phone.includes(q) || cccd.includes(q) || role.includes(q);
+            const match = !q || name.includes(q) || email.includes(q) || phone.includes(q) || role.includes(q);
             row.style.display = match ? '' : 'none';
         });
         updatePagerVisibility();
@@ -243,13 +240,13 @@
     function exportStaffExcel() {
         const table = document.querySelector('.data-table');
         const visibleRows = Array.from(table.querySelectorAll('tbody tr')).filter(r => r.style.display !== 'none');
-        const data = [['Tên nhân viên','Email','SĐT','CCCD','Role']];
+        const data = [['Tên nhân viên','Email','SĐT','Role']];
         visibleRows.forEach(row => {
             data.push([
                 cellText(row, '.staff-name'),
                 cellText(row, '.staff-email'),
                 cellText(row, '.staff-phone'),
-                cellText(row, '.staff-cccd'),
+
                 cellText(row, '.staff-role')
             ]);
         });

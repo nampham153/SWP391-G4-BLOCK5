@@ -1,14 +1,23 @@
 package com.example.swp.entity;
 
-import jakarta.persistence.*;
+import java.time.LocalDate;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
-
-import java.time.LocalDate;
 
 @Setter
 @Getter
@@ -37,6 +46,14 @@ public class Order {
         private String status; // PENDING, APPROVED, REJECTED, PAID
 
         @ManyToOne
+        @JoinColumn(name = "storage_id", nullable = true)
+        private Storage storage;
+
+        // Diện tích thuê (m2) cho đơn hàng này
+        @Column(nullable = true)
+        private double rentalArea;
+
+        @ManyToOne
         @JoinColumn(name = "customer_id", nullable = true)
         @JsonIgnore
         private Customer customer;
@@ -56,14 +73,12 @@ public class Order {
         private Manager manager;
 
         @ManyToOne
-        @JoinColumn(name = "storage_id", nullable = true)
+        @JoinColumn(name = "zone_id", nullable = true)
         @JsonIgnore
-        private Storage storage;
-        @Column(length = 500) // Tùy nhu cầu, có thể dài/ngắn hơn
+        private Zone zone;
+        @Column(length = 500)
         private String cancelReason;
 
-        @Column(nullable = true)
-        private Double rentalArea;
 
         @OneToOne(mappedBy = "order", cascade = CascadeType.ALL)
         private EContract eContract;

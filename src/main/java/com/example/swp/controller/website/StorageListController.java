@@ -4,6 +4,7 @@ import com.example.swp.entity.Manager;
 import com.example.swp.entity.Staff;
 import com.example.swp.entity.Storage;
 import com.example.swp.service.StorageService;
+import com.example.swp.repository.OrderRepository;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -17,8 +18,11 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.http.MediaType;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Controller
@@ -26,6 +30,9 @@ import java.util.stream.Collectors;
 public class StorageListController {
     @Autowired
     private StorageService storageService;
+
+    @Autowired
+    private OrderRepository orderRepository;
 
     @GetMapping("/storages")
     public String listStorage(
@@ -80,10 +87,21 @@ public class StorageListController {
             // Lấy danh sách cities để hiển thị trong dropdown
             List<String> cities = storageService.findAllCities();
 
+            // Tính diện tích còn lại cho từng kho tại thời điểm hiện tại
+            LocalDate today = LocalDate.now();
+            Map<Integer, Double> remainAreas = new HashMap<>();
+            for (Storage s : storagePage.getContent()) {
+                Double rented = orderRepository.sumRentedAreaForStorageOnDate(s.getStorageid(), today);
+                if (rented == null) rented = 0.0;
+                double remain = Math.max(0.0, s.getArea() - rented);
+                remainAreas.put(s.getStorageid(), remain);
+            }
+
             // Thêm vào model
             model.addAttribute("storages", storagePage.getContent());
             model.addAttribute("storagePage", storagePage);
             model.addAttribute("cities", cities);
+            model.addAttribute("remainAreas", remainAreas);
             model.addAttribute("currentPage", page);
             model.addAttribute("totalPages", storagePage.getTotalPages());
             model.addAttribute("totalElements", storagePage.getTotalElements());

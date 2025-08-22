@@ -9,9 +9,9 @@ public class SupportActivity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    private String activityType; // "Password Recovery" hoặc "Profile Access"
-    private String status;       // "Resolved", "Failed", etc.
-    private Date activityTime;   // <-- Đã đúng kiểu java.util.Date
+    private String activityType;
+    private String status;
+    private Date activityTime;
 
     @ManyToOne
     private Customer customer;

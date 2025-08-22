@@ -32,6 +32,6 @@ public class StorageRequest {
     private double pricePerDay;
     private String description;
     private String imUrl;
-    private boolean status;
+    private Boolean status;
     private Integer staffid;
 }
