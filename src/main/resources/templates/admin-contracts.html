@@ -235,6 +235,30 @@
             color: #ddd;
         }
 
+        .pagination {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            justify-content: flex-end;
+            padding: 12px 20px;
+            border-top: 1px solid #eee;
+            background: #fff;
+        }
+
+        .pagination .page-btn, .pagination select {
+            padding: 6px 10px;
+            border: 1px solid #dee2e6;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .pagination .page-info {
+            font-size: 13px;
+            color: #555;
+        }
+
         .customer-info {
             font-size: 14px;
         }
@@ -325,8 +349,8 @@
             <div class="section-header">
                 <h2>Danh sách hợp đồng</h2>
                 <div class="filter-buttons">
-                    <button class="filter-btn active" onclick="filterContracts('all')">Tất cả</button>
-                    <button class="filter-btn" onclick="filterContracts('SIGNED')">Đã ký</button>
+                    <button class="filter-btn active" data-role="status" onclick="filterContracts('all', event)">Tất cả</button>
+                    <button class="filter-btn" data-role="status" onclick="filterContracts('SIGNED', event)">Đã ký</button>
 <!--                    <button class="filter-btn" onclick="filterContracts('PENDING')">Chờ ký</button>-->
                     <button id="sortAreaBtn" class="filter-btn" onclick="sortByArea(this)" data-dir="asc">
                         Sắp xếp diện tích ↑
@@ -389,6 +413,17 @@
                         </tr>
                     </tbody>
                 </table>
+                <div class="pagination">
+                    <button class="page-btn" onclick="prevPage()">Trước</button>
+                    <span class="page-info" id="pageInfo">Trang 1/1</span>
+                    <button class="page-btn" onclick="nextPage()">Sau</button>
+                    <select id="pageSizeSelect" onchange="changePageSize(this.value)">
+                        <option value="5">5 / trang</option>
+                        <option value="10" selected>10 / trang</option>
+                        <option value="20">20 / trang</option>
+                        <option value="50">50 / trang</option>
+                    </select>
+                </div>
             </div>
 
             <!-- Empty State -->
@@ -401,22 +436,61 @@
     </div>
 
     <script>
-        function filterContracts(status) {
-            // Update active button
-            document.querySelectorAll('.filter-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            event.target.classList.add('active');
+        // Pagination and filtering state
+        let currentPage = 1;
+        let pageSize = 10;
+        let currentStatus = 'all';
+        let currentSearch = '';
 
-            // Filter table rows
-            const rows = document.querySelectorAll('.contracts-table tbody tr');
-            rows.forEach(row => {
-                if (status === 'all' || row.getAttribute('data-status') === status) {
-                    row.style.display = '';
-                } else {
-                    row.style.display = 'none';
-                }
-            });
+        function getTbody() {
+            return document.querySelector('.contracts-table tbody');
+        }
+
+        function getAllRows() {
+            const tbody = getTbody();
+            return tbody ? Array.from(tbody.querySelectorAll('tr')) : [];
+        }
+
+        function rowMatchesFilters(row) {
+            const statusOk = (currentStatus === 'all') || (row.getAttribute('data-status') === currentStatus);
+            if (!statusOk) return false;
+            if (!currentSearch) return true;
+            const text = row.textContent.toLowerCase();
+            return text.includes(currentSearch);
+        }
+
+        function getFilteredRows() {
+            return getAllRows().filter(row => rowMatchesFilters(row));
+        }
+
+        function updatePageInfo(totalPages) {
+            const info = document.getElementById('pageInfo');
+            if (info) info.textContent = `Trang ${totalPages === 0 ? 0 : currentPage}/${Math.max(totalPages, 1)}`;
+        }
+
+        function renderPage() {
+            const rows = getAllRows();
+            const filtered = rows.filter(r => rowMatchesFilters(r));
+            const totalPages = Math.ceil(filtered.length / pageSize) || 1;
+            if (currentPage > totalPages) currentPage = totalPages;
+            if (currentPage < 1) currentPage = 1;
+            const start = (currentPage - 1) * pageSize;
+            const end = start + pageSize;
+
+            // Hide all first, then show the current page slice
+            rows.forEach(r => { r.style.display = 'none'; });
+            filtered.slice(start, end).forEach(r => { r.style.display = ''; });
+
+            updatePageInfo(Math.ceil(filtered.length / pageSize));
+        }
+
+        function filterContracts(status, ev) {
+            // Update active class for status buttons only
+            document.querySelectorAll('.filter-btn[data-role="status"]').forEach(btn => btn.classList.remove('active'));
+            if (ev && ev.target) ev.target.classList.add('active');
+            currentStatus = status;
+            currentPage = 1;
+            renderPage();
         }
 
         // Helpers to extract numeric values
@@ -451,6 +525,8 @@
                 return (va < vb ? -1 : 1) * (dir === 'asc' ? 1 : -1);
             });
             rows.forEach(r => tbody.appendChild(r));
+            // Re-apply pagination view after sorting
+            renderPage();
         }
 
         function toggleDir(btn) {
@@ -480,17 +556,9 @@
             searchInput.style.cssText = 'padding: 8px 12px; border: 1px solid #dee2e6; border-radius: 6px; margin-left: 10px;';
             
             searchInput.addEventListener('input', function() {
-                const searchTerm = this.value.toLowerCase();
-                const rows = document.querySelectorAll('.contracts-table tbody tr');
-                
-                rows.forEach(row => {
-                    const text = row.textContent.toLowerCase();
-                    if (text.includes(searchTerm)) {
-                        row.style.display = '';
-                    } else {
-                        row.style.display = 'none';
-                    }
-                });
+                currentSearch = this.value.toLowerCase();
+                currentPage = 1;
+                renderPage();
             });
 
             const filterButtons = document.querySelector('.filter-buttons');
@@ -501,7 +569,37 @@
 
         document.addEventListener('DOMContentLoaded', function() {
             addSearchFunctionality();
+            // Initialize page size from select
+            const sel = document.getElementById('pageSizeSelect');
+            if (sel) {
+                pageSize = parseInt(sel.value, 10) || 10;
+            }
+            renderPage();
         });
+
+        function prevPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                renderPage();
+            }
+        }
+
+        function nextPage() {
+            const total = Math.ceil(getFilteredRows().length / pageSize) || 1;
+            if (currentPage < total) {
+                currentPage++;
+                renderPage();
+            }
+        }
+
+        function changePageSize(val) {
+            const v = parseInt(val, 10);
+            if (!isNaN(v) && v > 0) {
+                pageSize = v;
+                currentPage = 1;
+                renderPage();
+            }
+        }
     </script>
 </body>
 </html>
