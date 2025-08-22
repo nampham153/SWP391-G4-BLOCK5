@@ -42,6 +42,9 @@ public class StorageTransaction {
     @ManyToOne
     @JoinColumn(name = "order_id")
     private Order order;
+    @ManyToOne
+    @JoinColumn(name = "storage_id")
+    private Storage storage;
     @Column(length = 500)
     private String refundReason; // Lưu lý do do khách nhập
 
