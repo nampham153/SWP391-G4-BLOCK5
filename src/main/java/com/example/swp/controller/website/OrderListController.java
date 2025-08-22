@@ -9,9 +9,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
-
+import java.util.*;
 @Controller
-@RequestMapping("/{area:admin|staff}")  // ⬅ replace "/SWP"
+@RequestMapping("/{area:admin|staff}")
 public class OrderListController {
 
     private final OrderService orderService;
@@ -20,9 +20,11 @@ public class OrderListController {
     @GetMapping("/orders")
     @PreAuthorize("(#area == 'admin' and hasAuthority('MANAGER')) or (#area == 'staff' and hasAuthority('STAFF'))")
     public String listOrders(@PathVariable String area,
-                             @RequestParam(value = "status", required = false, defaultValue = "ALL") String status,
+                             @RequestParam(value = "status",  defaultValue = "ALL") String status,
                              @RequestParam(value = "orderId", required = false) Integer orderId,
+                             @RequestParam(value = "sort",    defaultValue = "newest") String sort,  // ← NEW
                              Model model) {
+
         List<Order> orders;
         if (orderId != null) {
             Optional<Order> foundOrder = orderService.getOrderById(orderId);
@@ -35,8 +37,20 @@ public class OrderListController {
             orders = orderService.findOrdersByStatus(status);
             model.addAttribute("selectedStatus", status);
         }
+
+        // --- NEW: sort by orderDate, newest first by default ---
+        Comparator<Order> cmp = Comparator
+                .comparing(Order::getOrderDate, Comparator.nullsLast(Comparator.naturalOrder()))
+                .thenComparing(Order::getId);
+        if ("oldest".equalsIgnoreCase(sort)) {
+            orders.sort(cmp);           // ascending (oldest → newest)
+        } else {
+            orders.sort(cmp.reversed()); // descending (newest → oldest)
+        }
+
         model.addAttribute("orders", orders);
-        model.addAttribute("base", "/" + area); // ⬅ for building links in views
+        model.addAttribute("selectedSort", sort.toLowerCase());
+        model.addAttribute("base", "/" + area);
         return "order-list";
     }
 }
