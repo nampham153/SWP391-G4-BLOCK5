@@ -115,6 +115,11 @@ public class StorageServiceImpl implements StorageService {
     }
 
     @Override
+    public void toggleStatusById(int id) {
+        storageRepository.toggleStatusById(id);
+    }
+
+    @Override
     public long countAvailableStorages() {
         return storageRepository.countByStatus(true);
     }

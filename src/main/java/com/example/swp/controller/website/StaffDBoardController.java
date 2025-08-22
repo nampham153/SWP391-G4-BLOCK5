@@ -292,11 +292,8 @@ public class StaffDBoardController {
         try {
             Optional<Storage> optionalStorage = storageService.findByID(id);
             if (optionalStorage.isPresent()) {
-                Storage storage = optionalStorage.get();
-                boolean oldStatus = storage.isStatus();
-                storage.setStatus(!oldStatus);
-                storageService.save(storage);
-                
+                boolean oldStatus = optionalStorage.get().isStatus();
+                storageService.toggleStatusById(id); // atomic DB update
                 String statusMessage = oldStatus ? "Đã chuyển từ CÒN TRỐNG sang ĐÃ THUÊ" : "Đã chuyển từ ĐÃ THUÊ sang CÒN TRỐNG";
                 redirectAttributes.addFlashAttribute("message", "Trạng thái kho đã được cập nhật: " + statusMessage);
                 redirectAttributes.addFlashAttribute("messageType", "success");

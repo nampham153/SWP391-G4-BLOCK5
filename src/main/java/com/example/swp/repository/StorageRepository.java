@@ -7,9 +7,11 @@ import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.example.swp.entity.Storage;
 
@@ -70,5 +72,11 @@ public interface StorageRepository extends JpaRepository<Storage, Integer> {
 
   // Find storages assigned to a specific staff
   List<Storage> findByStaff_Staffid(int staffid);
+
+  // Atomically toggle status to avoid stale entity issues
+  @Modifying
+  @Transactional
+  @Query(value = "UPDATE storage SET status = CASE WHEN status = 1 THEN 0 ELSE 1 END WHERE storageid = :id", nativeQuery = true)
+  void toggleStatusById(@Param("id") int id);
 
 }
