@@ -4,7 +4,9 @@ import com.example.swp.entity.Customer;
 import com.example.swp.entity.Manager;
 import com.example.swp.entity.Staff;
 import com.example.swp.entity.Storage;
+import com.example.swp.entity.Zone;
 import com.example.swp.repository.OrderRepository;
+import com.example.swp.repository.ZoneRepository;
 import com.example.swp.service.StorageService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +27,9 @@ public class StorageDetailController {
 
     @Autowired
     private OrderRepository orderRepository;
+
+    @Autowired
+    private ZoneRepository zoneRepository;
 
     @GetMapping("/storages/{id}")
     public String viewStorageDetail(@PathVariable("id") int storageId,
@@ -62,6 +67,14 @@ public class StorageDetailController {
         if (rentedToday == null) rentedToday = 0.0;
         double remainArea = Math.max(0.0, storage.getArea() - rentedToday);
         model.addAttribute("remainArea", remainArea);
+
+        // Nạp danh sách zones của kho
+        try {
+            java.util.List<Zone> zones = zoneRepository.findByStorage_Storageid(storage.getStorageid());
+            model.addAttribute("zones", zones);
+        } catch (Exception ex) {
+            model.addAttribute("zones", java.util.Collections.emptyList());
+        }
 
         // Lấy thông tin customer từ session để kiểm tra đăng nhập
         Customer customer = (Customer) session.getAttribute("loggedInCustomer");

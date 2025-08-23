@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Thêm Kho Lưu Trữ</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script>
         tailwind.config = {
             theme: {
@@ -791,16 +792,19 @@
                 </div>
                 <div>
                     <label for="pricePerDay" class="block text-sm font-medium text-gray-700 mb-2">
-                        Giá/ngày (VNĐ) <span class="text-red-500">*</span>
+                        Giá/ô 50m² (VNĐ) <span class="text-red-500">*</span>
                     </label>
                     <input
                             type="number"
                             id="pricePerDay"
                             name="pricePerDay"
+                            min="500000"
+                            max="10000000"
                             required
                             class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition duration-200 ease-in-out"
-                            placeholder="0.00"
+                            placeholder="500000"
                     />
+                    <p class="mt-1 text-xs text-gray-500">Giá cho mỗi ô 50m² (500.000 - 10.000.000 VNĐ)</p>
                 </div>
             </div>
 
@@ -816,6 +820,19 @@
                         class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition duration-200 ease-in-out resize-vertical"
                         placeholder="Nhập mô tả chi tiết về kho lưu trữ..."
                 ></textarea>
+            </div>
+
+            <!-- Zone Information -->
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div class="flex items-center">
+                    <i class="fas fa-info-circle text-blue-600 mr-2"></i>
+                    <span class="text-sm font-medium text-blue-900">
+                        Hệ thống sẽ tự động tạo các khu cho thuê 50m² dựa trên diện tích kho
+                    </span>
+                </div>
+                <div id="zonePreview" class="mt-2 text-sm text-blue-700">
+                    Dự kiến tạo <span id="previewCount">0</span> khu cho thuê
+                </div>
             </div>
 
             <!-- Status and Image Row -->
@@ -880,52 +897,77 @@
 </div>
 </main>
 
-<!--<script>-->
-<!--    // Form validation and enhancement-->
-<!--    document.addEventListener('DOMContentLoaded', function() {-->
-<!--        const form = document.querySelector('form');-->
-<!--        const inputs = form.querySelectorAll('input[required], textarea[required]');-->
+<script>
+    // Form validation and enhancement
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.querySelector('form');
+        const inputs = form.querySelectorAll('input[required], textarea[required]');
 
-<!--        // Add real-time validation-->
-<!--        inputs.forEach(input => {-->
-<!--            input.addEventListener('blur', function() {-->
-<!--                if (this.value.trim() === '') {-->
-<!--                    this.classList.add('border-red-500');-->
-<!--                    this.classList.remove('border-gray-300');-->
-<!--                } else {-->
-<!--                    this.classList.remove('border-red-500');-->
-<!--                    this.classList.add('border-gray-300');-->
-<!--                }-->
-<!--            });-->
-<!--        });-->
+        // Zone preview elements
+        const areaInput = document.getElementById('area');
+        const previewCount = document.getElementById('previewCount');
 
-<!--        // Format price input-->
-<!--        const priceInput = document.getElementById('pricePerDay');-->
-<!--        priceInput.addEventListener('input', function() {-->
-<!--            let value = this.value.replace(/[^\d.]/g, '');-->
-<!--            this.value = value;-->
-<!--        });-->
+        // Update zone preview when area changes
+        function updateZonePreview() {
+            const area = parseFloat(areaInput.value) || 0;
+            const zoneCount = Math.floor(area / 50);
+            previewCount.textContent = zoneCount > 0 ? zoneCount : 0;
+        }
 
-<!--        // Format area input-->
-<!--        const areaInput = document.getElementById('area');-->
-<!--        areaInput.addEventListener('input', function() {-->
-<!--            let value = this.value.replace(/[^\d.]/g, '');-->
-<!--            this.value = value;-->
-<!--        });-->
+        // Add event listener for area input
+        if (areaInput) {
+            areaInput.addEventListener('input', updateZonePreview);
+        }
 
-<!--        // Image preview-->
-<!--        const imageInput = document.getElementById('image');-->
-<!--        imageInput.addEventListener('change', function() {-->
-<!--            const file = this.files[0];-->
-<!--            if (file) {-->
-<!--                const fileSize = file.size / 1024 / 1024; // MB-->
-<!--                if (fileSize > 10) {-->
-<!--                    alert('Kích thước file không được vượt quá 10MB');-->
-<!--                    this.value = '';-->
-<!--                }-->
-<!--            }-->
-<!--        });-->
-<!--    });-->
-<!--</script>-->
+        // Initial preview update
+        updateZonePreview();
+
+        // Add real-time validation
+        inputs.forEach(input => {
+            input.addEventListener('blur', function() {
+                if (this.value.trim() === '') {
+                    this.classList.add('border-red-500');
+                    this.classList.remove('border-gray-300');
+                } else {
+                    this.classList.remove('border-red-500');
+                    this.classList.add('border-gray-300');
+                }
+            });
+        });
+
+        // Format price input
+        const priceInput = document.getElementById('pricePerDay');
+        if (priceInput) {
+            priceInput.addEventListener('input', function() {
+                let value = this.value.replace(/[^\d.]/g, '');
+                this.value = value;
+            });
+        }
+
+        // Format area input
+        if (areaInput) {
+            areaInput.addEventListener('input', function() {
+                let value = this.value.replace(/[^\d.]/g, '');
+                this.value = value;
+                updateZonePreview(); // Update preview when area changes
+            });
+        }
+
+        // Image preview
+        const imageInput = document.getElementById('image');
+        if (imageInput) {
+            imageInput.addEventListener('change', function() {
+                const file = this.files[0];
+                if (file) {
+                    const fileSize = file.size / 1024 / 1024; // MB
+                    if (fileSize > 10) {
+                        alert('Kích thước file không được vượt quá 10MB');
+                        this.value = '';
+                    }
+                }
+            });
+        }
+    });
+</script>
 </body>
 </html>

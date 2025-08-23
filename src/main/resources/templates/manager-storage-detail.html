@@ -198,6 +198,49 @@
             box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
         }
 
+        /* Alert Messages */
+        .alert {
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            border-left: 4px solid;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 500;
+        }
+
+        .alert-success {
+            background-color: #d1fae5;
+            border-left-color: var(--success-color);
+            color: #065f46;
+        }
+
+        .alert-error {
+            background-color: #fee2e2;
+            border-left-color: var(--danger-color);
+            color: #991b1b;
+        }
+
+        .alert-dismissible {
+            position: relative;
+        }
+
+        .btn-close {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            color: inherit;
+            opacity: 0.7;
+            transition: opacity 0.3s ease;
+            margin-left: auto;
+        }
+
+        .btn-close:hover {
+            opacity: 1;
+        }
+
         .btn-save {
             background: var(--success-color);
             color: white;
@@ -498,6 +541,381 @@
             color: white;
         }
 
+        /* Zones Styles */
+        .zones-info {
+            margin-top: 15px;
+        }
+
+        .zones-summary {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .zone-stat {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 15px;
+            background: #f8fafc;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .zone-stat i {
+            color: var(--primary-color);
+            font-size: 1rem;
+        }
+
+        .zone-stat strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .zones-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        @media (max-width: 1400px) {
+            .zones-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .zones-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .zones-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .zones-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .zone-item {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .zone-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            border-color: var(--primary-color);
+        }
+
+        .zone-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .zone-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .zone-edit-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            background: var(--primary-color);
+            color: white;
+            border-radius: 6px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-size: 0.8rem;
+        }
+
+        .zone-edit-btn:hover {
+            background: var(--secondary-color);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(30, 58, 138, 0.3);
+        }
+
+        .zone-delete-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            background: var(--danger-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.8rem;
+        }
+
+        .zone-delete-btn:hover {
+            background: #dc2626;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+        }
+
+        .zone-name {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 1rem;
+        }
+
+        .zone-status {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-available {
+            background: var(--success-color);
+            color: white;
+        }
+
+        .status-occupied {
+            background: var(--warning-color);
+            color: white;
+        }
+
+        .status-maintenance {
+            background: var(--danger-color);
+            color: white;
+        }
+
+        .zone-details {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .zone-area, .zone-price {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .zone-area i, .zone-price i {
+            color: var(--primary-color);
+            width: 16px;
+        }
+
+        .no-zones {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-secondary);
+            background: #f8fafc;
+            border-radius: 8px;
+            border: 2px dashed var(--border-color);
+        }
+
+        .no-zones i {
+            color: var(--text-secondary);
+            margin-bottom: 15px;
+        }
+
+        .no-zones p {
+            margin: 5px 0;
+        }
+
+        /* Pagination Styles */
+        .zones-pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 30px;
+            gap: 10px;
+        }
+
+        .zones-pagination .page-info {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin: 0 15px;
+        }
+
+        .zones-pagination button {
+            background: white;
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            min-width: 40px;
+        }
+
+        .zones-pagination button:hover:not(:disabled) {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .zones-pagination button:disabled {
+            background: #f8fafc;
+            color: #cbd5e1;
+            cursor: not-allowed;
+        }
+
+        .zones-pagination button.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .zones-controls {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .zones-per-page {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .zones-per-page select {
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 6px 10px;
+            background: white;
+            color: var(--text-primary);
+            cursor: pointer;
+        }
+
+        /* New styles for 50m² grid */
+        .unit-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+            gap: 6px;
+            padding: 15px;
+            background: linear-gradient(135deg, #e0e7ff, #f0f7ff);
+            border-radius: 12px;
+            border: 2px solid var(--primary-color);
+            max-width: 100%;
+            overflow-x: auto;
+        }
+
+        .unit-grid .unit-item {
+            width: 100%;
+            height: 60px;
+            background: #ffffff;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            color: var(--text-primary);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            padding: 4px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .unit-grid .unit-item:hover {
+            background: var(--primary-color);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(30, 58, 138, 0.3);
+        }
+
+        .unit-grid .unit-item.selected {
+            background: var(--success-color);
+            color: white;
+            border-color: var(--success-color);
+            transform: scale(1.05);
+        }
+
+        .unit-grid .unit-item.occupied {
+            background: var(--warning-color);
+            color: white;
+            border-color: var(--warning-color);
+            cursor: not-allowed;
+        }
+
+        .unit-grid .unit-item.available {
+            background: var(--success-color);
+            color: white;
+            border-color: var(--success-color);
+        }
+
+        .unit-grid .unit-item.maintenance {
+            background: var(--danger-color);
+            color: white;
+            border-color: var(--danger-color);
+            cursor: not-allowed;
+        }
+
+        .grid-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .grid-stats {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .grid-stat {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: rgba(30, 58, 138, 0.1);
+            border-radius: 6px;
+            font-size: 0.85rem;
+            color: var(--primary-color);
+        }
+
+        .grid-stat i {
+            color: var(--primary-color);
+        }
+
+        .grid-stat strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
         @media (max-width: 768px) {
             .detail-header {
                 flex-direction: column;
@@ -515,6 +933,39 @@
 
             .detail-actions {
                 flex-direction: column;
+            }
+
+            .unit-grid {
+                grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
+                gap: 4px;
+                padding: 10px;
+            }
+
+            .unit-grid .unit-item {
+                height: 50px;
+                font-size: 0.65rem;
+            }
+
+            .grid-stats {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .grid-stat {
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .unit-grid {
+                grid-template-columns: repeat(auto-fill, minmax(45px, 1fr));
+                gap: 3px;
+                padding: 8px;
+            }
+
+            .unit-grid .unit-item {
+                height: 45px;
+                font-size: 0.6rem;
             }
         }
 
@@ -584,22 +1035,14 @@
                         <span th:text="${storage.status} ? 'Available' : 'Occupied'"
                               th:class="${storage.status} ? 'status-badge active' : 'status-badge warning'">Available</span>
                     </div>
-                    <div class="info-row">
-                        <span class="detail-label">Giá/ngày:</span>
-                        <span class="detail-value" th:text="${#numbers.formatDecimal(storage.pricePerDay, 0, 'POINT', 0, 'COMMA')} + ' VND'">0 VND</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="detail-label">Diện tích:</span>
-                        <span class="detail-value" th:text="${totalArea} + ' m²'">0 m²</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="detail-label">Đã thuê:</span>
-                        <span class="detail-value" th:text="${rentedArea} + ' m²'">0 m²</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="detail-label">Còn lại:</span>
-                        <span class="detail-value" th:text="${remainingArea} + ' m²'">0 m²</span>
-                    </div>
+                                         <div class="info-row">
+                         <span class="detail-label">Diện tích:</span>
+                         <span class="detail-value" th:text="${totalArea} + ' m²'">0 m²</span>
+                     </div>
+                     <div class="info-row">
+                         <span class="detail-label">Giá/ô 50m²:</span>
+                         <span class="detail-value" th:text="${#numbers.formatDecimal(storage.pricePerDay / 50, 0, 0) + ' VNĐ'}">0 VNĐ</span>
+                     </div>
                 </div>
             </div>
 
@@ -637,6 +1080,15 @@
                         <label class="detail-label">Description</label>
                         <textarea class="field-edit" rows="4" th:field="*{description}" placeholder="Enter storage description..."></textarea>
                     </div>
+                    <div class="detail-field">
+                        <label class="detail-label">Giá/ô 50m² (VNĐ)</label>
+                        <input class="field-edit" type="number" th:field="*{pricePerDay}" min="500000" max="10000000" placeholder="500000" required>
+                        <div class="field-hints">
+                            <span>Giá cho mỗi ô 50m²</span>
+                            <span>Min: 500.000 VNĐ</span>
+                            <span>Max: 10.000.000 VNĐ</span>
+                        </div>
+                    </div>
 
                     <div class="detail-field">
                         <label class="detail-label">Thông tin thuê</label>
@@ -661,17 +1113,72 @@
 
             <!-- View Section -->
             <div id="viewSection" class="detail-content">
-                <div class="detail-field">
-                    <label class="detail-label">Full Address</label>
-                    <div class="detail-value" th:text="${storage.address} + ', ' + ${storage.state} + ', ' + ${storage.city}">
-                        123 Storage Street, California, Los Angeles
-                    </div>
-                </div>
+                                     <div class="detail-field">
+                         <label class="detail-label">Full Address</label>
+                         <div class="detail-value" th:text="${storage.address} + ', ' + ${storage.state} + ', ' + ${storage.city}">
+                             123 Storage Street, California, Los Angeles
+                         </div>
+                     </div>
+                     <div class="detail-field">
+                         <label class="detail-label">Giá/ô 50m²</label>
+                         <div class="detail-value" th:text="${#numbers.formatDecimal(storage.pricePerDay / 50, 0, 0) + ' VNĐ'}">
+                             0 VNĐ
+                         </div>
+                         <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 5px;">
+                             <i class="fas fa-info-circle"></i> 
+                             Khách hàng sẽ trả giá này cho mỗi ô 50m² khi đặt kho
+                         </div>
+                     </div>
 
+                                 <div class="detail-field">
+                     <label class="detail-label">Description</label>
+                     <div class="detail-value" th:text="${storage.description}">
+                         Secure storage facility with 24/7 access and climate control.
+                     </div>
+                 </div>
+                 <div class="detail-field">
+                     <label class="detail-label">Giá/ô 50m²</label>
+                     <div class="detail-value" th:text="${#numbers.formatDecimal(storage.pricePerDay / 50, 0, 0) + ' VNĐ'}">
+                         0 VNĐ
+                     </div>
+                     <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 5px;">
+                         <i class="fas fa-info-circle"></i> 
+                         Khách hàng sẽ trả giá này cho mỗi ô 50m² khi đặt kho
+                     </div>
+                 </div>
+
+                <!-- 50m² Grid Section -->
                 <div class="detail-field">
-                    <label class="detail-label">Description</label>
-                    <div class="detail-value" th:text="${storage.description}">
-                        Secure storage facility with 24/7 access and climate control.
+                    <label class="detail-label">
+                        <i class="fas fa-th"></i> Grid Ô 50m² - Cách Khách Hàng Đặt Kho
+                    </label>
+                    <div class="grid-info">
+                        <div class="grid-stats">
+                            <span class="grid-stat">
+                                <i class="fas fa-cube"></i>
+                                Mỗi ô = <strong>50 m²</strong>
+                            </span>
+                            <span class="grid-stat">
+                                <i class="fas fa-th-large"></i>
+                                Tổng: <strong th:text="${#numbers.formatDecimal(storage.area / 50, 0, 0)}">0</strong> ô
+                            </span>
+                            <span class="grid-stat">
+                                <i class="fas fa-info-circle"></i>
+                                Khách hàng chọn theo ô hoặc Zone
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <!-- 50m² Grid -->
+                    <div id="unitGrid" class="unit-grid" 
+                         th:attr="data-storage-area=${storage.area}"
+                         style="margin-bottom: 15px;">
+                        <!-- Grid sẽ được tạo bằng JavaScript -->
+                    </div>
+                    
+                    <div style="font-size: 0.8rem; color: var(--text-secondary); text-align: center; padding: 10px; background: rgba(30, 58, 138, 0.05); border-radius: 6px;">
+                        <i class="fas fa-lightbulb"></i> 
+                        <strong>Lưu ý:</strong> Grid này hiển thị cách khách hàng chọn diện tích khi đặt kho. Mỗi ô đại diện cho 50m² có thể thuê.
                     </div>
                 </div>
 
@@ -679,6 +1186,7 @@
                     <a th:href="@{'/admin/manager-dashboard/storages/' + ${storage.storageid} + '/edit'}" class="btn btn-edit">
                         <i class="fas fa-edit"></i> Edit Storage
                     </a>
+
                     <button type="button" class="btn btn-assign" onclick="openAssignStaffModal()">
                         <i class="fas fa-user-plus"></i> Gán nhân viên
                     </button>
@@ -997,6 +1505,199 @@
          const modal = document.getElementById('assignStaffModal');
          if (event.target === modal) {
              closeAssignStaffModal();
+         }
+     }
+
+     // Zones Pagination JavaScript
+     let allZones = [];
+     let currentPage = 1;
+     let zonesPerPage = 10;
+
+     // Initialize zones pagination when page loads
+     document.addEventListener('DOMContentLoaded', function() {
+         initializeZonesPagination();
+     });
+
+     function initializeZonesPagination() {
+         const zoneItems = document.querySelectorAll('.zone-item');
+         allZones = Array.from(zoneItems);
+         
+         if (allZones.length === 0) return;
+         
+         updateZonesDisplay();
+     }
+
+     function updateZonesDisplay() {
+         const totalPages = Math.ceil(allZones.length / zonesPerPage);
+         const startIndex = (currentPage - 1) * zonesPerPage;
+         const endIndex = startIndex + zonesPerPage;
+
+         // Hide all zones
+         allZones.forEach(zone => {
+             zone.style.display = 'none';
+         });
+
+         // Show zones for current page
+         for (let i = startIndex; i < endIndex && i < allZones.length; i++) {
+             allZones[i].style.display = 'block';
+         }
+
+         updatePaginationControls(totalPages);
+         updatePageInfo(totalPages);
+     }
+
+     function updatePaginationControls(totalPages) {
+         const prevButton = document.getElementById('prevPage');
+         const nextButton = document.getElementById('nextPage');
+         const pageNumbers = document.getElementById('pageNumbers');
+
+         // Update prev/next buttons
+         prevButton.disabled = currentPage === 1;
+         nextButton.disabled = currentPage === totalPages || totalPages === 0;
+
+         // Generate page numbers
+         pageNumbers.innerHTML = '';
+         
+         // Show page numbers (max 5 visible)
+         const maxVisiblePages = 5;
+         let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+         let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+         
+         if (endPage - startPage < maxVisiblePages - 1) {
+             startPage = Math.max(1, endPage - maxVisiblePages + 1);
+         }
+
+         for (let i = startPage; i <= endPage; i++) {
+             const pageButton = document.createElement('button');
+             pageButton.textContent = i;
+             pageButton.onclick = () => goToPage(i);
+             pageButton.classList.toggle('active', i === currentPage);
+             pageNumbers.appendChild(pageButton);
+         }
+     }
+
+     function updatePageInfo(totalPages) {
+         const pageInfo = document.getElementById('pageInfo');
+         const startItem = (currentPage - 1) * zonesPerPage + 1;
+         const endItem = Math.min(currentPage * zonesPerPage, allZones.length);
+         
+         pageInfo.textContent = `Hiển thị ${startItem}-${endItem} trong ${allZones.length} khu vực`;
+     }
+
+     function goToPage(page) {
+         const totalPages = Math.ceil(allZones.length / zonesPerPage);
+         if (page < 1 || page > totalPages) return;
+         
+         currentPage = page;
+         updateZonesDisplay();
+     }
+
+     function changeZonesPerPage(newPerPage) {
+         zonesPerPage = parseInt(newPerPage);
+         currentPage = 1; // Reset to first page
+         updateZonesDisplay();
+     }
+
+     // 50m² Grid JavaScript
+     document.addEventListener('DOMContentLoaded', function() {
+         initialize50m2Grid();
+     });
+
+     function initialize50m2Grid() {
+         const unitGrid = document.getElementById('unitGrid');
+         if (!unitGrid) return;
+         
+         const storageArea = parseFloat(unitGrid.getAttribute('data-storage-area')) || 0;
+         const totalUnits = Math.floor(storageArea / 50);
+         
+         if (totalUnits <= 0) {
+             unitGrid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 20px; color: var(--text-secondary); font-style: italic;">Kho này không đủ diện tích để chia thành ô 50m²</div>';
+             return;
+         }
+         
+         // Tính số cột tối ưu để hiển thị đẹp
+         const optimalCols = Math.ceil(Math.sqrt(totalUnits));
+         unitGrid.style.gridTemplateColumns = `repeat(${optimalCols}, 1fr)`;
+         
+         // Tạo các ô
+         for (let i = 0; i < totalUnits; i++) {
+             const unitItem = document.createElement('div');
+             unitItem.className = 'unit-item';
+             unitItem.setAttribute('data-unit-index', i);
+             unitItem.setAttribute('data-unit-area', '50');
+             
+             // Hiển thị số thứ tự và diện tích
+             unitItem.innerHTML = `<div style="font-size: 0.7rem; line-height: 1.2;">
+                 <div style="font-weight: bold;">${i + 1}</div>
+                 <div>50m²</div>
+             </div>`;
+             
+             // Thêm tooltip
+             unitItem.title = `Ô ${i + 1}: 50m²`;
+             
+             // Xử lý click (chỉ để demo, không thực sự thay đổi trạng thái)
+             unitItem.addEventListener('click', function() {
+                 // Chỉ để demo - hiển thị thông tin ô được chọn
+                 const isSelected = this.classList.contains('selected');
+                 
+                 // Bỏ chọn tất cả
+                 document.querySelectorAll('.unit-item').forEach(item => {
+                     item.classList.remove('selected');
+                 });
+                 
+                 // Chọn ô này nếu chưa được chọn
+                 if (!isSelected) {
+                     this.classList.add('selected');
+                     
+                     // Hiển thị thông tin ô được chọn
+                     const unitIndex = this.getAttribute('data-unit-index');
+                     const unitArea = this.getAttribute('data-unit-area');
+                     
+                     // Tạo thông báo tạm thời
+                     const notification = document.createElement('div');
+                     notification.style.cssText = `
+                         position: fixed;
+                         top: 20px;
+                         right: 20px;
+                         background: var(--success-color);
+                         color: white;
+                         padding: 12px 20px;
+                         border-radius: 8px;
+                         box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                         z-index: 1000;
+                         font-size: 0.9rem;
+                         max-width: 300px;
+                     `;
+                     notification.innerHTML = `
+                         <i class="fas fa-check-circle"></i>
+                         Đã chọn: Ô ${parseInt(unitIndex) + 1} (${unitArea}m²)
+                         <br><small>Đây là cách khách hàng chọn khi đặt kho</small>
+                     `;
+                     
+                     document.body.appendChild(notification);
+                     
+                     // Tự động ẩn sau 3 giây
+                     setTimeout(() => {
+                         if (notification.parentNode) {
+                             notification.parentNode.removeChild(notification);
+                         }
+                     }, 3000);
+                 }
+             });
+             
+             unitGrid.appendChild(unitItem);
+         }
+         
+         // Thêm thông tin tổng quan
+         const gridInfo = unitGrid.parentNode.querySelector('.grid-stats');
+         if (gridInfo) {
+             const totalAreaInfo = gridInfo.querySelector('.grid-stat:nth-child(2)');
+             if (totalAreaInfo) {
+                 totalAreaInfo.innerHTML = `
+                     <i class="fas fa-th-large"></i>
+                     Tổng: <strong>${totalUnits}</strong> ô (${storageArea}m²)
+                 `;
+             }
          }
      }
 </script>

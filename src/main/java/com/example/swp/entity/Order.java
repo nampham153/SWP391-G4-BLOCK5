@@ -76,6 +76,10 @@ public class Order {
         @JoinColumn(name = "zone_id", nullable = true)
         @JsonIgnore
         private Zone zone;
+        
+        // Lưu danh sách chỉ số ô 50m² đã chọn (CSV: "0,1,5,6")
+        @Column(name = "selected_unit_indices", length = 1000)
+        private String selectedUnitIndices;
         @Column(length = 500)
         private String cancelReason;
 

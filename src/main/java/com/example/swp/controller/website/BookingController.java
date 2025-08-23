@@ -19,12 +19,16 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.annotation.Isolation;
 
 import com.example.swp.entity.Customer;
 import com.example.swp.entity.EContract;
 import com.example.swp.entity.Order;
 import com.example.swp.entity.Storage;
 import com.example.swp.entity.Voucher;
+import com.example.swp.entity.Zone;
+import com.example.swp.entity.UnitSelection;
 import com.example.swp.entity.VoucherUsage;
 import com.example.swp.enums.EContractStatus;
 import com.example.swp.enums.VoucherStatus;
@@ -33,7 +37,10 @@ import com.example.swp.service.EContractService;
 import com.example.swp.service.OrderService;
 import com.example.swp.service.StorageService;
 import com.example.swp.service.VoucherService;
+import com.example.swp.repository.ZoneRepository;
 import com.example.swp.service.VoucherUsageService;
+import com.example.swp.repository.OrderRepository;
+import com.example.swp.repository.UnitSelectionRepository;
 
 import jakarta.servlet.http.HttpSession;
 
@@ -65,6 +72,15 @@ public class BookingController {
 
     @Autowired
     private CustomerService customerService;
+
+    @Autowired
+    private ZoneRepository zoneRepository;
+
+    @Autowired
+    private OrderRepository orderRepository;
+
+    @Autowired
+    private UnitSelectionRepository unitSelectionRepository;
 
     /**
      * Helper method để kiểm tra và lấy customer từ session
@@ -119,6 +135,9 @@ public class BookingController {
     public String processDateSelection(@PathVariable int storageId,
             @RequestParam("startDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam("endDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam(value = "zoneId", required = false) Integer zoneId,
+            @RequestParam(value = "preSelectedArea", required = false) Integer preSelectedArea,
+            @RequestParam(value = "selectedUnitIndices", required = false) String selectedUnitIndices,
             Model model,
             HttpSession session,
             RedirectAttributes redirectAttributes) {
@@ -165,6 +184,47 @@ public class BookingController {
         model.addAttribute("endDate", endDate);
         model.addAttribute("remainArea", remainArea);
         model.addAttribute("orderToken", orderToken);
+
+        // Tính các ô đã bị đặt trong khoảng thời gian để disable trên grid (GET)
+        try {
+            java.util.List<Integer> booked = unitSelectionRepository
+                    .findBookedUnitIndicesForOverlap(storageId, startDate, endDate);
+            String unavailableCsv = booked.stream()
+                    .distinct()
+                    .sorted()
+                    .map(String::valueOf)
+                    .collect(java.util.stream.Collectors.joining(","));
+            model.addAttribute("unavailableUnitIndices", unavailableCsv);
+        } catch (Exception ignore) {
+            model.addAttribute("unavailableUnitIndices", "");
+        }
+        if (preSelectedArea != null && preSelectedArea > 0) {
+            model.addAttribute("preSelectedArea", preSelectedArea);
+        }
+        if (selectedUnitIndices != null && !selectedUnitIndices.isBlank()) {
+            model.addAttribute("selectedUnitIndices", selectedUnitIndices);
+        }
+
+        // Tính các ô đã bị đặt trong khoảng thời gian để disable trên grid
+        try {
+            java.util.List<Integer> booked = unitSelectionRepository
+                    .findBookedUnitIndicesForOverlap(storageId, startDate, endDate);
+            String unavailableCsv = booked.stream()
+                    .distinct()
+                    .sorted()
+                    .map(String::valueOf)
+                    .collect(java.util.stream.Collectors.joining(","));
+            model.addAttribute("unavailableUnitIndices", unavailableCsv);
+        } catch (Exception ignore) {
+            model.addAttribute("unavailableUnitIndices", "");
+        }
+
+        // Zone đã chọn (nếu có)
+        if (zoneId != null) {
+            Optional<Zone> zoneOpt = zoneRepository.findById(zoneId);
+            zoneOpt.ifPresent(z -> model.addAttribute("selectedZone", z));
+            model.addAttribute("zoneId", zoneId);
+        }
         // Danh sách voucher khả dụng cho khách (đang ACTIVE và đủ điểm)
         try {
             int customerPoint = customer.getPoints() != null ? customer.getPoints() : 0;
@@ -185,6 +245,7 @@ public class BookingController {
     public String showBookingForm(@PathVariable int storageId,
             @RequestParam("startDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam("endDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam(value = "zoneId", required = false) Integer zoneId,
             Model model,
             HttpSession session) {
 
@@ -238,14 +299,17 @@ public class BookingController {
      * Xử lý submit form booking
      */
     @PostMapping("/booking/{storageId}/booking/save")
+    @Transactional(isolation = Isolation.SERIALIZABLE)
     public String processBooking(@PathVariable int storageId,
             @RequestParam("startDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam("endDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             @RequestParam("rentalArea") double rentalArea,
+            @RequestParam(value = "selectedUnitIndices", required = false) String selectedUnitIndices,
+            @RequestParam(value = "zoneId", required = false) Integer zoneId,
             @RequestParam("name") String name,
             @RequestParam("email") String email,
             @RequestParam("phone") String phone,
-            @RequestParam("id_citizen") String idCitizen,
+            @RequestParam(value = "id_citizen", required = false) String idCitizen,
             @RequestParam(value = "voucherId", required = false) Integer voucherId,
             @RequestParam("orderToken") String orderToken,
             Model model,
@@ -298,6 +362,37 @@ public class BookingController {
                     "Diện tích thuê (" + rentalArea + " m²) không được vượt quá diện tích kho (" + storage.getArea()
                             + " m²).");
             return "redirect:/SWP/booking/" + storageId + "/booking?startDate=" + startDate + "&endDate=" + endDate;
+        }
+
+        // Nếu không chọn Zone, yêu cầu phải chọn các ô cụ thể để tránh trùng lặp đơn vị
+        if (zoneId == null && (selectedUnitIndices == null || selectedUnitIndices.isBlank())) {
+            redirectAttributes.addFlashAttribute("error", "Vui lòng chọn các ô 50 m² cụ thể để đặt kho.");
+            return "redirect:/SWP/booking/" + storageId + "/booking?startDate=" + startDate + "&endDate=" + endDate;
+        }
+
+        // Nếu có chọn theo ô, kiểm tra xung đột với các đơn trùng thời gian
+        if (selectedUnitIndices != null && !selectedUnitIndices.isBlank()) {
+            // Làm sạch danh sách chỉ số yêu cầu
+            java.util.Set<Integer> requested = java.util.Arrays.stream(selectedUnitIndices.split(","))
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .map(Integer::parseInt)
+                    .collect(java.util.stream.Collectors.toSet());
+
+            java.util.Set<Integer> booked = new java.util.HashSet<>(
+                    unitSelectionRepository.findBookedUnitIndicesForOverlap(storageId, startDate, endDate)
+            );
+            booked.retainAll(requested);
+            if (!booked.isEmpty()) {
+                redirectAttributes.addFlashAttribute("error", "Một số ô bạn chọn đã được đặt trong khoảng thời gian này. Vui lòng chọn lại.");
+                return "redirect:/SWP/booking/" + storageId + "/booking?startDate=" + startDate + "&endDate=" + endDate;
+            }
+
+            // Đảm bảo rentalArea khớp số ô đã chọn (mỗi ô 50 m²)
+            double expectedArea = requested.size() * 50.0;
+            if (expectedArea != rentalArea) {
+                rentalArea = expectedArea; // đồng bộ để tính tiền và lưu DB
+            }
         }
 
         try {
@@ -370,12 +465,38 @@ public class BookingController {
             order.setOrderDate(LocalDate.now());
             order.setTotalAmount(totalCost);
             order.setStatus("PENDING");
+            order.setStorage(storage);
+            order.setRentalArea(rentalArea);
+            if (selectedUnitIndices != null && !selectedUnitIndices.isBlank()) {
+                order.setSelectedUnitIndices(selectedUnitIndices);
+            }
+            // Gán zone nếu người dùng đã chọn
+            if (zoneId != null) {
+                zoneRepository.findById(zoneId).ifPresent(order::setZone);
+            }
             if (appliedVoucher != null) {
                 order.setVoucher(appliedVoucher);
             }
 
             // Lưu đơn hàng vào database
             Order savedOrder = orderService.save(order);
+
+            // Lưu từng ô đã chọn vào bảng UnitSelection
+            if (selectedUnitIndices != null && !selectedUnitIndices.isBlank()) {
+                String[] parts = selectedUnitIndices.split(",");
+                for (String part : parts) {
+                    String t = part.trim();
+                    if (t.isEmpty()) continue;
+                    Integer idx = Integer.parseInt(t);
+                    UnitSelection us = new UnitSelection();
+                    us.setOrder(savedOrder);
+                    us.setStorage(storage);
+                    us.setUnitIndex(idx);
+                    us.setStartDate(startDate);
+                    us.setEndDate(endDate);
+                    unitSelectionRepository.save(us);
+                }
+            }
 
             // Lưu lịch sử sử dụng voucher nếu có
             if (appliedVoucher != null) {
@@ -453,7 +574,65 @@ public class BookingController {
         model.addAttribute("order", order);
         model.addAttribute("customer", customer);
 
+        // Nếu đơn không có CSV trong Order, lấy từ bảng UnitSelection để hiển thị
+        try {
+            String csv = order.getSelectedUnitIndices();
+            if (csv == null || csv.trim().isEmpty()) {
+                java.util.List<Integer> indices = unitSelectionRepository.findUnitIndicesByOrderId(order.getId());
+                if (indices != null && !indices.isEmpty()) {
+                    csv = indices.stream()
+                            .sorted()
+                            .map(String::valueOf)
+                            .collect(java.util.stream.Collectors.joining(","));
+                }
+            }
+            if (csv != null) {
+                model.addAttribute("selectedUnitIndices", csv);
+            }
+        } catch (Exception ignore) { }
+
         return "booking-detail";
+    }
+
+    /**
+     * API: Lấy danh sách chỉ số ô đã đặt (để bôi xám) theo khoảng ngày cho một kho
+     * Trả về JSON array các index (Integer)
+     */
+    @GetMapping("/booking/{storageId}/unavailable")
+    @ResponseBody
+    public java.util.List<Integer> getUnavailableUnitIndices(
+            @PathVariable int storageId,
+            @RequestParam("startDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam("endDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate
+    ) {
+        if (startDate == null || endDate == null || !endDate.isAfter(startDate)) {
+            return java.util.Collections.emptyList();
+        }
+        try {
+            // Nguồn 1: bảng UnitSelection (đã chuẩn hoá từng ô)
+            java.util.List<Integer> merged = new java.util.ArrayList<>(
+                    unitSelectionRepository.findPaidUnitIndicesForOverlap(storageId, startDate, endDate)
+            );
+
+            // Nguồn 2: cột CSV selectedUnitIndices trong Order (đơn PAID, overlap)
+            java.util.List<String> csvList = orderRepository.findPaidSelectedUnitIndicesForOverlap(storageId, startDate, endDate);
+            if (csvList != null) {
+                for (String csv : csvList) {
+                    if (csv == null || csv.isBlank()) continue;
+                    for (String part : csv.split(",")) {
+                        String t = part.trim();
+                        if (t.isEmpty()) continue;
+                        try {
+                            merged.add(Integer.parseInt(t));
+                        } catch (NumberFormatException ignore) { }
+                    }
+                }
+            }
+
+            return merged.stream().distinct().sorted().toList();
+        } catch (Exception ex) {
+            return java.util.Collections.emptyList();
+        }
     }
 
     /**

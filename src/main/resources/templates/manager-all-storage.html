@@ -109,7 +109,8 @@
                         <th>Ảnh</th>
                         <th>Tên Kho</th>
                         <th>Diện tích</th>
-                        <th>Giá cả</th>
+                        <th>Giá/ô 50m²</th>
+                        <th>Số khu cho thuê</th>
                         <th>Trạng thái</th>
                         <th>Hành động</th>
                     </tr>
@@ -121,7 +122,12 @@
                         <td><img th:src="${storage.imUrl} ?: '/images/default-storage.jpg'" class="storage-image" /></td>
                         <td th:text="${storage.storagename}"></td>
                         <td th:text="${storage.area + ' m²'}"></td>
-                        <td th:text="${storage.pricePerDay}"></td>
+                        <td th:text="${#numbers.formatDecimal(storage.pricePerDay / 50, 0, 0) + ' VNĐ'}"></td>
+                        <td>
+                            <span th:text="${gridCountMap[storage.storageid] ?: 0}"></span>
+                            <i class="fas fa-info-circle" style="color: #3b82f6; margin-left: 5px; cursor: help;" 
+                               title="Số ô 50m² có thể cho thuê trong kho này"></i>
+                        </td>
                         <td>
                     <span th:class="${storage.status} ? 'status-badge active' : 'status-badge warning'"
                         th:text="${storage.status} ? 'Còn trống' : 'Đã thuê'"></span>
@@ -155,6 +161,12 @@
                 </table>
             </div>
 
+            <!-- Table Note -->
+            <div style="margin-top: 15px; padding: 10px; background: #f8fafc; border-radius: 8px; border-left: 4px solid #3b82f6; font-size: 0.9rem; color: #64748b;">
+                <i class="fas fa-info-circle" style="color: #3b82f6; margin-right: 8px;"></i>
+                <strong>Lưu ý:</strong> Cột "Số khu cho thuê" hiển thị số lượng ô 50m² có thể cho thuê trong mỗi kho. Khách hàng có thể chọn thuê theo từng ô 50m² hoặc theo Zone.
+            </div>
+
             <!-- Pagination -->
             <div class="pagination">
                 <button><i class="fas fa-chevron-left"></i></button>
@@ -168,7 +180,7 @@
 </main>
 
 <script>
-    const COLUMN_COUNT = 7;
+    const COLUMN_COUNT = 8;
     const rowsPerPage = 10;
     let currentPage = 1;
 

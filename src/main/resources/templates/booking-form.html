@@ -41,12 +41,27 @@
             word-break: break-word;
             max-width: 100%;
         }
+        /* Unit grid styles */
+        .unit-tile {
+            user-select: none;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            cursor: pointer;
+            background: #fff;
+        }
+        .unit-tile.selected { background-color: #dcfce7; outline: 2px solid #16a34a; }
+        .unit-tile.disabled { background-color: #f3f4f6; opacity: .6; pointer-events: none; text-decoration: line-through; }
     </style>
 </head>
 <body>
 <div class="page-wrapper">
     <!-- NAVBAR -->
-    <div th:replace="taskbar/customer-navbar :: customerNavbar"></div>
+    <div th:replace="~{taskbar/customer-navbar :: customerNavbar}"></div>
 
     <!-- MAIN CONTENT -->
     <main class="main">
@@ -72,19 +87,14 @@
                     <input type="hidden" name="startDate" th:value="${startDate}" />
                     <input type="hidden" name="endDate" th:value="${endDate}" />
                     <input type="hidden" name="orderToken" th:value="${orderToken}" />
+                    <input type="hidden" name="zoneId" th:value="${zoneId}" />
+                    <input type="hidden" name="preSelectedArea" th:value="${preSelectedArea}" />
+                    <input type="hidden" id="selectedUnitIndices" name="selectedUnitIndices" th:value="${selectedUnitIndices}" />
 
                     <!-- Storage Info -->
                     <div class="form-section">
                         <h3 class="section-title"><i class="fas fa-warehouse"></i> Thông tin kho</h3>
                         <div class="storage-info">
-<!--                            &lt;!&ndash; Ảnh kho mặc định &ndash;&gt;-->
-<!--                            <div class="info-card" style="text-align:center;">-->
-<!--                                <img-->
-<!--                                        th:src="${storage.imUrl != null && !storage.imUrl.isEmpty() ? storage.imUrl : 'https://img.freepik.com/premium-photo/warehouse-with-shelves-filled-with-boxes-storage-facility-ai_97167-3669.jpg'}"-->
-<!--                                        alt="Ảnh kho"-->
-<!--                                        class="storage-img"-->
-<!--                                        style="max-width: 100%; height: 200px; object-fit:cover; border-radius:8px; margin-bottom:10px;">-->
-<!--                            </div>-->
                             <div class="info-card">
                                 <div class="info-label">TÊN KHO</div>
                                 <div class="info-value" th:text="${storage.storagename}">Tên kho</div>
@@ -92,9 +102,23 @@
                                     <span th:text="${storage.status} ? 'CÒN TRỐNG' : 'ĐANG THUÊ'">CÒN TRỐNG</span>
                                 </div>
                             </div>
+                            <div class="info-card" th:if="${selectedZone} != null">
+                                <div class="info-label">ZONE ĐÃ CHỌN</div>
+                                <div class="info-value">
+                                    <span style="font-weight:600" th:text="${selectedZone.name}">Zone A</span>
+                                    <span> • </span>
+                                    <span th:text="${selectedZone.zoneArea} + ' m²'">0 m²</span>
+                                    <span> • </span>
+                                    <span th:text="${#numbers.formatDecimal(selectedZone.pricePerDay, 0, 'POINT', 0, 'COMMA')} + ' VNĐ/ngày'">0 VNĐ/ngày</span>
+                                </div>
+                            </div>
                             <div class="info-card">
                                 <div class="info-label">ĐỊA CHỈ</div>
-                                <div class="info-value" th:text="${storage.address}">Địa chỉ</div>
+                                <div class="info-value" th:text="${storage.address + ', ' + storage.state + ', ' + storage.city}">Địa chỉ</div>
+                            </div>
+                            <div class="info-card">
+                                <div class="info-label">MÃ KHO</div>
+                                <div class="info-value" th:text="${storage.storageid}">ID</div>
                             </div>
                             <div class="info-card">
                                 <div class="info-label">GIÁ/NGÀY</div>
@@ -104,10 +128,7 @@
                                 <div class="info-label">DIỆN TÍCH TỔNG</div>
                                 <div class="info-value" th:text="${storage.area} + ' m²'">0 m²</div>
                             </div>
-                            <div class="info-card">
-                                <div class="info-label">DIỆN TÍCH CÒN LẠI</div>
-                                <div class="info-value" th:text="${remainArea} + ' m²'">0 m²</div>
-                            </div>
+                            
                             <div class="info-card">
                                 <div class="info-label">NGÀY BẮT ĐẦU</div>
                                 <div class="info-value" th:text="${#temporals.format(startDate, 'dd/MM/yyyy')}">Ngày bắt đầu</div>
@@ -138,6 +159,22 @@
                         </div>
                     </div>
 
+                    <!-- Unit selection (50 m²) -->
+                    <div class="form-section">
+                        <h3 class="section-title"><i class="fas fa-th"></i> Chọn diện tích theo ô 50 m²</h3>
+                        <div class="info-card" style="padding: 12px;">
+                            <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <div class="info-label">Kéo để chọn theo hình chữ nhật hoặc nhấp để cộng dồn</div>
+                                <div class="info-value" style="font-size: 14px;">
+                                    Đã chọn: <span id="bfUnitSelectedCount">0</span> ô (<span id="bfUnitSelectedArea">0</span> m²)
+                                </div>
+                            </div>
+                            <div id="bfUnitGrid" class="grid" style="display:grid; gap:8px;"
+                                 th:attr="data-preselected=${selectedUnitIndices},data-unavailable=${unavailableUnitIndices}"></div>
+                            <small class="form-text">Mỗi ô = 50 m². Khi chọn theo ô, hệ thống sẽ bỏ chọn Zone (nếu có).</small>
+                        </div>
+                    </div>
+
                     <!-- Customer Info -->
                     <div class="section-title" style="display: flex; justify-content: space-between; align-items: center;">
                         <h3 style="margin: 0;"><i class="fas fa-user-edit"></i> Thông tin khách hàng</h3>
@@ -145,24 +182,8 @@
                     </div>
                     <input type="hidden" name="voucherId" id="voucherId" />
 
-                    <!-- Trường chọn diện tích thuê -->
-                    <div class="form-group">
-                        <label for="rentalArea" class="form-label">Diện tích muốn thuê (m²) *</label>
-                        <input type="number"
-                               id="rentalArea"
-                               name="rentalArea"
-                               class="form-input"
-                               min="1"
-                               th:attr="max=${remainArea}"
-                               th:placeholder="'Tối đa ' + ${remainArea} + ' m² '"
-                               required
-                               step="1"
-                               oninput="validateIntegerRentalArea(this)" />
-                        <small class="form-text" th:text="'Có thể thuê tối đa ' + ${remainArea} + ' m².'"></small>
-                        <small class="error-text" id="rentalAreaError" style="display: none;">
-                            Diện tích phải là số nguyên từ 1 đến diện tích còn lại.
-                        </small>
-                    </div>
+                    <!-- Hidden field for rental area - will be set automatically from grid or zone -->
+                    <input type="hidden" id="rentalArea" name="rentalArea" th:value="${preSelectedArea} != null ? preSelectedArea : (selectedZone != null ? selectedZone.zoneArea : 0)" />
 
                     <div class="form-group">
                         <label for="name" class="form-label">Họ và tên *</label>
@@ -187,17 +208,7 @@
                                required
                                pattern="[0-9]{10,11}" />
                     </div>
-                    <div class="form-group">
-                        <label for="id_citizen" class="form-label">Số CCCD *</label>
-                        <input type="text"
-                               id="id_citizen"
-                               name="id_citizen"
-                               class="form-input"
-                               maxlength="20"
-                               th:value="${customer != null ? customer.id_citizen : ''}"
-                               readonly
-                               required />
-                    </div>
+                    
 
                     <div class="submit-section">
                         <button type="submit" class="submit-btn">
@@ -220,7 +231,7 @@
 
     <footer class="footer">
         <div class="container">
-            <p>© 2025 QVL Storage. Tất cả quyền được bảo lưu.</p>
+            <p> 2025 QVL Storage. Tất cả quyền được bảo lưu.</p>
         </div>
     </footer>
 </div>
@@ -233,15 +244,20 @@
     }
 </script>
 
-<script th:inline="javascript">
+    <script th:inline="javascript">
     /*<![CDATA[*/
     const vouchers = /*[[${vouchers}]]*/ [];
     const customerPoint = /*[[${customer != null ? customer.points : 0}]]*/ 0;
-    const pricePerDay = /*[[${storage.pricePerDay}]]*/ 0;
-    const area = /*[[${storage.area}]]*/ 1;
+    let pricePerDay = /*[[${storage.pricePerDay}]]*/ 0;
+    let area = /*[[${storage.area}]]*/ 1;
     const startDate = new Date(/*[[${startDate}]]*/);
     const endDate = new Date(/*[[${endDate}]]*/);
     let selectedVoucher = null;
+    // If a zone was selected, use zone pricing and area
+    /*[# th:if="${selectedZone != null}"]*/
+        pricePerDay = /*[[${selectedZone.pricePerDay}]]*/ pricePerDay;
+        area = /*[[${selectedZone.zoneArea}]]*/ area;
+    /*[/]*/
 
     // Robust formatter to keep numbers compact and consistent
     function formatVNDNumber(value) {
@@ -286,39 +302,27 @@
         }
     }
 
-    function validateIntegerRentalArea(input) {
-        const value = input.value;
-        const rentalArea = parseInt(value);
-        const maxArea = parseInt(input.getAttribute('max'));
-        const errorElement = document.getElementById('rentalAreaError');
-
-        // Kiểm tra xem có phải số nguyên không (không có dấu chấm)
-        if (value.includes('.') || value.includes(',')) {
-            errorElement.style.display = 'block';
-            errorElement.textContent = 'Chỉ được nhập số nguyên, không được nhập số thập phân.';
-            input.setCustomValidity('Chỉ được nhập số nguyên');
-            return;
-        }
-
-        // Clamp to valid range immediately to avoid huge numbers causing layout issues
-        if (!isNaN(rentalArea)) {
-            if (rentalArea > maxArea) {
-                input.value = String(maxArea);
-            } else if (rentalArea < 1) {
-                input.value = '1';
+    function updateRentalAreaFromGrid() {
+        // Update rental area based on grid selection or zone
+        const rentalAreaInput = document.getElementById('rentalArea');
+        const grid = document.getElementById('bfUnitGrid');
+        const indicesInput = document.getElementById('selectedUnitIndices');
+        
+        if (grid) {
+            const selectedTiles = grid.querySelectorAll('.unit-tile.selected');
+            const selectedArea = selectedTiles.length * 50; // Each tile = 50m²
+            // Persist selected indices
+            if (indicesInput) {
+                const indices = Array.from(selectedTiles).map(t => t.dataset.index).join(',');
+                indicesInput.value = indices;
             }
-        }
-
-        const current = parseInt(input.value);
-
-        // Kiểm tra giá trị hợp lệ
-        if (isNaN(current) || current < 1 || current > maxArea) {
-            errorElement.style.display = 'block';
-            errorElement.textContent = 'Diện tích phải là số nguyên từ 1 đến ' + maxArea + ' m².';
-            input.setCustomValidity('Diện tích không hợp lệ');
-        } else {
-            errorElement.style.display = 'none';
-            input.setCustomValidity('');
+            
+            if (selectedArea > 0) {
+                rentalAreaInput.value = selectedArea;
+            } else if (area > 0) {
+                // Fallback to zone area if no grid selection
+                rentalAreaInput.value = area;
+            }
         }
         calculateTotal();
     }
@@ -370,28 +374,100 @@
     };
 
     window.addEventListener('DOMContentLoaded', () => {
-        document.getElementById('rentalArea').addEventListener('input', calculateTotal);
-        // Prevent mouse wheel from changing number input unexpectedly
-        const rentalAreaEl = document.getElementById('rentalArea');
-        rentalAreaEl.addEventListener('wheel', (e) => {
-            e.preventDefault();
-        }, { passive: false });
-        // Prevent arrow up/down from changing value
-        rentalAreaEl.addEventListener('keydown', (e) => {
-            if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                e.preventDefault();
-            }
-        });
         document.querySelector('form').addEventListener('submit', function(e) {
-            const rentalAreaInput = document.getElementById('rentalArea');
-            validateIntegerRentalArea(rentalAreaInput);
-
+            // Ensure hidden fields reflect current grid state before submit
+            updateRentalAreaFromGrid();
+            // Require selecting tiles when no zone chosen
+            const zoneInput = document.querySelector('input[name="zoneId"]');
+            const zoneVal = zoneInput && zoneInput.value ? zoneInput.value : '';
+            const indicesVal = (document.getElementById('selectedUnitIndices') || { value: '' }).value.trim();
+            if (!zoneVal && indicesVal.length === 0) {
+                e.preventDefault();
+                alert('Vui lòng chọn các ô 50 m² để tiếp tục.');
+                return;
+            }
             if (!this.checkValidity()) {
                 e.preventDefault();
                 alert('Vui lòng kiểm tra lại thông tin nhập vào.');
             }
         });
-        calculateTotal();
+        
+        // Build 50 m² grid and reflect preselected tiles from storage detail
+        try {
+            const UNIT_SIZE = 50;
+            const storageArea = /*[[${storage.area}]]*/ 0;
+            const totalUnits = Math.max(0, Math.floor(storageArea / UNIT_SIZE));
+            const grid = document.getElementById('bfUnitGrid');
+            const preSelectedArea = /*[[${preSelectedArea}]]*/ null;
+            const preIndicesStr = grid ? (grid.getAttribute('data-preselected') || '') : '';
+            const preIndices = new Set(preIndicesStr.split(',').map(s => s.trim()).filter(Boolean).map(n => parseInt(n, 10)).filter(n => !isNaN(n)));
+            const unavailableStr = grid ? (grid.getAttribute('data-unavailable') || '') : '';
+            const unavailable = new Set(unavailableStr.split(',').map(s => s.trim()).filter(Boolean).map(n => parseInt(n, 10)).filter(n => !isNaN(n)));
+            
+            console.log('Grid debug:', {
+                storageArea,
+                totalUnits,
+                gridExists: !!grid,
+                preSelectedArea,
+                preIndicesStr,
+                preIndicesSize: preIndices.size
+            });
+            
+            if (grid) {
+                if (totalUnits > 0) {
+                    const cols = Math.max(1, Math.ceil(Math.sqrt(totalUnits)));
+                    grid.style.gridTemplateColumns = `repeat(${cols}, minmax(0, 1fr))`;
+                    for (let i = 0; i < totalUnits; i++) {
+                        const tile = document.createElement('div');
+                        tile.className = 'unit-tile';
+                        tile.textContent = `${UNIT_SIZE} m²`;
+                        tile.dataset.index = String(i);
+                        if (preIndices.has(i)) {
+                            tile.classList.add('selected', 'disabled');
+                        } else if (unavailable.has(i)) {
+                            tile.classList.add('disabled');
+                        }
+                        // Enable toggling when not disabled by preSelectedArea
+                        if (preSelectedArea == null) {
+                            tile.addEventListener('click', () => {
+                                if (tile.classList.contains('disabled')) return;
+                                tile.classList.toggle('selected');
+                                const cntEl = document.getElementById('bfUnitSelectedCount');
+                                const areaEl = document.getElementById('bfUnitSelectedArea');
+                                const selectedNow = grid.querySelectorAll('.unit-tile.selected').length;
+                                if (cntEl) cntEl.textContent = String(selectedNow);
+                                if (areaEl) areaEl.textContent = String(selectedNow * UNIT_SIZE);
+                                updateRentalAreaFromGrid();
+                            });
+                        }
+                        grid.appendChild(tile);
+                    }
+                } else {
+                    // Show message when no units available
+                    grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 20px; color: #666;">Không có ô 50 m² khả dụng cho kho này</div>';
+                }
+                
+                // Update header counts according to preselection
+                const count = preIndices.size;
+                const areaSel = count * UNIT_SIZE;
+                const cntEl = document.getElementById('bfUnitSelectedCount');
+                const areaEl = document.getElementById('bfUnitSelectedArea');
+                if (cntEl) cntEl.textContent = String(count);
+                if (areaEl) areaEl.textContent = String(areaSel);
+                
+                // Disable interactions when preSelectedArea is set (selection came from previous page)
+                if (preSelectedArea != null) {
+                    grid.style.pointerEvents = 'none';
+                }
+                // Initialize hidden inputs from preselection
+                updateRentalAreaFromGrid();
+            }
+        } catch (err) {
+            console.warn('Unit grid init failed:', err);
+        }
+        
+        // Set initial rental area and calculate total
+        updateRentalAreaFromGrid();
     });
     /*]]>*/
 </script>

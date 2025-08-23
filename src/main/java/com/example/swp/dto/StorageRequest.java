@@ -34,4 +34,7 @@ public class StorageRequest {
     private String imUrl;
     private Boolean status;
     private Integer staffid;
+    
+    // Tự động tạo zones dựa trên diện tích kho
+    private Boolean createZones = true; // Mặc định tạo zones
 }

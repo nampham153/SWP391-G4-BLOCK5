@@ -7,182 +7,33 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
-        /* Comment: Feedback Section CSS - tạm thời ẩn */
-        /*
-        .feedback-section {
-            background-color: #f8fafc;
-            padding: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-            max-width: inherit; /* Inherit max-width from parent container */
-        box-sizing: border-box; /* Ensure padding doesn't affect width */
-        width: 1400px;
-        margin-left: 230px;
-        margin-top: 30px;
+        /* Feedback-related CSS temporarily disabled to avoid nested comment lint */
+        /* .feedback-section, .feedback-list-section { display: none; } */
+        /* Minimal styles for zone tiles */
+        .zone-tile { transition: all .15s ease; }
+        .zone-tile:hover { box-shadow: 0 0 0 2px #16a34a33; }
+        .zone-tile.selected { outline: 2px solid #16a34a; background: #16a34a0d; }
+        /* 50m² unit tiles */
+        .unit-tile { user-select: none; }
+        .unit-tile.selected { background-color: #dcfce7; outline: 2px solid #16a34a; }
+        .unit-tile.disabled { background-color: #f3f4f6; opacity: .6; pointer-events: none; text-decoration: line-through; }
+    </style>
+    <style>
+        .unit-tile.disabled {
+            opacity: 0.5;
+            pointer-events: none;
+            text-decoration: line-through;
         }
-
-        /* Feedback Section Title */
-        .feedback-section h2 {
-            color: #2c3e50;
-            font-size: 1.5rem;
-            font-weight: 600;
-            margin-bottom: 1.5rem;
+        .unit-tile.selected {
+            background-color: #dcfce7; /* green-100 */
+            border-color: #22c55e;     /* green-500 */
         }
-
-        /* Messages (Success and Error) */
-        .feedback-section .message {
-            padding: 1rem;
-            border-radius: 6px;
-            margin-bottom: 1rem;
-            font-size: 0.95rem;
-        }
-
-        .feedback-section .message.success {
-            background-color: #e6ffed;
-            color: #2c3e50;
-            border: 1px solid #34c759;
-        }
-
-        .feedback-section .message.error {
-            background-color: #ffe6e6;
-            color: #2c3e50;
-            border: 1px solid #ff4d4d;
-        }
-
-        /* Feedback Form */
-        .feedback-section form {
-            background-color: #ffffff;
-            padding: 1.5rem;
-            border-radius: 8px;
-            border: 1px solid #e2e8f0;
-        }
-
-        .feedback-section form label {
-            color: #2c3e50;
-            font-size: 0.9rem;
-            font-weight: 500;
-            margin-bottom: 0.5rem;
-            display: block;
-        }
-
-        .feedback-section form textarea,
-        .feedback-section form select {
-            width: 100%;
-            padding: 0.75rem;
-            border: 1px solid #e2e8f0;
-            border-radius: 6px;
-            font-size: 0.95rem;
-            color: #2c3e50;
-            background-color: #f8fafc;
-            transition: border-color 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        .feedback-section form textarea:focus,
-        .feedback-section form select:focus {
-            outline: none;
-            border-color: #2c3e50;
-            box-shadow: 0 0 0 3px rgba(44, 62, 80, 0.1);
-        }
-
-        .feedback-section form textarea {
-            resize: vertical;
-            min-height: 100px;
-        }
-
-        .feedback-section form select {
-            appearance: none;
-            background-image: url("data:image/svg+xml;utf8,<svg fill='none' stroke='%232c3e50' stroke-width='2' viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'><path d='M19 9l-7 7-7-7'></path></svg>");
-            background-repeat: no-repeat;
-            background-position: right 0.75rem center;
-            background-size: 1rem;
-        }
-
-        .feedback-section form button {
-            background-color: #2c3e50;
-            color: #ffffff;
-            padding: 0.75rem 1.5rem;
-            border-radius: 6px;
-            font-size: 0.95rem;
-            font-weight: 600;
-            border: none;
-            cursor: pointer;
-            transition: background-color 0.2s ease;
-        }
-
-        .feedback-section form button:hover {
-            background-color: #34495e;
-        }
-
-        /* Feedbacked Message */
-        .feedback-section .feedbacked-message,
-        .feedback-section .ineligible-message {
-            background-color: #ffffff;
-            padding: 1.5rem;
-            border-radius: 8px;
-            border: 1px solid #e2e8f0;
-            color: #2c3e50;
-            font-size: 0.95rem;
-            text-align: center;
-        }
-
-        /* Feedback List Section */
-        .feedback-list-section {
-            background-color: #f8fafc;
-            padding: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-            max-width: inherit; /* Inherit max-width from parent container */
-            box-sizing: border-box; /* Ensure padding doesn't affect width */
-            width: 1400px;
-            margin-left: 230px;
-            margin-top: 30px;
-        }
-
-        .feedback-list-section h3 {
-            color: #2c3e50;
-            font-size: 1.25rem;
-            font-weight: 600;
-            margin-bottom: 1.5rem;
-        }
-
-        .feedback-list-section .feedback-item {
-            background-color: #ffffff;
-            padding: 1.5rem;
-            border-radius: 8px;
-            border: 1px solid #e2e8f0;
-            margin-bottom: 1rem;
-        }
-
-        .feedback-list-section .feedback-item .font-semibold {
-            color: #2c3e50;
-            font-size: 1rem;
-        }
-
-        .feedback-list-section .feedback-item .content {
-            color: #4b5e6f;
-            font-size: 0.9rem;
-            margin-top: 0.5rem;
-        }
-
-        .feedback-list-section .feedback-item .fa-star {
-            color: #facc15;
-        }
-
-        .feedback-list-section .no-feedback {
-            background-color: #ffffff;
-            padding: 1.5rem;
-            border-radius: 8px;
-            border: 1px solid #e2e8f0;
-            color: #2c3e50;
-            font-size: 0.95rem;
-            text-align: center;
-        }
-        */
     </style>
 </head>
+
 <body>
 <!-- Navigation Bar -->
-<div th:replace="taskbar/customer-navbar :: customerNavbar"></div>
+<div th:replace="~{taskbar/customer-navbar :: customerNavbar}"></div>
 
 <div class="container">
     <!-- Hiển thị thông báo thành công -->
@@ -227,13 +78,14 @@
                                 <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
                                 <circle cx="12" cy="10" r="3"/>
                             </svg>
-                            <span th:text="${storage.getState()} + ', ' + ${storage.getCity()}"></span>
+                            <span th:text="|${storage.state}, ${storage.city}|"></span>
                         </div>
                     </div>
                 </div>
 
                 <div class="price-container">
-                    <span class="price" th:text="${storage.getPricePerDay()} + ' VND'"></span>
+                    <span class="price"
+                          th:text="${storage.getPricePerDay() != null ? #numbers.formatDecimal(storage.getPricePerDay(), 0, 'POINT', 0, 'COMMA') : 0} + ' VND'"></span>
                     <span class="price-unit">/ngày</span>
                 </div>
             </div>
@@ -274,7 +126,7 @@
                 <div class="address-section">
                     <label>Địa chỉ đầy đủ</label>
                     <div class="address-content">
-                        <p class="address-main" th:text="${storage.getAddress() + ', ' + storage.getState()} + ', ' + ${storage.getCity()}"></p>
+                        <p class="address-main" th:text="|${storage.address}, ${storage.state}, ${storage.city}|"></p>
                     </div>
                 </div>
             </div>
@@ -327,14 +179,59 @@
                     </div>
                     <form th:action="@{/SWP/booking/{storageId}/booking(storageId=${storage.storageid})}" method="post" class="space-y-4">
                         <div>
-                            <label class="block text-sm font-medium mb-1 text-gray-700">Ngày bắt đầu</label>
+                            <label class="block text-sm font-medium mb-1 text-gray-700">Chọn ngày bắt đầu</label>
                             <input type="date" id="startDate" name="startDate" required
                                    class="w-full border border-gray-300 rounded px-3 py-2 focus:ring-green-500 focus:border-green-500">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium mb-1 text-gray-700">Ngày kết thúc</label>
+                            <label class="block text-sm font-medium mb-1 text-gray-700">Chọn ngày kết thúc</label>
                             <input type="date" id="endDate" name="endDate" required
                                    class="w-full border border-gray-300 rounded px-3 py-2 focus:ring-green-500 focus:border-green-500">
+                        </div>
+                        <div class="space-y-3">
+                            <label class="block text-sm font-medium mb-1 text-gray-700">Chọn Zone</label>
+                            <input type="hidden" id="zoneIdHidden" name="zoneId">
+                            <div id="zoneGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                <!-- Available zone -->
+                                <div th:if="${z.status == null or (z.status != null and #strings.equalsIgnoreCase(z.status, 'AVAILABLE'))}"
+                                     th:each="z : ${zones}"
+                                     class="zone-tile cursor-pointer border rounded p-3 text-center select-none"
+                                     th:attr="data-zone-id=${z.id},data-available=${z.status},data-name=${z.name != null ? z.name : 'Zone'},data-area=${z.zoneArea != null ? z.zoneArea : 0},data-price=${z.pricePerDay != null ? z.pricePerDay : 0}"
+                                     onclick="selectZone(this)">
+                                    <div class="font-semibold" th:text="${z.name != null ? z.name : 'Zone'}">Zone</div>
+                                    <div class="text-xs text-gray-600">
+                                        <span th:text="${(z.zoneArea != null ? z.zoneArea : 0)} + ' m²'"></span> •
+                                        <span th:text="${(z.pricePerDay != null ? #numbers.formatDecimal(z.pricePerDay, 0, 'POINT', 0, 'COMMA') : '0')} + ' VND/ngày'"></span>
+                                    </div>
+                                    <div class="mt-1 text-xs">Còn trống</div>
+                                </div>
+                                <!-- Unavailable zone -->
+                                <div th:unless="${z.status == null or (z.status != null and #strings.equalsIgnoreCase(z.status, 'AVAILABLE'))}"
+                                     th:each="z : ${zones}"
+                                     class="zone-tile cursor-pointer border rounded p-3 text-center select-none opacity-50 pointer-events-none line-through"
+                                     th:attr="data-zone-id=${z.id},data-available=${z.status},data-name=${z.name != null ? z.name : 'Zone'},data-area=${z.zoneArea != null ? z.zoneArea : 0},data-price=${z.pricePerDay != null ? z.pricePerDay : 0}"
+                                     onclick="selectZone(this)">
+                                    <div class="font-semibold" th:text="${z.name != null ? z.name : 'Zone'}">Zone</div>
+                                    <div class="text-xs text-gray-600">
+                                        <span th:text="${(z.zoneArea != null ? z.zoneArea : 0)} + ' m²'"></span> •
+                                        <span th:text="${(z.pricePerDay != null ? #numbers.formatDecimal(z.pricePerDay, 0, 'POINT', 0, 'COMMA') : '0')} + ' VND/ngày'"></span>
+                                    </div>
+                                    <div class="mt-1 text-xs">Đã thuê</div>
+                                </div>
+                            </div>
+
+                            <div class="pt-2 border-t" th:if="${false}">
+                                <div class="flex items-center justify-between mb-1">
+                                    <label class="block text-sm font-medium text-gray-700">Chọn diện tích theo ô 50 m²</label>
+                                    <div class="text-sm text-gray-600">
+                                        Đã chọn: <span id="unitSelectedCount">0</span> ô (<span id="unitSelectedArea">0</span> m²)
+                                    </div>
+                                </div>
+                                <input type="hidden" id="preSelectedArea" name="preSelectedArea" />
+                                <input type="hidden" id="selectedUnitIndices" name="selectedUnitIndices" />
+                                <div id="unitGrid" class="grid gap-2"></div>
+                                <div class="text-xs text-gray-500 mt-1">Giữ chuột và kéo để chọn theo hình chữ nhật. Mỗi ô = 50 m².</div>
+                            </div>
                         </div>
                         <div class="flex justify-end gap-2">
                             <button type="button" onclick="closeModal()"
@@ -395,16 +292,16 @@
 
     
 </div>
-
 <!-- Footer -->
-<div th:replace="taskbar/customer-footer :: customerFooter"></div>
+<div th:replace="~{taskbar/customer-footer :: customerFooter}"></div>
 
 <!-- Scripts -->
-<script>
+<script th:inline="javascript">
     document.addEventListener('DOMContentLoaded', function () {
         const today = new Date().toISOString().split('T')[0];
         const startInput = document.getElementById('startDate');
         const endInput = document.getElementById('endDate');
+        const storageId = /*[[${storage.storageid}]]*/ 0;
 
         // Đặt giá trị tối thiểu cho ngày bắt đầu và ngày kết thúc
         startInput.setAttribute('min', today);
@@ -414,12 +311,232 @@
         startInput.addEventListener('change', function () {
             endInput.setAttribute('min', startInput.value);
         });
+
+        // Build 50 m² unit grid once on load
+        const UNIT_SIZE = 50;
+        const storageArea = /*[[${storage.area}]]*/ 0;
+        const totalUnits = Math.max(0, Math.floor(storageArea / UNIT_SIZE));
+        const unitGrid = document.getElementById('unitGrid');
+        if (unitGrid && totalUnits > 0) {
+            const cols = Math.max(1, Math.ceil(Math.sqrt(totalUnits))); // near-square
+            unitGrid.style.gridTemplateColumns = 'repeat(' + cols + ', minmax(0, 1fr))';
+
+            // Create tiles
+            for (let i = 0; i < totalUnits; i++) {
+                const tile = document.createElement('div');
+                tile.className = 'unit-tile border rounded h-10 flex items-center justify-center text-xs cursor-pointer select-none';
+                tile.textContent = UNIT_SIZE + ' m²';
+                tile.dataset.index = String(i);
+                unitGrid.appendChild(tile);
+            }
+
+            // Helper: apply unavailable index list to grid
+            function applyUnavailable(indices) {
+                const raw = Array.isArray(indices) ? indices.slice() : [];
+                // Tự nhận biết dữ liệu 1-based: tất cả >=1, không có 0, và max <= totalUnits
+                let normalized = raw;
+                if (raw.length > 0) {
+                    const minIdx = Math.min(...raw);
+                    const maxIdx = Math.max(...raw);
+                    const assumeOneBased = minIdx >= 1 && !raw.includes(0) && maxIdx <= totalUnits;
+                    if (assumeOneBased) {
+                        normalized = raw.map(i => i - 1);
+                        console.debug('[Grid] Converted 1-based -> 0-based:', raw, '=>', normalized);
+                    }
+                }
+                // Loại bỏ index ngoài phạm vi grid
+                normalized = normalized.filter(i => Number.isInteger(i) && i >= 0 && i < totalUnits);
+                const set = new Set(normalized);
+                Array.from(unitGrid.children).forEach(ch => {
+                    const idx = parseInt(ch.dataset.index);
+                    if (set.has(idx)) {
+                        ch.classList.add('disabled');
+                        ch.classList.remove('selected');
+                    } else {
+                        ch.classList.remove('disabled');
+                    }
+                });
+                console.debug('[Grid] Applied unavailable indices:', Array.from(set));
+                updateUnitSelectionCount();
+            }
+
+            // Fetch unavailable tiles from server when both dates valid
+            function toIsoDateStr(inputEl) {
+                // Ưu tiên valueAsDate nếu có, fallback parse thủ công
+                const d = inputEl.valueAsDate;
+                if (d instanceof Date && !isNaN(d)) {
+                    const y = d.getFullYear();
+                    const mth = String(d.getMonth() + 1).padStart(2, '0');
+                    const day = String(d.getDate()).padStart(2, '0');
+                    return y + '-' + mth + '-' + day;
+                }
+                // Fallback: cố gắng parse các định dạng phổ biến
+                const raw = (inputEl.value || '').trim();
+                if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw; // ISO ok
+                const m = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/); // MM/DD/YYYY
+                if (m) {
+                    const mm = m[1].padStart(2, '0');
+                    const dd = m[2].padStart(2, '0');
+                    const yyyy = m[3];
+                    return yyyy + '-' + mm + '-' + dd;
+                }
+                // Không parse được => trả về chuỗi rỗng để tránh gọi API sai
+                return '';
+            }
+
+            async function refreshUnavailable() {
+                const s = toIsoDateStr(startInput);
+                const e = toIsoDateStr(endInput);
+                if (!s || !e) return;
+                if (new Date(e) <= new Date(s)) return;
+                try {
+                    const url = '/SWP/booking/' + storageId + '/unavailable?startDate=' + encodeURIComponent(s) + '&endDate=' + encodeURIComponent(e);
+                    console.debug('[Fetch] storageId:', storageId, 'start:', s, 'end:', e);
+                    console.debug('[Fetch] Unavailable URL:', url);
+                    const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+                    if (!res.ok) {
+                        console.error('[Fetch] HTTP error', res.status, res.statusText);
+                        throw new Error('Network error');
+                    }
+                    const data = await res.json();
+                    console.debug('[Fetch] Unavailable data:', data);
+                    applyUnavailable(Array.isArray(data) ? data : []);
+                } catch (err) {
+                    // On error, clear unavailable markers
+                    console.error('[Fetch] Unavailable failed:', err);
+                    applyUnavailable([]);
+                }
+            }
+            // Expose to global so openModal() can force refresh immediately
+            window.refreshUnavailable = refreshUnavailable;
+
+            // Drag-to-select rectangle
+            let isDragging = false;
+            let isMouseDown = false;
+            let startIndex = null;
+            let lastDownTile = null;
+
+            function indexToRC(idx) {
+                const r = Math.floor(idx / cols);
+                const c = idx % cols;
+                return { r, c };
+            }
+            function updateSelectionRect(endIdx) {
+                const s = indexToRC(startIndex);
+                const e = indexToRC(endIdx);
+                const r1 = Math.min(s.r, e.r), r2 = Math.max(s.r, e.r);
+                const c1 = Math.min(s.c, e.c), c2 = Math.max(s.c, e.c);
+                const children = unitGrid.children;
+                for (let i = 0; i < children.length; i++) {
+                    const { r, c } = indexToRC(i);
+                    if (r >= r1 && r <= r2 && c >= c1 && c <= c2) {
+                        children[i].classList.add('selected');
+                    } else if (!isDragging) {
+                        // do nothing on finalize here
+                    } else {
+                        // while dragging, clear others for preview
+                        children[i].classList.remove('selected');
+                    }
+                }
+                updateUnitSelectionCount();
+            }
+
+            unitGrid.addEventListener('mousedown', (e) => {
+                const tile = e.target.closest('.unit-tile');
+                if (!tile) return;
+                if (tile.classList.contains('disabled')) return; // block interaction on disabled
+                isMouseDown = true;
+                startIndex = parseInt(tile.dataset.index);
+                lastDownTile = tile;
+                // Do not mark dragging or select yet; wait for movement or click handler
+            });
+            unitGrid.addEventListener('mouseover', (e) => {
+                if (!isMouseDown) return;
+                const tile = e.target.closest('.unit-tile');
+                if (!tile) return;
+                if (tile.classList.contains('disabled')) return; // ignore drag over disabled
+                const idx = parseInt(tile.dataset.index);
+                if (!isDragging && idx !== startIndex) {
+                    isDragging = true; // start drag only when moving to another tile
+                    // Clear previous selection only when drag begins (so clicks can accumulate)
+                    Array.from(unitGrid.children).forEach(ch => ch.classList.remove('selected'));
+                }
+                updateSelectionRect(idx);
+            });
+            document.addEventListener('mouseup', (e) => {
+                // If mouse was pressed on a tile and no drag happened => treat as simple click toggle
+                if (isMouseDown && !isDragging && lastDownTile) {
+                    if (!lastDownTile.classList.contains('disabled')) {
+                        lastDownTile.classList.toggle('selected');
+                    }
+                    updateUnitSelectionCount();
+                }
+                isMouseDown = false;
+                isDragging = false;
+                lastDownTile = null;
+            });
+
+            function updateUnitSelectionCount() {
+                const selectedTiles = unitGrid.querySelectorAll('.unit-tile.selected');
+                const count = selectedTiles.length;
+                const area = count * UNIT_SIZE;
+                const cntEl = document.getElementById('unitSelectedCount');
+                const areaEl = document.getElementById('unitSelectedArea');
+                const hiddenArea = document.getElementById('preSelectedArea');
+                const hiddenIndices = document.getElementById('selectedUnitIndices');
+                if (cntEl) cntEl.textContent = String(count);
+                if (areaEl) areaEl.textContent = String(area);
+                if (hiddenArea) hiddenArea.value = String(area);
+                if (hiddenIndices) {
+                    const indices = Array.from(selectedTiles).map(t => t.dataset.index).join(',');
+                    hiddenIndices.value = indices;
+                }
+                // If user selected tiles, clear zone selection to avoid conflicts
+                if (area > 0) {
+                    const zoneHidden = document.getElementById('zoneIdHidden');
+                    if (zoneHidden) zoneHidden.value = '';
+                    document.querySelectorAll('#zoneGrid .zone-tile.selected').forEach(el => el.classList.remove('selected'));
+                }
+            }
+            // Trigger refresh when dates change
+            startInput.addEventListener('change', refreshUnavailable);
+            endInput.addEventListener('change', refreshUnavailable);
+
+            // Initial refresh if dates prefilled
+            refreshUnavailable();
+        }
     });
 
     // Hàm mở modal
     function openModal() {
         const modal = document.getElementById('bookingModal');
         modal.classList.remove('hidden');
+        // Prefill default dates if empty: today and tomorrow
+        const startInput = document.getElementById('startDate');
+        const endInput = document.getElementById('endDate');
+        if (startInput && endInput) {
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+            const todayStr = yyyy + '-' + mm + '-' + dd;
+
+            const tomorrow = new Date(today.getTime() + 24*60*60*1000);
+            const yyyy2 = tomorrow.getFullYear();
+            const mm2 = String(tomorrow.getMonth() + 1).padStart(2, '0');
+            const dd2 = String(tomorrow.getDate()).padStart(2, '0');
+            const tomorrowStr = yyyy2 + '-' + mm2 + '-' + dd2;
+
+            if (!startInput.value) startInput.value = todayStr;
+            // Ensure end > start
+            if (!endInput.value || new Date(endInput.value) <= new Date(startInput.value)) {
+                endInput.value = tomorrowStr;
+            }
+        }
+        // Force refresh unavailable immediately on modal open
+        if (window.refreshUnavailable) {
+            window.refreshUnavailable();
+        }
     }
 
     // Hàm đóng modal
@@ -439,6 +556,8 @@
     document.querySelector('#bookingModal form').addEventListener('submit', function(event) {
         const startDate = document.getElementById('startDate').value;
         const endDate = document.getElementById('endDate').value;
+        const zoneId = document.getElementById('zoneIdHidden').value;
+        const preSelectedArea = parseInt(document.getElementById('preSelectedArea')?.value || '0');
 
         if (!startDate || !endDate) {
             event.preventDefault();
@@ -450,6 +569,40 @@
             event.preventDefault();
             alert('Ngày kết thúc phải sau ngày bắt đầu.');
             return;
+        }
+
+        // Require either a zone selection or at least one 50 m² unit
+        if (!zoneId && (!preSelectedArea || preSelectedArea <= 0)) {
+            event.preventDefault();
+            alert('Vui lòng chọn Zone hoặc chọn ít nhất 1 ô (50 m²).');
+            return;
+        }
+    });
+</script>
+<script>
+    function selectZone(el) {
+        // Bỏ chọn các tile khác
+        document.querySelectorAll('#zoneGrid .zone-tile').forEach(function (tile) {
+            tile.classList.remove('selected');
+        });
+
+        // Đánh dấu tile được chọn
+        el.classList.add('selected');
+
+        // Set hidden input zoneId
+        var zoneId = el.getAttribute('data-zone-id');
+        document.getElementById('zoneIdHidden').value = zoneId;
+    }
+
+    // Nếu cần, tự chọn tile đầu tiên còn trống khi mở modal
+    document.addEventListener('DOMContentLoaded', function () {
+        var current = document.getElementById('zoneIdHidden').value;
+        if (!current) {
+            var firstAvailable = Array.from(document.querySelectorAll('#zoneGrid .zone-tile'))
+                .find(function (tile) { return !tile.classList.contains('opacity-50'); });
+            if (firstAvailable) {
+                selectZone(firstAvailable);
+            }
         }
     });
 </script>
