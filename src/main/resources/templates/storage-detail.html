@@ -298,11 +298,168 @@
 
 <!-- Scripts -->
 <script th:inline="javascript">
+    // Global variables and functions for modal access
+    let startInput, endInput, storageId, unitGrid, totalUnits;
+    const UNIT_SIZE = 50;
+    
+    // Global apply unavailable function for 50m² units
+    function applyUnavailable(indices) {
+        // Check if unitGrid exists
+        if (!unitGrid || !unitGrid.children) {
+            console.debug('[Grid] unitGrid not available, skipping apply unavailable');
+            return;
+        }
+        
+        const raw = Array.isArray(indices) ? indices.slice() : [];
+        // Tự nhận biết dữ liệu 1-based: tất cả >=1, không có 0, và max <= totalUnits
+        let normalized = raw;
+        if (raw.length > 0) {
+            const minIdx = Math.min(...raw);
+            const maxIdx = Math.max(...raw);
+            const assumeOneBased = minIdx >= 1 && !raw.includes(0) && maxIdx <= totalUnits;
+            if (assumeOneBased) {
+                normalized = raw.map(i => i - 1);
+                console.debug('[Grid] Converted 1-based -> 0-based:', raw, '=>', normalized);
+            }
+        }
+        // Loại bỏ index ngoài phạm vi grid
+        normalized = normalized.filter(i => Number.isInteger(i) && i >= 0 && i < totalUnits);
+        const set = new Set(normalized);
+        Array.from(unitGrid.children).forEach(ch => {
+            const idx = parseInt(ch.dataset.index);
+            if (set.has(idx)) {
+                ch.classList.add('disabled');
+                ch.classList.remove('selected');
+            } else {
+                ch.classList.remove('disabled');
+            }
+        });
+        console.debug('[Grid] Applied unavailable indices:', Array.from(set));
+        if (typeof updateUnitSelectionCount === 'function') {
+            updateUnitSelectionCount();
+        }
+    }
+    
+    // Global refresh functions
+    async function refreshUnavailable() {
+        const s = toIsoDateStr(startInput);
+        const e = toIsoDateStr(endInput);
+        if (!s || !e) return;
+        try {
+            const res = await fetch(`/SWP/booking/${storageId}/unavailable?startDate=${startInput.value}&endDate=${endInput.value}`);
+            if (!res.ok) {
+                throw new Error('Network error');
+            }
+            const data = await res.json();
+            console.debug('[Fetch] Unavailable data:', data);
+            applyUnavailable(Array.isArray(data) ? data : []);
+        } catch (err) {
+            // On error, clear unavailable markers
+            console.error('[Fetch] Unavailable failed:', err);
+            applyUnavailable([]);
+        }
+    }
+
+    // Global refresh unavailable zones function
+    async function refreshUnavailableZones() {
+        const startDate = startInput.value;
+        const endDate = endInput.value;
+        console.log('[Debug] refreshUnavailableZones called with:', { startDate, endDate });
+        
+        if (!startDate || !endDate) {
+            console.log('[Debug] Missing dates, skipping zone check');
+            return;
+        }
+        
+        try {
+            const url = `/SWP/booking/${storageId}/unavailable-zones?startDate=${startDate}&endDate=${endDate}`;
+            console.log('[Debug] Fetching unavailable zones from:', url);
+            
+            const res = await fetch(url);
+            if (!res.ok) {
+                throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+            }
+            const data = await res.json();
+            console.log('[Debug] Unavailable zones response:', data);
+            applyUnavailableZones(Array.isArray(data) ? data : []);
+        } catch (err) {
+            // On error, clear unavailable markers
+            console.error('[Error] Unavailable zones failed:', err);
+            applyUnavailableZones([]);
+        }
+    }
+
+    // Global apply unavailable zones function
+    function applyUnavailableZones(unavailableZoneIds) {
+        console.log('[Debug] applyUnavailableZones called with:', unavailableZoneIds);
+        const zoneTiles = document.querySelectorAll('.zone-tile');
+        console.log('[Debug] Found zone tiles:', zoneTiles.length);
+        
+        zoneTiles.forEach((tile, index) => {
+            const zoneId = parseInt(tile.getAttribute('data-zone-id'));
+            console.log(`[Debug] Processing tile ${index}: zoneId=${zoneId}, unavailable=${unavailableZoneIds.includes(zoneId)}`);
+            
+            if (unavailableZoneIds.includes(zoneId)) {
+                console.log(`[Debug] Marking zone ${zoneId} as unavailable`);
+                tile.classList.add('zone-unavailable');
+                tile.style.pointerEvents = 'none';
+                tile.style.opacity = '0.5';
+                tile.style.backgroundColor = '#f3f4f6';
+                tile.style.color = '#6b7280';
+                const statusDiv = tile.querySelector('.mt-1.text-xs');
+                if (statusDiv) {
+                    statusDiv.textContent = 'Đã thuê';
+                }
+            } else {
+                console.log(`[Debug] Marking zone ${zoneId} as available`);
+                tile.classList.remove('zone-unavailable');
+                tile.style.pointerEvents = '';
+                tile.style.opacity = '';
+                tile.style.backgroundColor = '';
+                tile.style.color = '';
+                const statusDiv = tile.querySelector('.mt-1.text-xs');
+                if (statusDiv) {
+                    statusDiv.textContent = 'Còn trống';
+                }
+            }
+        });
+    }
+
+    // Helper function for date conversion
+    function toIsoDateStr(inputEl) {
+        // Ưu tiên valueAsDate nếu có, fallback parse thủ công
+        const d = inputEl.valueAsDate;
+        if (d instanceof Date && !isNaN(d)) {
+            const y = d.getFullYear();
+            const mth = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return y + '-' + mth + '-' + day;
+        }
+        // Fallback: cố gắng parse các định dạng phổ biến
+        const raw = (inputEl.value || '').trim();
+        if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw; // ISO ok
+        const m = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/); // MM/DD/YYYY
+        if (m) {
+            const mm = m[1].padStart(2, '0');
+            const dd = m[2].padStart(2, '0');
+            const yyyy = m[3];
+            return yyyy + '-' + mm + '-' + dd;
+        }
+        // Không parse được => trả về chuỗi rỗng để tránh gọi API sai
+        return '';
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
         const today = new Date().toISOString().split('T')[0];
-        const startInput = document.getElementById('startDate');
-        const endInput = document.getElementById('endDate');
-        const storageId = /*[[${storage.storageid}]]*/ 0;
+        startInput = document.getElementById('startDate');
+        endInput = document.getElementById('endDate');
+        storageId = /*[[${storage.storageid}]]*/ 0;
+        
+        // Initialize unit grid variables
+        const UNIT_SIZE = 50;
+        const storageArea = /*[[${storage.area}]]*/ 0;
+        totalUnits = Math.max(0, Math.floor(storageArea / UNIT_SIZE));
+        unitGrid = document.getElementById('unitGrid');
 
         // Đặt giá trị tối thiểu cho ngày bắt đầu và ngày kết thúc
         startInput.setAttribute('min', today);
@@ -314,10 +471,6 @@
         });
 
         // Build 50 m² unit grid once on load
-        const UNIT_SIZE = 50;
-        const storageArea = /*[[${storage.area}]]*/ 0;
-        const totalUnits = Math.max(0, Math.floor(storageArea / UNIT_SIZE));
-        const unitGrid = document.getElementById('unitGrid');
         if (unitGrid && totalUnits > 0) {
             const cols = Math.max(1, Math.ceil(Math.sqrt(totalUnits))); // near-square
             unitGrid.style.gridTemplateColumns = 'repeat(' + cols + ', minmax(0, 1fr))';
@@ -360,100 +513,6 @@
                 console.debug('[Grid] Applied unavailable indices:', Array.from(set));
                 updateUnitSelectionCount();
             }
-
-            // Fetch unavailable tiles from server when both dates valid
-            function toIsoDateStr(inputEl) {
-                // Ưu tiên valueAsDate nếu có, fallback parse thủ công
-                const d = inputEl.valueAsDate;
-                if (d instanceof Date && !isNaN(d)) {
-                    const y = d.getFullYear();
-                    const mth = String(d.getMonth() + 1).padStart(2, '0');
-                    const day = String(d.getDate()).padStart(2, '0');
-                    return y + '-' + mth + '-' + day;
-                }
-                // Fallback: cố gắng parse các định dạng phổ biến
-                const raw = (inputEl.value || '').trim();
-                if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw; // ISO ok
-                const m = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/); // MM/DD/YYYY
-                if (m) {
-                    const mm = m[1].padStart(2, '0');
-                    const dd = m[2].padStart(2, '0');
-                    const yyyy = m[3];
-                    return yyyy + '-' + mm + '-' + dd;
-                }
-                // Không parse được => trả về chuỗi rỗng để tránh gọi API sai
-                return '';
-            }
-
-            async function refreshUnavailable() {
-                const s = toIsoDateStr(startInput);
-                const e = toIsoDateStr(endInput);
-                if (!s || !e) return;
-                try {
-                    const res = await fetch(`/SWP/booking/${storageId}/unavailable?startDate=${startInput.value}&endDate=${endInput.value}`);
-                    if (!res.ok) {
-                        throw new Error('Network error');
-                    }
-                    const data = await res.json();
-                    console.debug('[Fetch] Unavailable data:', data);
-                    applyUnavailable(Array.isArray(data) ? data : []);
-                } catch (err) {
-                    // On error, clear unavailable markers
-                    console.error('[Fetch] Unavailable failed:', err);
-                    applyUnavailable([]);
-                }
-            }
-
-            // Fetch unavailable zones for the date range
-            async function refreshUnavailableZones() {
-                if (!startInput.value || !endInput.value) return;
-                try {
-                    const res = await fetch(`/SWP/booking/${storageId}/unavailable-zones?startDate=${startInput.value}&endDate=${endInput.value}`);
-                    if (!res.ok) {
-                        throw new Error('Network error');
-                    }
-                    const data = await res.json();
-                    console.debug('[Fetch] Unavailable zones:', data);
-                    applyUnavailableZones(Array.isArray(data) ? data : []);
-                } catch (err) {
-                    // On error, clear unavailable markers
-                    console.error('[Fetch] Unavailable zones failed:', err);
-                    applyUnavailableZones([]);
-                }
-            }
-
-            // Apply unavailable zones styling
-            function applyUnavailableZones(unavailableZoneIds) {
-                const zoneTiles = document.querySelectorAll('.zone-tile');
-                zoneTiles.forEach(tile => {
-                    const zoneId = parseInt(tile.getAttribute('data-zone-id'));
-                    if (unavailableZoneIds.includes(zoneId)) {
-                        tile.classList.add('zone-unavailable');
-                        tile.style.pointerEvents = 'none';
-                        tile.style.opacity = '0.5';
-                        tile.style.backgroundColor = '#f3f4f6';
-                        tile.style.color = '#6b7280';
-                        const statusDiv = tile.querySelector('.mt-1.text-xs');
-                        if (statusDiv) {
-                            statusDiv.textContent = 'Đã thuê';
-                        }
-                    } else {
-                        tile.classList.remove('zone-unavailable');
-                        tile.style.pointerEvents = '';
-                        tile.style.opacity = '';
-                        tile.style.backgroundColor = '';
-                        tile.style.color = '';
-                        const statusDiv = tile.querySelector('.mt-1.text-xs');
-                        if (statusDiv) {
-                            statusDiv.textContent = 'Còn trống';
-                        }
-                    }
-                });
-            }
-
-            // Expose to global so openModal() can force refresh immediately
-            window.refreshUnavailable = refreshUnavailable;
-            window.refreshUnavailableZones = refreshUnavailableZones;
 
             // Drag-to-select rectangle
             let isDragging = false;
@@ -638,12 +697,15 @@
             }
         }
         // Force refresh unavailable and unavailable zones when modal opens
-        if (window.refreshUnavailable) {
-            window.refreshUnavailable();
-        }
-        if (window.refreshUnavailableZones) {
-            window.refreshUnavailableZones();
-        }
+        console.log('[Debug] openModal called, calling refresh functions...');
+        
+        setTimeout(() => {
+            console.log('[Debug] Timeout executed, calling refresh functions...');
+            console.log('[Debug] Calling refreshUnavailable...');
+            refreshUnavailable();
+            console.log('[Debug] Calling refreshUnavailableZones...');
+            refreshUnavailableZones();
+        }, 100); // Delay để đảm bảo modal đã render xong
     }
 
     // Hàm đóng modal

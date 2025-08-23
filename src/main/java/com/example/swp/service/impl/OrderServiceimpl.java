@@ -4,9 +4,13 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -376,11 +380,32 @@ public class OrderServiceimpl implements OrderService {
             .filter(order -> !order.getEndDate().isBefore(startDate) && !order.getStartDate().isAfter(endDate))
             .collect(Collectors.toList());
         
-        return bookedOrders.stream()
-            .filter(order -> order.getZone() != null)
-            .map(order -> order.getZone().getId())
-            .distinct()
-            .collect(Collectors.toList());
+        // Trích xuất tất cả zone IDs từ cả selectedZoneIds và zone đơn lẻ
+        Set<Integer> allZoneIds = new HashSet<>();
+        
+        for (Order order : bookedOrders) {
+            // Ưu tiên lấy từ selectedZoneIds trước
+            String selectedZoneIds = order.getSelectedZoneIds();
+            if (selectedZoneIds != null && !selectedZoneIds.trim().isEmpty()) {
+                try {
+                    Arrays.stream(selectedZoneIds.split(","))
+                        .map(String::trim)
+                        .filter(s -> !s.isEmpty())
+                        .map(Integer::parseInt)
+                        .forEach(allZoneIds::add);
+                } catch (Exception e) {
+                    // Nếu lỗi parse selectedZoneIds, fallback về zone đơn lẻ
+                    if (order.getZone() != null) {
+                        allZoneIds.add(order.getZone().getId());
+                    }
+                }
+            } else if (order.getZone() != null) {
+                // Fallback về zone đơn lẻ nếu không có selectedZoneIds
+                allZoneIds.add(order.getZone().getId());
+            }
+        }
+        
+        return new ArrayList<>(allZoneIds);
     }
 
 //    @Override
