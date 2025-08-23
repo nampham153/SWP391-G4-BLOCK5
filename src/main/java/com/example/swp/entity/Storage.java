@@ -5,6 +5,7 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -51,6 +52,10 @@ public class Storage {
     @OneToMany(mappedBy = "storage")
     @JsonIgnore
     private List<StorageTransaction> storageTransactions;
+
+    @OneToMany(mappedBy = "storage", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    private List<Zone> zones;
 
     @ManyToOne
     @JoinColumn(name = "staffid", referencedColumnName = "staffid")

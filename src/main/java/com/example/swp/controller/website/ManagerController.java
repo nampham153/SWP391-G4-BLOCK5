@@ -162,28 +162,14 @@ public class ManagerController {
         List<Storage> storages = storageService.getAll();
         model.addAttribute("storages", storages);
 
-        // Tạo Map để chứa thông tin zone và grid cho mỗi storage
-        Map<Integer, Map<String, Object>> storageInfoMap = new HashMap<>();
+        // Tạo Map để chứa số lượng ô 50m² cho mỗi storage
+        Map<Integer, Integer> gridCountMap = new HashMap<>();
         for (Storage storage : storages) {
-            List<Zone> zones = zoneService.getZonesByStorageId(storage.getStorageid());
-            
-            // Tính số zone có thể thuê (status = available hoặc null)
-            long rentableZones = zones.stream()
-                .filter(zone -> zone.getStatus() == null || "available".equals(zone.getStatus()))
-                .count();
-            
-            // Tính số ô 50m² có thể chia từ diện tích kho
-            int gridUnits = (int) Math.floor(storage.getArea() / 50);
-            
-            Map<String, Object> info = new HashMap<>();
-            info.put("totalZones", zones.size());
-            info.put("rentableZones", rentableZones);
-            info.put("gridUnits", gridUnits);
-            info.put("storageArea", storage.getArea());
-            
-            storageInfoMap.put(storage.getStorageid(), info);
+            // Tính số ô 50m² dựa trên diện tích kho
+            int gridCount = (int) Math.floor(storage.getArea() / 50.0);
+            gridCountMap.put(storage.getStorageid(), gridCount);
         }
-        model.addAttribute("storageInfoMap", storageInfoMap);
+        model.addAttribute("gridCountMap", gridCountMap);
 
         return "manager-all-storage"; // Tên file HTML tương ứng
     }
@@ -218,7 +204,8 @@ public class ManagerController {
     @LogActivity(action = "Thêm kho hàng")
     @PostMapping("/addstorage")
     public String addStorage(@ModelAttribute StorageRequest storageRequest,
-            @RequestParam("image") MultipartFile file, @Valid RedirectAttributes redirectAttributes) {
+            @RequestParam(value = "image", required = false) MultipartFile file, 
+            @Valid RedirectAttributes redirectAttributes) {
         try {
             // Upload ảnh
             if (file != null && !file.isEmpty()) {
@@ -226,12 +213,20 @@ public class ManagerController {
                 storageRequest.setImUrl(imageUrl);
             }
 
+            // Mặc định tạo zones tự động
+            storageRequest.setCreateZones(true);
+
             // Gọi service lưu vào DB
-            storageService.createStorage(storageRequest);
-            redirectAttributes.addFlashAttribute("message", "Thêm kho thành công!");
+            Storage createdStorage = storageService.createStorage(storageRequest);
+            
+            // Tính số zones đã tạo
+            int zonesCreated = (int) Math.floor(createdStorage.getArea() / 50.0);
+            String message = "Thêm kho thành công! Đã tạo " + zonesCreated + " khu cho thuê (mỗi khu 50m²).";
+            
+            redirectAttributes.addFlashAttribute("message", message);
         } catch (Exception e) {
             e.printStackTrace();
-            redirectAttributes.addFlashAttribute("message", "Lỗi khi thêm kho.");
+            redirectAttributes.addFlashAttribute("message", "Lỗi khi thêm kho: " + e.getMessage());
         }
         return "redirect:/admin/manager-dashboard";
     }
