@@ -5,6 +5,7 @@ import com.example.swp.dto.NewStaffForm;
 import com.example.swp.dto.StaffRequest;
 import com.example.swp.entity.Staff;
 import com.example.swp.enums.RoleName;
+import com.example.swp.repository.CustomerRepository;
 import com.example.swp.repository.StaffRepository;
 import com.example.swp.service.EmailService;
 import com.example.swp.service.StaffService;
@@ -22,6 +23,7 @@ public class StaffServiceImpl implements StaffService {
     @Autowired private StaffRepository staffRepository;
     @Autowired private PasswordEncoder passwordEncoder;
     @Autowired private EmailService emailService;
+    @Autowired private CustomerRepository customerRepository;
 
     @Override
     public List<Staff> getAllStaff() {
@@ -51,13 +53,22 @@ public class StaffServiceImpl implements StaffService {
         return createFromForm(form);
     }
 
+    private boolean emailExistsAnywhere(String email) {
+        return staffRepository.existsByEmailIgnoreCase(email)
+                || customerRepository.existsByEmail(email);
+    }
+
+    private boolean phoneExistsAnywhere(String phone) {
+        return staffRepository.existsByPhone(phone)
+                || customerRepository.existsByPhone(phone);
+    }
+
     @Override
     public Staff createFromForm(NewStaffForm form) {
-        // App-level pre-check for nicer error message
-        if (emailExists(form.getEmail())) {
+        if (emailExistsAnywhere(form.getEmail())) {
             throw new IllegalArgumentException("duplicate-email");
         }
-        if (phoneExists(form.getPhone())) {
+        if (phoneExistsAnywhere(form.getPhone())) {
             throw new IllegalArgumentException("duplicate-phone");
         }
 
@@ -73,20 +84,16 @@ public class StaffServiceImpl implements StaffService {
 
         try {
             Staff saved = staffRepository.save(s);
-
-            // Send welcome email with password
-            String subject = "Tài khoản nhân viên tại QVL Storage";
-            String body =
-                    "Xin chào " + saved.getFullname() + ",\n\n" +
-                            "Tài khoản nhân viên của bạn đã được tạo.\n" +
-                            "Email đăng nhập: " + saved.getEmail() + "\n" +
-                            "Mật khẩu tạm thời: " + rawPassword + "\n\n" +
-                            "Vui lòng đăng nhập và đổi mật khẩu ngay sau khi vào hệ thống.";
-            emailService.sendEmail(saved.getEmail(), subject, body);
-
+            emailService.sendEmail(saved.getEmail(),
+                    "Tài khoản nhân viên tại QVL Storage",
+                    "Xin chào " + saved.getFullname() + ",\n\n"
+                            + "Tài khoản nhân viên của bạn đã được tạo.\n"
+                            + "Email đăng nhập: " + saved.getEmail() + "\n"
+                            + "Mật khẩu tạm thời: " + rawPassword + "\n\n"
+                            + "Vui lòng đăng nhập và đổi mật khẩu ngay sau khi vào hệ thống."
+            );
             return saved;
         } catch (DataIntegrityViolationException ex) {
-            // DB unique constraint fallback
             throw new IllegalArgumentException("duplicate-email-or-phone", ex);
         }
     }

@@ -313,10 +313,7 @@ public class ManagerController {
                                 @RequestParam(defaultValue = "1") int page,
                                 @RequestParam(defaultValue = "6") int size) {
 
-        Page<Staff> staffPage = staffService.getStaffsByPage(
-                page - 1, size, Sort.by("fullname").ascending()
-                // or Sort.by("staffid").ascending()
-        );
+        Page<Staff> staffPage = staffService.getStaffsByPage(page - 1, size); // already DESC by id inside
 
         model.addAttribute("staffPage", staffPage);
         model.addAttribute("staffs", staffPage.getContent());

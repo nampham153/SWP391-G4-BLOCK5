@@ -6,6 +6,7 @@ import com.example.swp.enums.RoleName;
 import com.example.swp.service.CustomerService;
 import com.example.swp.service.EmailService;
 import com.example.swp.service.OtpCache;
+import com.example.swp.service.StaffService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -21,7 +22,8 @@ import java.util.List;
 
 @Controller
 public class RegisterController {
-
+    @Autowired
+    private StaffService staffService;
     @Autowired
     private CustomerService customerService;
     @Autowired
@@ -41,21 +43,39 @@ public class RegisterController {
     @PostMapping("/api/register")
     @ResponseBody
     public ResponseEntity<String> processRegister(@Valid @RequestBody Customer customer) {
-        if (customerService.existsByEmail(customer.getEmail())) {
-            return ResponseEntity.badRequest().body("Email đã tồn tại!");
+        // Normalize (optional but safer if DB is case-sensitive on email)
+        String email = customer.getEmail() == null ? null : customer.getEmail().trim();
+        String phone = customer.getPhone() == null ? null : customer.getPhone().trim();
+
+        // Email duplicate across BOTH tables
+        boolean emailTaken =
+                customerService.existsByEmail(email) ||    // Customer table
+                        staffService.emailExists(email);            // Staff table
+
+        if (emailTaken) {
+            return ResponseEntity.badRequest().body("Email đã tồn tại (khách hàng hoặc nhân viên)!");
         }
-        if (customerService.existsByPhone(customer.getPhone())) {
-            return ResponseEntity.badRequest().body("Số điện thoại đã tồn tại!");
+
+        // Phone duplicate across BOTH tables
+        boolean phoneTaken =
+                customerService.existsByPhone(phone) ||    // Customer table
+                        staffService.phoneExists(phone);           // Staff table
+
+        if (phoneTaken) {
+            return ResponseEntity.badRequest().body("Số điện thoại đã tồn tại (khách hàng hoặc nhân viên)!");
         }
 
         customer.setRoleName(RoleName.BLOCKED);
         customer.setPassword(passwordEncoder.encode(customer.getPassword()));
         customerService.save(customer);
-        String otp = String.valueOf((int)(Math.random() * 900000) + 100000); // 6 số
-        emailService.sendOtpEmail(customer.getEmail(), otp);
-        otpCache.put(customer.getEmail(), otp);
+
+        String otp = String.valueOf((int) (Math.random() * 900000) + 100000);
+        emailService.sendOtpEmail(email, otp);
+        otpCache.put(email, otp);
+
         return ResponseEntity.ok("Đăng ký thành công!");
     }
+
     @PostMapping("/api/verify-otp")
     @ResponseBody
     public ResponseEntity<String> verifyOtp(@RequestParam String email, @RequestParam String otp) {
