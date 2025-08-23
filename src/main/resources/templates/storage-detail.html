@@ -200,10 +200,10 @@
                                      th:attr="data-zone-id=${z.id},data-available=${z.status},data-name=${z.name != null ? z.name : 'Zone'},data-area=${z.zoneArea != null ? z.zoneArea : 0},data-price=${z.pricePerDay != null ? z.pricePerDay : 0}"
                                      onclick="selectZone(this)">
                                     <div class="font-semibold" th:text="${z.name != null ? z.name : 'Zone'}">Zone</div>
-                                    <div class="text-xs text-gray-600">
-                                        <span th:text="${(z.zoneArea != null ? z.zoneArea : 0)} + ' m²'"></span> •
-                                        <span th:text="${(z.pricePerDay != null ? #numbers.formatDecimal(z.pricePerDay, 0, 'POINT', 0, 'COMMA') : '0')} + ' VND/ngày'"></span>
-                                    </div>
+<!--                                    <div class="text-xs text-gray-600">-->
+<!--                                        <span th:text="${(z.zoneArea != null ? z.zoneArea : 0)} + ' m²'"></span> •-->
+<!--                                        <span th:text="${(z.pricePerDay != null ? #numbers.formatDecimal(z.pricePerDay, 0, 'POINT', 0, 'COMMA') : '0')} + ' VND/ngày'"></span>-->
+<!--                                    </div>-->
                                     <div class="mt-1 text-xs">Còn trống</div>
                                 </div>
                                 <!-- Unavailable zone -->
