@@ -6,7 +6,15 @@
     <title>Chi tiết đơn hàng</title>
     <link rel="stylesheet" th:href="@{/css/booking-detail.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        .unit-grid { display: grid; gap: 8px; margin-top: 8px; }
+        .unit-tile { user-select: none; border: 1px solid #e5e7eb; border-radius: 8px; height: 36px; display: flex; align-items: center; justify-content: center; font-size: 12px; background: #fff; }
+        /* Hiển thị ô đã đặt dưới dạng màu xám */
+        .unit-tile.selected { background-color: #f3f4f6; outline: 2px solid #9ca3af; }
+        .muted { color: #6b7280; font-size: 13px; }
+    </style>
 </head>
+
 <body>
 <div class="page-wrapper">
     <!-- Navigation -->
@@ -120,6 +128,21 @@
                             </div>
                         </div>
 
+                        <!-- Selected 50 m² units visualization -->
+                        <div class="info-card" style="margin-top: 24px;"
+                             th:with="selCsv=${selectedUnitIndices != null && !#strings.isEmpty(selectedUnitIndices) ? selectedUnitIndices : order.selectedUnitIndices}">
+                            <h3 style="margin:0 0 8px 0; font-size: 18px;"><i class="fas fa-th"></i> Các ô 50 m² đã chọn</h3>
+                            <div class="muted">
+                                Đã chọn: <span id="bdUnitSelectedCount">0</span> ô
+                                (<span id="bdUnitSelectedArea">0</span> m²)
+                                <span th:if="${selCsv != null and !#strings.isEmpty(selCsv)}">
+                                    • Danh sách: <span th:text="${selCsv}">0</span>
+                                </span>
+                            </div>
+                            <div id="bdUnitGrid" class="unit-grid" th:attr="data-selected=${selCsv != null ? selCsv : ''}"></div>
+                            <small class="muted">Mỗi ô = 50 m². Lưới chỉ mang tính minh họa, không tương tác.</small>
+                        </div>
+
                         <!-- Action buttons -->
                         <div class="order-actions" style="margin-top: 30px; text-align: center; border-top: 1px solid #eee; padding-top: 20px;">
                             <a href="/SWP/customers/my-bookings" class="btn btn-secondary" style="margin-right: 10px;">
@@ -145,14 +168,43 @@
         </div>
     </div>
 
-
-
     <!-- Footer -->
     <div th:replace="taskbar/customer-footer :: customerFooter"></div>
 </div>
 
-<script>
-    
+<script th:inline="javascript">
+//<![CDATA[
+(function initDetailGrid(){
+    try {
+        const UNIT_SIZE = 50;
+        const grid = document.getElementById('bdUnitGrid');
+        if (!grid) return;
+        const storageArea = /*[[${order.storage.area}]]*/ 0;
+        const totalUnits = Math.max(0, Math.floor(storageArea / UNIT_SIZE));
+        const selStr = grid.getAttribute('data-selected') || '';
+        const selected = new Set(selStr.split(',').map(s=>s.trim()).filter(Boolean).map(n=>parseInt(n,10)).filter(n=>!isNaN(n)));
+
+        const cols = Math.max(1, Math.ceil(Math.sqrt(totalUnits)));
+        grid.style.gridTemplateColumns = `repeat(${cols}, minmax(0, 1fr))`;
+        for (let i=0;i<totalUnits;i++){
+            const tile = document.createElement('div');
+            tile.className = 'unit-tile' + (selected.has(i) ? ' selected' : '');
+            tile.textContent = `${UNIT_SIZE} m²`;
+            tile.dataset.index = String(i);
+            grid.appendChild(tile);
+        }
+        // update counters
+        const cnt = selected.size;
+        const area = cnt * UNIT_SIZE;
+        const cntEl = document.getElementById('bdUnitSelectedCount');
+        const areaEl = document.getElementById('bdUnitSelectedArea');
+        if (cntEl) cntEl.textContent = String(cnt);
+        if (areaEl) areaEl.textContent = String(area);
+    } catch(err){
+        console.warn('Render detail grid failed:', err);
+    }
+})();
+//]]>
 </script>
 </body>
 </html>

@@ -19,6 +19,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.annotation.Isolation;
 
 import com.example.swp.entity.Customer;
 import com.example.swp.entity.EContract;
@@ -26,6 +28,7 @@ import com.example.swp.entity.Order;
 import com.example.swp.entity.Storage;
 import com.example.swp.entity.Voucher;
 import com.example.swp.entity.Zone;
+import com.example.swp.entity.UnitSelection;
 import com.example.swp.entity.VoucherUsage;
 import com.example.swp.enums.EContractStatus;
 import com.example.swp.enums.VoucherStatus;
@@ -37,6 +40,7 @@ import com.example.swp.service.VoucherService;
 import com.example.swp.repository.ZoneRepository;
 import com.example.swp.service.VoucherUsageService;
 import com.example.swp.repository.OrderRepository;
+import com.example.swp.repository.UnitSelectionRepository;
 
 import jakarta.servlet.http.HttpSession;
 
@@ -74,6 +78,9 @@ public class BookingController {
 
     @Autowired
     private OrderRepository orderRepository;
+
+    @Autowired
+    private UnitSelectionRepository unitSelectionRepository;
 
     /**
      * Helper method để kiểm tra và lấy customer từ session
@@ -184,6 +191,20 @@ public class BookingController {
             model.addAttribute("selectedUnitIndices", selectedUnitIndices);
         }
 
+        // Tính các ô đã bị đặt trong khoảng thời gian để disable trên grid
+        try {
+            java.util.List<Integer> booked = unitSelectionRepository
+                    .findBookedUnitIndicesForOverlap(storageId, startDate, endDate);
+            String unavailableCsv = booked.stream()
+                    .distinct()
+                    .sorted()
+                    .map(String::valueOf)
+                    .collect(java.util.stream.Collectors.joining(","));
+            model.addAttribute("unavailableUnitIndices", unavailableCsv);
+        } catch (Exception ignore) {
+            model.addAttribute("unavailableUnitIndices", "");
+        }
+
         // Zone đã chọn (nếu có)
         if (zoneId != null) {
             Optional<Zone> zoneOpt = zoneRepository.findById(zoneId);
@@ -264,6 +285,7 @@ public class BookingController {
      * Xử lý submit form booking
      */
     @PostMapping("/booking/{storageId}/booking/save")
+    @Transactional(isolation = Isolation.SERIALIZABLE)
     public String processBooking(@PathVariable int storageId,
             @RequestParam("startDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam("endDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
@@ -273,7 +295,7 @@ public class BookingController {
             @RequestParam("name") String name,
             @RequestParam("email") String email,
             @RequestParam("phone") String phone,
-            @RequestParam("id_citizen") String idCitizen,
+            @RequestParam(value = "id_citizen", required = false) String idCitizen,
             @RequestParam(value = "voucherId", required = false) Integer voucherId,
             @RequestParam("orderToken") String orderToken,
             Model model,
@@ -328,6 +350,12 @@ public class BookingController {
             return "redirect:/SWP/booking/" + storageId + "/booking?startDate=" + startDate + "&endDate=" + endDate;
         }
 
+        // Nếu không chọn Zone, yêu cầu phải chọn các ô cụ thể để tránh trùng lặp đơn vị
+        if (zoneId == null && (selectedUnitIndices == null || selectedUnitIndices.isBlank())) {
+            redirectAttributes.addFlashAttribute("error", "Vui lòng chọn các ô 50 m² cụ thể để đặt kho.");
+            return "redirect:/SWP/booking/" + storageId + "/booking?startDate=" + startDate + "&endDate=" + endDate;
+        }
+
         // Nếu có chọn theo ô, kiểm tra xung đột với các đơn trùng thời gian
         if (selectedUnitIndices != null && !selectedUnitIndices.isBlank()) {
             // Làm sạch danh sách chỉ số yêu cầu
@@ -337,17 +365,9 @@ public class BookingController {
                     .map(Integer::parseInt)
                     .collect(java.util.stream.Collectors.toSet());
 
-            List<String> bookedList = orderRepository.findBookedUnitIndicesForOverlap(
-                    storageId, startDate, endDate);
-
-            java.util.Set<Integer> booked = new java.util.HashSet<>();
-            for (String s : bookedList) {
-                if (s == null || s.isBlank()) continue;
-                for (String p : s.split(",")) {
-                    String t = p.trim();
-                    if (!t.isEmpty()) booked.add(Integer.parseInt(t));
-                }
-            }
+            java.util.Set<Integer> booked = new java.util.HashSet<>(
+                    unitSelectionRepository.findBookedUnitIndicesForOverlap(storageId, startDate, endDate)
+            );
             booked.retainAll(requested);
             if (!booked.isEmpty()) {
                 redirectAttributes.addFlashAttribute("error", "Một số ô bạn chọn đã được đặt trong khoảng thời gian này. Vui lòng chọn lại.");
@@ -447,6 +467,23 @@ public class BookingController {
             // Lưu đơn hàng vào database
             Order savedOrder = orderService.save(order);
 
+            // Lưu từng ô đã chọn vào bảng UnitSelection
+            if (selectedUnitIndices != null && !selectedUnitIndices.isBlank()) {
+                String[] parts = selectedUnitIndices.split(",");
+                for (String part : parts) {
+                    String t = part.trim();
+                    if (t.isEmpty()) continue;
+                    Integer idx = Integer.parseInt(t);
+                    UnitSelection us = new UnitSelection();
+                    us.setOrder(savedOrder);
+                    us.setStorage(storage);
+                    us.setUnitIndex(idx);
+                    us.setStartDate(startDate);
+                    us.setEndDate(endDate);
+                    unitSelectionRepository.save(us);
+                }
+            }
+
             // Lưu lịch sử sử dụng voucher nếu có
             if (appliedVoucher != null) {
                 VoucherUsage usage = new VoucherUsage();
@@ -522,6 +559,23 @@ public class BookingController {
         // Thêm attributes vào model
         model.addAttribute("order", order);
         model.addAttribute("customer", customer);
+
+        // Nếu đơn không có CSV trong Order, lấy từ bảng UnitSelection để hiển thị
+        try {
+            String csv = order.getSelectedUnitIndices();
+            if (csv == null || csv.trim().isEmpty()) {
+                java.util.List<Integer> indices = unitSelectionRepository.findUnitIndicesByOrderId(order.getId());
+                if (indices != null && !indices.isEmpty()) {
+                    csv = indices.stream()
+                            .sorted()
+                            .map(String::valueOf)
+                            .collect(java.util.stream.Collectors.joining(","));
+                }
+            }
+            if (csv != null) {
+                model.addAttribute("selectedUnitIndices", csv);
+            }
+        } catch (Exception ignore) { }
 
         return "booking-detail";
     }

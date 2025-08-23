@@ -170,7 +170,7 @@
                                 </div>
                             </div>
                             <div id="bfUnitGrid" class="grid" style="display:grid; gap:8px;"
-                                 th:attr="data-preselected=${selectedUnitIndices}"></div>
+                                 th:attr="data-preselected=${selectedUnitIndices},data-unavailable=${unavailableUnitIndices}"></div>
                             <small class="form-text">Mỗi ô = 50 m². Khi chọn theo ô, hệ thống sẽ bỏ chọn Zone (nếu có).</small>
                         </div>
                     </div>
@@ -377,6 +377,15 @@
         document.querySelector('form').addEventListener('submit', function(e) {
             // Ensure hidden fields reflect current grid state before submit
             updateRentalAreaFromGrid();
+            // Require selecting tiles when no zone chosen
+            const zoneInput = document.querySelector('input[name="zoneId"]');
+            const zoneVal = zoneInput && zoneInput.value ? zoneInput.value : '';
+            const indicesVal = (document.getElementById('selectedUnitIndices') || { value: '' }).value.trim();
+            if (!zoneVal && indicesVal.length === 0) {
+                e.preventDefault();
+                alert('Vui lòng chọn các ô 50 m² để tiếp tục.');
+                return;
+            }
             if (!this.checkValidity()) {
                 e.preventDefault();
                 alert('Vui lòng kiểm tra lại thông tin nhập vào.');
@@ -392,6 +401,8 @@
             const preSelectedArea = /*[[${preSelectedArea}]]*/ null;
             const preIndicesStr = grid ? (grid.getAttribute('data-preselected') || '') : '';
             const preIndices = new Set(preIndicesStr.split(',').map(s => s.trim()).filter(Boolean).map(n => parseInt(n, 10)).filter(n => !isNaN(n)));
+            const unavailableStr = grid ? (grid.getAttribute('data-unavailable') || '') : '';
+            const unavailable = new Set(unavailableStr.split(',').map(s => s.trim()).filter(Boolean).map(n => parseInt(n, 10)).filter(n => !isNaN(n)));
             
             console.log('Grid debug:', {
                 storageArea,
@@ -413,10 +424,13 @@
                         tile.dataset.index = String(i);
                         if (preIndices.has(i)) {
                             tile.classList.add('selected', 'disabled');
+                        } else if (unavailable.has(i)) {
+                            tile.classList.add('disabled');
                         }
                         // Enable toggling when not disabled by preSelectedArea
                         if (preSelectedArea == null) {
                             tile.addEventListener('click', () => {
+                                if (tile.classList.contains('disabled')) return;
                                 tile.classList.toggle('selected');
                                 const cntEl = document.getElementById('bfUnitSelectedCount');
                                 const areaEl = document.getElementById('bfUnitSelectedArea');
