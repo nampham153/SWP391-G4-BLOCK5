@@ -191,6 +191,7 @@
                         <div class="space-y-3">
                             <label class="block text-sm font-medium mb-1 text-gray-700">Chọn Zone</label>
                             <input type="hidden" id="zoneIdHidden" name="zoneId">
+                            <input type="hidden" id="zoneIdsHidden" name="zoneIds">
                             <div id="zoneGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-3">
                                 <!-- Available zone -->
                                 <div th:if="${z.status == null or (z.status != null and #strings.equalsIgnoreCase(z.status, 'AVAILABLE'))}"
@@ -497,7 +498,57 @@
                     if (zoneHidden) zoneHidden.value = '';
                     document.querySelectorAll('#zoneGrid .zone-tile.selected').forEach(el => el.classList.remove('selected'));
                 }
+                calculateEstimatedCost();
             }
+
+            function calculateEstimatedCost() {
+                const startInput = document.getElementById('startDate');
+                const endInput = document.getElementById('endDate');
+                
+                if (!startInput || !endInput || !startInput.value || !endInput.value) {
+                    return;
+                }
+                
+                const startDate = new Date(startInput.value);
+                const endDate = new Date(endInput.value);
+                
+                if (endDate <= startDate) {
+                    return;
+                }
+                
+                // Chuẩn hóa ngày kết thúc về cuối tháng
+                const normalizedEndDate = new Date(endDate.getFullYear(), endDate.getMonth() + 1, 0);
+                
+                // Tính số tháng thuê
+                const monthsDiff = (normalizedEndDate.getFullYear() - startDate.getFullYear()) * 12 + 
+                                  (normalizedEndDate.getMonth() - startDate.getMonth()) + 1;
+                const monthsCount = Math.max(1, monthsDiff);
+                
+                let totalCost = 0;
+                
+                // Tính theo zone đã chọn - Công thức mới: Đơn giá 1 zone/tháng × Số zone × Số tháng
+                const selectedZoneElements = document.querySelectorAll('.zone-tile.selected');
+                if (selectedZoneElements.length > 0) {
+                    // Lấy giá từ zone đầu tiên đã chọn
+                    // Note: pricePerDay trong DB thực chất là giá/tháng
+                    const firstZoneElement = selectedZoneElements[0];
+                    const firstZonePricePerMonth = parseFloat(firstZoneElement.dataset.pricePerDay || 0);
+                    const zoneCount = selectedZoneElements.length;
+                    totalCost = firstZonePricePerMonth * zoneCount * monthsCount;
+                } else {
+                    // Fallback: tính theo diện tích storage
+                    // Note: pricePerDay trong DB thực chất là giá/tháng
+                    const storagePricePerMonth = /*[[${storage.pricePerDay}]]*/ 0;
+                    totalCost = monthsCount * storagePricePerMonth;
+                }
+                
+                // Hiển thị kết quả
+                const costDisplay = document.getElementById('estimatedCost');
+                if (costDisplay) {
+                    costDisplay.textContent = totalCost.toLocaleString('vi-VN') + ' VNĐ (' + monthsCount + ' tháng)';
+                }
+            }
+
             // Trigger refresh when dates change
             startInput.addEventListener('change', refreshUnavailable);
             endInput.addEventListener('change', refreshUnavailable);
@@ -581,30 +632,35 @@
 </script>
 <script>
     function selectZone(el) {
-        // Bỏ chọn các tile khác
-        document.querySelectorAll('#zoneGrid .zone-tile').forEach(function (tile) {
-            tile.classList.remove('selected');
+        // Toggle selection cho zone hiện tại
+        el.classList.toggle('selected');
+        
+        // Lấy tất cả zone đã chọn
+        var selectedZones = document.querySelectorAll('#zoneGrid .zone-tile.selected');
+        var zoneIds = Array.from(selectedZones).map(function(zone) {
+            return zone.getAttribute('data-zone-id');
         });
-
-        // Đánh dấu tile được chọn
-        el.classList.add('selected');
-
-        // Set hidden input zoneId
-        var zoneId = el.getAttribute('data-zone-id');
-        document.getElementById('zoneIdHidden').value = zoneId;
-    }
-
-    // Nếu cần, tự chọn tile đầu tiên còn trống khi mở modal
-    document.addEventListener('DOMContentLoaded', function () {
-        var current = document.getElementById('zoneIdHidden').value;
-        if (!current) {
-            var firstAvailable = Array.from(document.querySelectorAll('#zoneGrid .zone-tile'))
-                .find(function (tile) { return !tile.classList.contains('opacity-50'); });
-            if (firstAvailable) {
-                selectZone(firstAvailable);
+        
+        // Cập nhật hidden inputs
+        document.getElementById('zoneIdHidden').value = zoneIds.length > 0 ? zoneIds[0] : '';
+        document.getElementById('zoneIdsHidden').value = zoneIds.join(',');
+        
+        // Bỏ chọn unit tiles nếu có zone được chọn
+        if (zoneIds.length > 0) {
+            document.querySelectorAll('#unitGrid .unit-tile.selected').forEach(function (tile) {
+                tile.classList.remove('selected');
+            });
+            // Cập nhật số lượng unit đã chọn về 0
+            if (typeof updateUnitSelectionCount === 'function') {
+                updateUnitSelectionCount();
             }
         }
-    });
+        
+        // Cập nhật chi phí dự kiến
+        if (typeof calculateEstimatedCost === 'function') {
+            calculateEstimatedCost();
+        }
+    };
 </script>
 </body>
 </html>

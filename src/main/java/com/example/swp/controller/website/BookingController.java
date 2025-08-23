@@ -97,6 +97,26 @@ public class BookingController {
     }
 
     /**
+     * Chuẩn hóa ngày kết thúc về cuối tháng để tính theo tháng
+     * Ví dụ: 2024-01-15 -> 2024-01-31
+     */
+    private LocalDate normalizeToEndOfMonth(LocalDate date) {
+        return date.withDayOfMonth(date.lengthOfMonth());
+    }
+
+    /**
+     * Tính số tháng giữa hai ngày (bắt buộc thuê theo tháng)
+     * Ví dụ: 2024-01-15 đến 2024-03-31 = 3 tháng
+     */
+    private int calculateMonthsBetween(LocalDate startDate, LocalDate endDate) {
+        // Chuẩn hóa startDate về đầu tháng để tính chính xác
+        LocalDate normalizedStart = startDate.withDayOfMonth(1);
+        LocalDate normalizedEnd = endDate.withDayOfMonth(1);
+        
+        return (int) ChronoUnit.MONTHS.between(normalizedStart, normalizedEnd) + 1;
+    }
+
+    /**
      * Test endpoint để kiểm tra session
      */
     @GetMapping("/test-session")
@@ -136,6 +156,7 @@ public class BookingController {
             @RequestParam("startDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam("endDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             @RequestParam(value = "zoneId", required = false) Integer zoneId,
+            @RequestParam(value = "zoneIds", required = false) String zoneIds,
             @RequestParam(value = "preSelectedArea", required = false) Integer preSelectedArea,
             @RequestParam(value = "selectedUnitIndices", required = false) String selectedUnitIndices,
             Model model,
@@ -219,8 +240,27 @@ public class BookingController {
             model.addAttribute("unavailableUnitIndices", "");
         }
 
-        // Zone đã chọn (nếu có)
-        if (zoneId != null) {
+        // Xử lý nhiều zone đã chọn (zoneIds)
+        if (zoneIds != null && !zoneIds.trim().isEmpty()) {
+            String csv = zoneIds.trim();
+            List<Integer> ids = java.util.Arrays.stream(csv.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .map(Integer::parseInt)
+                .collect(java.util.stream.Collectors.toList());
+            
+            List<Zone> selectedZones = zoneRepository.findAllById(ids);
+            model.addAttribute("selectedZones", selectedZones);
+            model.addAttribute("zoneIds", zoneIds);
+            
+            // Backward compatibility: set first zone as selectedZone
+            if (!selectedZones.isEmpty()) {
+                model.addAttribute("selectedZone", selectedZones.get(0));
+                model.addAttribute("zoneId", selectedZones.get(0).getId());
+            }
+        }
+        // Fallback cho single zone (backward compatibility)
+        else if (zoneId != null) {
             Optional<Zone> zoneOpt = zoneRepository.findById(zoneId);
             zoneOpt.ifPresent(z -> model.addAttribute("selectedZone", z));
             model.addAttribute("zoneId", zoneId);
@@ -306,6 +346,7 @@ public class BookingController {
             @RequestParam("rentalArea") double rentalArea,
             @RequestParam(value = "selectedUnitIndices", required = false) String selectedUnitIndices,
             @RequestParam(value = "zoneId", required = false) Integer zoneId,
+            @RequestParam(value = "zoneIds", required = false) String zoneIds,
             @RequestParam("name") String name,
             @RequestParam("email") String email,
             @RequestParam("phone") String phone,
@@ -364,9 +405,13 @@ public class BookingController {
             return "redirect:/SWP/booking/" + storageId + "/booking?startDate=" + startDate + "&endDate=" + endDate;
         }
 
-        // Nếu không chọn Zone, yêu cầu phải chọn các ô cụ thể để tránh trùng lặp đơn vị
-        if (zoneId == null && (selectedUnitIndices == null || selectedUnitIndices.isBlank())) {
-            redirectAttributes.addFlashAttribute("error", "Vui lòng chọn các ô 50 m² cụ thể để đặt kho.");
+        // Kiểm tra có chọn zone hoặc unit indices
+        boolean hasZoneIds = (zoneIds != null && !zoneIds.trim().isEmpty());
+        boolean hasZoneId = (zoneId != null);
+        boolean hasUnitIndices = (selectedUnitIndices != null && !selectedUnitIndices.isBlank());
+        
+        if (!hasZoneIds && !hasZoneId && !hasUnitIndices) {
+            redirectAttributes.addFlashAttribute("error", "Vui lòng chọn Zone hoặc các ô 50 m² cụ thể để đặt kho.");
             return "redirect:/SWP/booking/" + storageId + "/booking?startDate=" + startDate + "&endDate=" + endDate;
         }
 
@@ -403,10 +448,68 @@ public class BookingController {
                 "Khách hàng đặt lại cùng kho - Hủy đơn hàng cũ tự động"
             );
 
-            // Tính toán chi phí
-            long days = ChronoUnit.DAYS.between(startDate, endDate);
-            double pricePerDay = storage.getPricePerDay();
-            double totalCost = days * pricePerDay * (rentalArea / storage.getArea());
+            // Chuẩn hóa ngày kết thúc về cuối tháng để tính theo tháng
+            LocalDate normalizedEndDate = normalizeToEndOfMonth(endDate);
+            
+            // Tính số tháng thuê (bắt buộc thuê theo tháng)
+            int monthsCount = calculateMonthsBetween(startDate, normalizedEndDate);
+            if (monthsCount <= 0) {
+                monthsCount = 1; // Tối thiểu 1 tháng
+            }
+            
+            // Tính toán chi phí theo tháng
+            double totalCost = 0.0;
+            
+            // Nếu có chọn nhiều zone (zoneIds)
+            if (hasZoneIds) {
+                String csv = (zoneIds != null) ? zoneIds : "";
+                List<Integer> ids = java.util.Arrays.stream(csv.split(","))
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .map(Integer::parseInt)
+                    .collect(java.util.stream.Collectors.toList());
+                
+                List<Zone> zones = zoneRepository.findAllById(ids);
+                if (!zones.isEmpty()) {
+                    // Công thức mới: Giá thuê = Đơn giá 1 zone/tháng × Số zone × Số tháng
+                    // Note: pricePerDay trong DB thực chất là giá/tháng
+                    double firstZonePricePerMonth = (zones.get(0).getPricePerDay() != null ? zones.get(0).getPricePerDay() : 0.0);
+                    int zoneCount = zones.size();
+                    totalCost = firstZonePricePerMonth * zoneCount * monthsCount;
+                    
+                    // Cập nhật rentalArea theo tổng diện tích các zone
+                    double sumZoneArea = zones.stream()
+                        .mapToDouble(z -> z.getZoneArea() != null ? z.getZoneArea() : 0.0)
+                        .sum();
+                    if (sumZoneArea > 0) {
+                        rentalArea = sumZoneArea;
+                    }
+                }
+            }
+            // Nếu chỉ chọn 1 zone (zoneId) - backward compatibility
+            else if (hasZoneId && zoneId != null) {
+                Optional<Zone> zoneOpt = zoneRepository.findById(zoneId);
+                if (zoneOpt.isPresent()) {
+                    Zone zone = zoneOpt.get();
+                    // Note: pricePerDay trong DB thực chất là giá/tháng
+                    double zonePricePerMonth = (zone.getPricePerDay() != null ? zone.getPricePerDay() : 0.0);
+                    totalCost = monthsCount * zonePricePerMonth;
+                    
+                    // Cập nhật rentalArea theo diện tích zone
+                    if (zone.getZoneArea() != null && zone.getZoneArea() > 0) {
+                        rentalArea = zone.getZoneArea();
+                    }
+                } else {
+                    redirectAttributes.addFlashAttribute("error", "Zone không tồn tại.");
+                    return "redirect:/SWP/booking/" + storageId + "/booking?startDate=" + startDate + "&endDate=" + endDate;
+                }
+            }
+            // Nếu chọn theo ô 50m² (unit indices)
+            else {
+                // Note: pricePerDay trong DB thực chất là giá/tháng
+                double pricePerMonth = storage.getPricePerDay();
+                totalCost = monthsCount * pricePerMonth * (rentalArea / storage.getArea());
+            }
 
             // Áp dụng voucher nếu có
             Voucher appliedVoucher = null;
@@ -510,7 +613,7 @@ public class BookingController {
             }
 
             // Tạo hợp đồng cho đơn hàng
-            EContract contract = eContractService.createContract(savedOrder);
+            eContractService.createContract(savedOrder);
 
             // Lưu ID đơn hàng vào session để hiển thị trong booking detail
             session.setAttribute("latestOrderId", savedOrder.getId());

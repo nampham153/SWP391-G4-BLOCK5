@@ -88,6 +88,7 @@
                     <input type="hidden" name="endDate" th:value="${endDate}" />
                     <input type="hidden" name="orderToken" th:value="${orderToken}" />
                     <input type="hidden" name="zoneId" th:value="${zoneId}" />
+                    <input type="hidden" name="zoneIds" th:value="${zoneIds}" />
                     <input type="hidden" name="preSelectedArea" th:value="${preSelectedArea}" />
                     <input type="hidden" id="selectedUnitIndices" name="selectedUnitIndices" th:value="${selectedUnitIndices}" />
 
@@ -102,14 +103,28 @@
                                     <span th:text="${storage.status} ? 'CÒN TRỐNG' : 'ĐANG THUÊ'">CÒN TRỐNG</span>
                                 </div>
                             </div>
-                            <div class="info-card" th:if="${selectedZone} != null">
+                            <!-- Hiển thị nhiều zone đã chọn -->
+                            <div th:if="${selectedZones != null and !selectedZones.isEmpty()}" class="info-card">
+                                <div class="info-label">ZONE ĐÃ CHỌN</div>
+                                <div class="info-value">
+                                    <div th:each="zone : ${selectedZones}" style="margin-bottom: 8px;">
+                                        <span style="font-weight:600" th:text="${zone.name}">Zone A</span>
+                                        <span> • </span>
+                                        <span th:text="${zone.zoneArea} + ' m²'">0 m²</span>
+                                        <span> • </span>
+                                        <span th:text="${#numbers.formatDecimal(zone.pricePerDay, 0, 'POINT', 0, 'COMMA')} + ' VNĐ/tháng'" style="color: #28a745; font-weight: 600;">0 VNĐ/tháng</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Fallback cho single zone (backward compatibility) -->
+                            <div th:if="${selectedZone != null and (selectedZones == null or selectedZones.isEmpty())}" class="info-card">
                                 <div class="info-label">ZONE ĐÃ CHỌN</div>
                                 <div class="info-value">
                                     <span style="font-weight:600" th:text="${selectedZone.name}">Zone A</span>
                                     <span> • </span>
                                     <span th:text="${selectedZone.zoneArea} + ' m²'">0 m²</span>
                                     <span> • </span>
-                                    <span th:text="${#numbers.formatDecimal(selectedZone.pricePerDay, 0, 'POINT', 0, 'COMMA')} + ' VNĐ/ngày'">0 VNĐ/ngày</span>
+                                    <span th:text="${#numbers.formatDecimal(selectedZone.pricePerDay, 0, 'POINT', 0, 'COMMA')} + ' VNĐ/tháng'" style="color: #28a745; font-weight: 600;">0 VNĐ/tháng</span>
                                 </div>
                             </div>
                             <div class="info-card">
@@ -121,8 +136,8 @@
                                 <div class="info-value" th:text="${storage.storageid}">ID</div>
                             </div>
                             <div class="info-card">
-                                <div class="info-label">GIÁ/NGÀY</div>
-                                <div class="info-value" th:text="${#numbers.formatDecimal(storage.pricePerDay, 0, 'POINT', 0, 'COMMA')} + ' VNĐ/ngày'">0 VNĐ/ngày</div>
+                                <div class="info-label">GIÁ/THÁNG</div>
+                                <div class="info-value" th:text="${#numbers.formatDecimal(storage.pricePerDay, 0, 'POINT', 0, 'COMMA')} + ' VNĐ/tháng'">0 VNĐ/tháng</div>
                             </div>
                             <div class="info-card">
                                 <div class="info-label">DIỆN TÍCH TỔNG</div>
@@ -253,9 +268,24 @@
     const startDate = new Date(/*[[${startDate}]]*/);
     const endDate = new Date(/*[[${endDate}]]*/);
     let selectedVoucher = null;
-    // If a zone was selected, use zone pricing and area
-    /*[# th:if="${selectedZone != null}"]*/
-        pricePerDay = /*[[${selectedZone.pricePerDay}]]*/ pricePerDay;
+    // Công thức mới: Đơn giá 1 zone/tháng × Số zone × Số tháng
+    let firstZonePricePerDay = 0;
+    let zoneCount = 0;
+    let totalZoneArea = 0;
+    /*[# th:if="${selectedZones != null and !selectedZones.isEmpty()}"]*/
+        firstZonePricePerDay = /*[[${selectedZones[0].pricePerDay}]]*/ 0;
+        zoneCount = /*[[${selectedZones.size()}]]*/ 0;
+        /*[# th:each="zone : ${selectedZones}"]*/
+            totalZoneArea += /*[[${zone.zoneArea}]]*/ 0;
+        /*[/]*/
+        pricePerDay = firstZonePricePerDay;
+        area = totalZoneArea;
+    /*[/]*/
+    // Fallback for single zone (backward compatibility)
+    /*[# th:if="${selectedZone != null and (selectedZones == null or selectedZones.isEmpty())}"]*/
+        firstZonePricePerDay = /*[[${selectedZone.pricePerDay}]]*/ 0;
+        zoneCount = 1;
+        pricePerDay = firstZonePricePerDay;
         area = /*[[${selectedZone.zoneArea}]]*/ area;
     /*[/]*/
 
@@ -329,8 +359,25 @@
 
     function calculateTotal() {
         const rentalArea = parseFloat(document.getElementById('rentalArea').value) || 0;
-        const days = Math.max(1, Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)));
-        const originalTotal = (days * pricePerDay * rentalArea / area);
+        
+        // Tính số tháng thuê (chuẩn hóa về cuối tháng)
+        const normalizedEndDate = new Date(endDate.getFullYear(), endDate.getMonth() + 1, 0);
+        const monthsDiff = (normalizedEndDate.getFullYear() - startDate.getFullYear()) * 12 + 
+                          (normalizedEndDate.getMonth() - startDate.getMonth()) + 1;
+        const monthsCount = Math.max(1, monthsDiff);
+        
+        let originalTotal = 0;
+        
+        // Áp dụng công thức mới: Đơn giá 1 zone/tháng × Số zone × Số tháng
+        // Note: pricePerDay trong DB thực chất là giá/tháng
+        if (zoneCount > 0) {
+            const firstZonePricePerMonth = firstZonePricePerDay;
+            originalTotal = firstZonePricePerMonth * zoneCount * monthsCount;
+        } else {
+            // Fallback: tính theo diện tích storage
+            const pricePerMonth = pricePerDay;
+            originalTotal = monthsCount * pricePerMonth * (rentalArea / area);
+        }
 
         document.getElementById('originalCostDisplay').innerText = formatVNDNumber(originalTotal) + ' VNĐ';
 
