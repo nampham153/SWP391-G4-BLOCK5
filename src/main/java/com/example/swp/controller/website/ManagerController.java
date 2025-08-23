@@ -1,9 +1,10 @@
 package com.example.swp.controller.website;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
-import com.example.swp.enums.RoleName;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.security.core.Authentication;
@@ -11,6 +12,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -24,12 +26,16 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.cloudinary.Cloudinary;
 import com.example.swp.annotation.LogActivity;
 import com.example.swp.dto.StorageRequest;
+import com.example.swp.dto.ZoneRequest;
 import com.example.swp.entity.Customer;
 import com.example.swp.entity.EContract;
 import com.example.swp.entity.Manager;
 import com.example.swp.entity.Order;
 import com.example.swp.entity.Staff;
 import com.example.swp.entity.Storage;
+import com.example.swp.entity.Zone;
+import com.example.swp.enums.RoleName;
+import com.example.swp.enums.ZoneStatus;
 import com.example.swp.repository.FeedbackRepository;
 import com.example.swp.repository.OrderRepository;
 import com.example.swp.service.CloudinaryService;
@@ -38,6 +44,7 @@ import com.example.swp.service.EContractService;
 import com.example.swp.service.OrderService;
 import com.example.swp.service.StaffService;
 import com.example.swp.service.StorageService;
+import com.example.swp.service.ZoneService;
 
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
@@ -71,6 +78,9 @@ public class ManagerController {
 
     @Autowired
     private EContractService eContractService;
+
+    @Autowired
+    private ZoneService zoneService;
 
     @GetMapping("/manager-dashboard")
     public String showDashboard(Model model, HttpSession session) {
@@ -151,6 +161,15 @@ public class ManagerController {
 
         List<Storage> storages = storageService.getAll();
         model.addAttribute("storages", storages);
+
+        // Tạo Map để chứa số lượng zone cho mỗi storage
+        Map<Integer, Integer> zoneCountMap = new HashMap<>();
+        for (Storage storage : storages) {
+            List<Zone> zones = zoneService.getZonesByStorageId(storage.getStorageid());
+            zoneCountMap.put(storage.getStorageid(), zones.size());
+        }
+        model.addAttribute("zoneCountMap", zoneCountMap);
+
         return "manager-all-storage"; // Tên file HTML tương ứng
     }
 
@@ -231,10 +250,18 @@ public class ManagerController {
                     ? storage.getStaff().getFullname()
                     : "Chưa có nhân viên quản lý";
 
+            // Lấy danh sách zones của storage này
+            List<Zone> zones = zoneService.getZonesByStorageId(id);
+            double totalZoneArea = zoneService.getTotalZoneAreaByStorageId(id);
+            double availableAreaForNewZone = totalArea - totalZoneArea;
+
             model.addAttribute("totalArea", totalArea);
             model.addAttribute("rentedArea", rentedArea);
             model.addAttribute("remainingArea", remainingArea);
             model.addAttribute("staffName", staffName);
+            model.addAttribute("zones", zones);
+            model.addAttribute("totalZoneArea", totalZoneArea);
+            model.addAttribute("availableAreaForNewZone", availableAreaForNewZone);
         } else {
             return "redirect:/admin/manager-dashboard";
         }
@@ -255,8 +282,8 @@ public class ManagerController {
     @LogActivity(action = "Xoá kho")
     @PostMapping("/storages/{id}/delete")
     public String deleteStorage(@PathVariable int id,
-                                @RequestParam(value = "returnUrl", required = false) String returnUrl,
-                                RedirectAttributes redirectAttributes) {
+            @RequestParam(value = "returnUrl", required = false) String returnUrl,
+            RedirectAttributes redirectAttributes) {
         storageService.deleteStorageById(id);
         redirectAttributes.addFlashAttribute("message", "Đã xoá kho thành công!");
         if (returnUrl == null || returnUrl.isEmpty()) {
@@ -291,19 +318,38 @@ public class ManagerController {
             RedirectAttributes redirectAttributes,
             @ModelAttribute StorageRequest storageRequest,
             @RequestParam(value = "returnUrl", required = false) String returnUrl,
+            @RequestParam(value = "newImage", required = false) MultipartFile newImage,
             Model model) {
         Optional<Storage> optional = storageService.findByID(id);
         if (optional.isEmpty()) {
             redirectAttributes.addFlashAttribute("error", "Không tìm thấy kho!");
             return "redirect:/admin/manager-dashboard";
         }
-        Storage updated = storageService.updateStorage(storageRequest, optional.get());
+
+        Storage storage = optional.get();
+
+        // Xử lý upload ảnh mới nếu có
+        if (newImage != null && !newImage.isEmpty()) {
+            try {
+                String imageUrl = cloudinaryService.uploadImage(newImage);
+                storage.setImUrl(imageUrl);
+                redirectAttributes.addFlashAttribute("message", "Cập nhật kho và ảnh thành công!");
+            } catch (Exception e) {
+                redirectAttributes.addFlashAttribute("error", "Lỗi khi upload ảnh: " + e.getMessage());
+                return "redirect:/admin/manager-dashboard/storages/" + id + "/edit";
+            }
+        } else {
+            redirectAttributes.addFlashAttribute("message", "Cập nhật kho thành công!");
+        }
+
+        // Cập nhật thông tin kho
+        Storage updated = storageService.updateStorage(storageRequest, storage);
         model.addAttribute("storage", updated);
-        redirectAttributes.addFlashAttribute("message", "Cập nhật thành công!");
+
         if (returnUrl != null && !returnUrl.isBlank()) {
             return "redirect:" + returnUrl;
         }
-        return "redirect:/admin/manager-dashboard/storages/";
+        return "redirect:/admin/manager-dashboard/storages/" + id;
     }
 
     //danh sách staff
@@ -349,8 +395,7 @@ public class ManagerController {
         }
     }
 
-
-     @PostMapping("/staffs/{id}/toggle-block")
+    @PostMapping("/staffs/{id}/toggle-block")
     public String toggleStaffBlock(
             @PathVariable int id,
             @RequestParam(value = "from", required = false) String from,
@@ -373,7 +418,6 @@ public class ManagerController {
                 : "redirect:/admin/staff-list";
     }
 
-
     @GetMapping("/manager-inbox")
     public String managerInbox() {
         return "manager-inbox";
@@ -382,6 +426,97 @@ public class ManagerController {
     @GetMapping("/social-chat")
     public String socialChat() {
         return "social-chat";
+    }
+
+    @GetMapping("/storages/{id}/add-zone")
+    public String showAddZoneForm(@PathVariable int id, Model model, HttpSession session) {
+        // Populate user info for manager taskbar
+        Manager loggedInManager = (Manager) session.getAttribute("loggedInManager");
+        if (loggedInManager != null) {
+            model.addAttribute("user", loggedInManager.getFullname());
+            model.addAttribute("userName", loggedInManager.getEmail());
+            model.addAttribute("userRole", "MANAGER");
+        } else {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getPrincipal())) {
+                UserDetails userDetails = (UserDetails) auth.getPrincipal();
+                model.addAttribute("userName", userDetails.getUsername());
+                model.addAttribute("userRole", auth.getAuthorities().iterator().next().getAuthority());
+            }
+        }
+
+        Optional<Storage> optionalStorage = storageService.findByID(id);
+        if (optionalStorage.isPresent()) {
+            Storage storage = optionalStorage.get();
+            model.addAttribute("storage", storage);
+
+            // Tính toán diện tích còn lại có thể tạo zone
+            double totalArea = storage.getArea();
+            double totalZoneArea = zoneService.getTotalZoneAreaByStorageId(id);
+            double availableArea = totalArea - totalZoneArea;
+
+            model.addAttribute("availableArea", availableArea);
+            model.addAttribute("zoneRequest", new ZoneRequest());
+        } else {
+            return "redirect:/admin/manager-dashboard";
+        }
+
+        return "add-zone";
+    }
+
+    @LogActivity(action = "Thêm khu vực chứa đồ")
+    @PostMapping("/storages/{id}/add-zone")
+    public String addZone(@PathVariable int id,
+            @Valid @ModelAttribute ZoneRequest zoneRequest,
+            BindingResult bindingResult,
+            RedirectAttributes redirectAttributes,
+            Model model) {
+        // Kiểm tra validation errors
+        if (bindingResult.hasErrors()) {
+            Optional<Storage> optionalStorage = storageService.findByID(id);
+            if (optionalStorage.isPresent()) {
+                Storage storage = optionalStorage.get();
+                model.addAttribute("storage", storage);
+                model.addAttribute("zoneRequest", zoneRequest);
+                double totalZoneArea = zoneService.getTotalZoneAreaByStorageId(id);
+                model.addAttribute("availableArea", storage.getArea() - totalZoneArea);
+                return "add-zone";
+            }
+            return "redirect:/admin/manager-dashboard";
+        }
+
+        try {
+            Optional<Storage> optionalStorage = storageService.findByID(id);
+            if (optionalStorage.isEmpty()) {
+                redirectAttributes.addFlashAttribute("error", "Không tìm thấy kho!");
+                return "redirect:/admin/manager-dashboard";
+            }
+
+            Storage storage = optionalStorage.get();
+
+            // Validate diện tích zone
+            if (!zoneService.validateZoneArea(id, zoneRequest.getZoneArea())) {
+                redirectAttributes.addFlashAttribute("error", "Diện tích zone vượt quá diện tích còn lại của kho!");
+                return "redirect:/admin/storages/" + id + "/add-zone";
+            }
+
+            // Tạo zone mới
+            Zone newZone = new Zone();
+            newZone.setName(zoneRequest.getName());
+            newZone.setZoneArea(zoneRequest.getZoneArea());
+            newZone.setPricePerDay(zoneRequest.getPricePerDay());
+            newZone.setStatus(zoneRequest.getStatus() != null ? zoneRequest.getStatus().getValue() : ZoneStatus.AVAILABLE.getValue());
+            newZone.setStorage(storage);
+
+            zoneService.createZone(newZone);
+            redirectAttributes.addFlashAttribute("message", "Thêm khu vực thành công!");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            redirectAttributes.addFlashAttribute("error", "Lỗi khi thêm khu vực: " + e.getMessage());
+        }
+
+        return "redirect:/admin/manager-dashboard/storages/" + id;
     }
 
     @GetMapping("/manager-setting")
@@ -406,6 +541,131 @@ public class ManagerController {
         return "manager-setting";
     }
 
+    @GetMapping("/storages/{storageId}/zones/{zoneId}/edit")
+    public String showEditZoneForm(@PathVariable int storageId, @PathVariable int zoneId,
+            Model model, HttpSession session) {
+        // Populate user info for manager taskbar
+        Manager loggedInManager = (Manager) session.getAttribute("loggedInManager");
+        if (loggedInManager != null) {
+            model.addAttribute("user", loggedInManager.getFullname());
+            model.addAttribute("userName", loggedInManager.getEmail());
+            model.addAttribute("userRole", "MANAGER");
+        } else {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getPrincipal())) {
+                UserDetails userDetails = (UserDetails) auth.getPrincipal();
+                model.addAttribute("userName", userDetails.getUsername());
+                model.addAttribute("userRole", auth.getAuthorities().iterator().next().getAuthority());
+            }
+        }
+
+        Optional<Storage> optionalStorage = storageService.findByID(storageId);
+        Optional<Zone> optionalZone = zoneService.getZoneById(zoneId);
+
+        if (optionalStorage.isEmpty() || optionalZone.isEmpty()) {
+            return "redirect:/admin/manager-dashboard/storages/" + storageId;
+        }
+
+        Storage storage = optionalStorage.get();
+        Zone zone = optionalZone.get();
+
+        // Kiểm tra xem zone có thuộc về storage này không
+        if (zone.getStorage().getStorageid() != storageId) {
+            return "redirect:/admin/manager-dashboard/storages/" + storageId;
+        }
+
+        // Tạo ZoneRequest từ Zone hiện tại
+        ZoneRequest zoneRequest = new ZoneRequest();
+        zoneRequest.setName(zone.getName());
+        zoneRequest.setZoneArea(zone.getZoneArea());
+        zoneRequest.setPricePerDay(zone.getPricePerDay());
+        zoneRequest.setStatus(ZoneStatus.fromValue(zone.getStatus()));
+        zoneRequest.setStorageId(storageId);
+
+        // Tính diện tích có thể sử dụng (bao gồm cả zone hiện tại)
+        double totalZoneArea = zoneService.getTotalZoneAreaByStorageId(storageId);
+        double availableArea = storage.getArea() - totalZoneArea + zone.getZoneArea();
+
+        model.addAttribute("storage", storage);
+        model.addAttribute("zone", zone);
+        model.addAttribute("zoneRequest", zoneRequest);
+        model.addAttribute("availableArea", availableArea);
+        model.addAttribute("isEdit", true);
+
+        return "edit-zone";
+    }
+
+    @PostMapping("/storages/{storageId}/zones/{zoneId}/edit")
+    public String updateZone(@PathVariable int storageId, @PathVariable int zoneId,
+            @Valid @ModelAttribute ZoneRequest zoneRequest,
+            BindingResult bindingResult,
+            RedirectAttributes redirectAttributes,
+            Model model) {
+        // Kiểm tra validation errors
+        if (bindingResult.hasErrors()) {
+            Optional<Storage> optionalStorage = storageService.findByID(storageId);
+            Optional<Zone> optionalZone = zoneService.getZoneById(zoneId);
+
+            if (optionalStorage.isPresent() && optionalZone.isPresent()) {
+                Storage storage = optionalStorage.get();
+                Zone zone = optionalZone.get();
+
+                model.addAttribute("storage", storage);
+                model.addAttribute("zone", zone);
+                model.addAttribute("zoneRequest", zoneRequest);
+                model.addAttribute("isEdit", true);
+
+                // Tính diện tích có thể sử dụng
+                double totalZoneArea = zoneService.getTotalZoneAreaByStorageId(storageId);
+                double availableArea = storage.getArea() - totalZoneArea + zone.getZoneArea();
+                model.addAttribute("availableArea", availableArea);
+
+                return "edit-zone";
+            }
+            return "redirect:/admin/manager-dashboard/storages/" + storageId;
+        }
+
+        try {
+            Optional<Zone> optionalZone = zoneService.getZoneById(zoneId);
+            if (optionalZone.isEmpty()) {
+                redirectAttributes.addFlashAttribute("error", "Không tìm thấy khu vực!");
+                return "redirect:/admin/manager-dashboard/storages/" + storageId;
+            }
+
+            Zone existingZone = optionalZone.get();
+
+            // Kiểm tra xem zone có thuộc về storage này không
+            if (existingZone.getStorage().getStorageid() != storageId) {
+                redirectAttributes.addFlashAttribute("error", "Khu vực không thuộc về kho này!");
+                return "redirect:/admin/manager-dashboard/storages/" + storageId;
+            }
+
+            // Validate diện tích zone (trừ đi diện tích zone hiện tại)
+            double currentZoneArea = existingZone.getZoneArea();
+            double newTotalArea = zoneService.getTotalZoneAreaByStorageId(storageId) - currentZoneArea + zoneRequest.getZoneArea();
+
+            Optional<Storage> optionalStorage = storageService.findByID(storageId);
+            if (optionalStorage.isPresent() && newTotalArea > optionalStorage.get().getArea()) {
+                redirectAttributes.addFlashAttribute("error", "Tổng diện tích các khu vực vượt quá diện tích kho!");
+                return "redirect:/admin/storages/" + storageId + "/zones/" + zoneId + "/edit";
+            }
+
+            // Cập nhật thông tin zone
+            existingZone.setName(zoneRequest.getName());
+            existingZone.setZoneArea(zoneRequest.getZoneArea());
+            existingZone.setPricePerDay(zoneRequest.getPricePerDay());
+            existingZone.setStatus(zoneRequest.getStatus() != null ? zoneRequest.getStatus().getValue() : ZoneStatus.AVAILABLE.getValue());
+
+            zoneService.updateZone(existingZone);
+            redirectAttributes.addFlashAttribute("message", "Cập nhật khu vực thành công!");
+            redirectAttributes.addFlashAttribute("messageType", "success");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Có lỗi xảy ra khi cập nhật khu vực: " + e.getMessage());
+        }
+
+        return "redirect:/admin/manager-dashboard/storages/" + storageId;
+    }
+
     /**
      * Hiển thị danh sách tất cả hợp đồng cho admin
      */
@@ -421,7 +681,7 @@ public class ManagerController {
 
         // Lấy tất cả hợp đồng
         List<EContract> allContracts = eContractService.findAll();
-        
+
         // Chỉ hiển thị hợp đồng từ các đơn hàng đã thanh toán (PAID) hoặc đã được duyệt (APPROVED)
         List<EContract> contracts = allContracts.stream()
                 .filter(contract -> {
@@ -429,7 +689,7 @@ public class ManagerController {
                     return "PAID".equals(orderStatus) || "APPROVED".equals(orderStatus);
                 })
                 .collect(java.util.stream.Collectors.toList());
-        
+
         // Thống kê hợp đồng dựa trên danh sách đã lọc
         long signedContracts = contracts.stream()
                 .filter(contract -> contract.getStatus().name().equals("SIGNED"))
@@ -458,6 +718,89 @@ public class ManagerController {
         model.addAttribute("pendingCancellationContracts", pendingCancellationContracts);
 
         return "admin-contracts";
+    }
+
+    /**
+     * Xóa khu vực
+     */
+    @PostMapping("/storages/{storageId}/zones/{zoneId}/delete")
+    public String deleteZone(@PathVariable int storageId,
+            @PathVariable int zoneId,
+            RedirectAttributes redirectAttributes) {
+        try {
+            // Kiểm tra xem zone có tồn tại không
+            Optional<Zone> optionalZone = zoneService.getZoneById(zoneId);
+            if (optionalZone.isEmpty()) {
+                redirectAttributes.addFlashAttribute("error", "Khu vực không tồn tại!");
+                return "redirect:/admin/manager-dashboard/storages/" + storageId;
+            }
+
+            Zone zone = optionalZone.get();
+
+            // Kiểm tra xem zone có thuộc về storage này không
+            if (zone.getStorage().getStorageid() != storageId) {
+                redirectAttributes.addFlashAttribute("error", "Khu vực không thuộc về kho này!");
+                return "redirect:/admin/manager-dashboard/storages/" + storageId;
+            }
+
+            // Kiểm tra xem zone có đang được sử dụng trong đơn hàng nào không
+            List<Order> ordersUsingZone = orderRepository.findAll().stream()
+                    .filter(order -> order.getZone() != null && order.getZone().getId() == zoneId)
+                    .collect(java.util.stream.Collectors.toList());
+            if (!ordersUsingZone.isEmpty()) {
+                redirectAttributes.addFlashAttribute("error", "Không thể xóa khu vực đang được sử dụng trong đơn hàng!");
+                return "redirect:/admin/manager-dashboard/storages/" + storageId;
+            }
+
+            // Kiểm tra xem zone có đang được sử dụng trong đơn hàng có trạng thái đặc biệt không
+            List<Order> activeOrdersUsingZone = orderRepository.findAll().stream()
+                    .filter(order -> order.getZone() != null && order.getZone().getId() == zoneId)
+                    .filter(order -> "PENDING".equals(order.getStatus()) || "APPROVED".equals(order.getStatus()) || "PAID".equals(order.getStatus()))
+                    .collect(java.util.stream.Collectors.toList());
+            if (!activeOrdersUsingZone.isEmpty()) {
+                redirectAttributes.addFlashAttribute("error", "Không thể xóa khu vực đang được sử dụng trong đơn hàng đang hoạt động!");
+                return "redirect:/admin/manager-dashboard/storages/" + storageId;
+            }
+
+            // Kiểm tra xem zone có đang được sử dụng trong đơn hàng có ngày thuê hiện tại hoặc trong tương lai không
+            java.time.LocalDate today = java.time.LocalDate.now();
+            List<Order> currentOrdersUsingZone = orderRepository.findAll().stream()
+                    .filter(order -> order.getZone() != null && order.getZone().getId() == zoneId)
+                    .filter(order -> order.getStartDate() != null && order.getEndDate() != null)
+                    .filter(order -> !today.isAfter(order.getEndDate()))
+                    .collect(java.util.stream.Collectors.toList());
+            if (!currentOrdersUsingZone.isEmpty()) {
+                redirectAttributes.addFlashAttribute("error", "Không thể xóa khu vực đang được sử dụng trong đơn hàng hiện tại hoặc trong tương lai!");
+                return "redirect:/admin/manager-dashboard/storages/" + storageId;
+            }
+
+            // Kiểm tra xem zone có đang được sử dụng không
+            if (!"available".equals(zone.getStatus())) {
+                redirectAttributes.addFlashAttribute("error", "Chỉ có thể xóa khu vực có trạng thái 'Còn trống'!");
+                return "redirect:/admin/manager-dashboard/storages/" + storageId;
+            }
+
+            // Lưu thông tin về diện tích zone trước khi xóa
+            double deletedZoneArea = zone.getZoneArea();
+
+            // Kiểm tra xem có phải là zone cuối cùng không
+            List<Zone> remainingZones = zoneService.getZonesByStorageId(storageId);
+            boolean isLastZone = remainingZones.size() == 1;
+
+            // Xóa zone
+            zoneService.deleteZone(zoneId);
+
+            if (isLastZone) {
+                redirectAttributes.addFlashAttribute("message", "Xóa khu vực cuối cùng thành công! Kho này hiện không có khu vực nào.");
+            } else {
+                redirectAttributes.addFlashAttribute("message", "Xóa khu vực thành công! Đã giải phóng " + deletedZoneArea + " m².");
+            }
+            redirectAttributes.addFlashAttribute("messageType", "success");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Có lỗi xảy ra khi xóa khu vực: " + e.getMessage());
+        }
+
+        return "redirect:/admin/manager-dashboard/storages/" + storageId;
     }
 
 //    @GetMapping("/manager/profile")

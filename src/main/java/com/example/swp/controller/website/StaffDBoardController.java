@@ -2,6 +2,7 @@ package com.example.swp.controller.website;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -60,67 +61,104 @@ public class StaffDBoardController {
     VoucherService voucherService;
 
     @GetMapping("/staff-dashboard")
-    public String showDashboard(Model model) {
-        // Doanh thu
-        double totalRevenueAll = orderService.getTotalRevenueAll();
-        double revenuePaid = orderService.getRevenuePaid();
-        double revenueApproved = orderService.getRevenueApproved();
+    public String showDashboard(Model model, HttpSession session) {
+        // Lấy thông tin staff từ session
+        Object loggedInStaffObj = session.getAttribute("loggedInStaff");
+        if (!(loggedInStaffObj instanceof Staff)) {
+            return "redirect:/login"; // Redirect nếu chưa đăng nhập
+        }
+        
+        Staff loggedInStaff = (Staff) loggedInStaffObj;
+        
+        // Lấy danh sách kho mà staff được giao quản lý
+        List<Storage> managedStorages = storageService.findByStaffId(loggedInStaff.getStaffid());
+        model.addAttribute("storages", managedStorages);
+        
+        // Thông tin kho được quản lý
+        if (!managedStorages.isEmpty()) {
+            Storage managedStorage = managedStorages.get(0); // Lấy kho đầu tiên (giả sử 1 staff quản lý 1 kho)
+            model.addAttribute("managedStorage", managedStorage);
+            
+            // Lấy tất cả đơn hàng và filter theo storage
+            List<Order> allOrders = orderService.getAllOrders();
+            List<Order> storageOrders = allOrders.stream()
+                    .filter(order -> order.getStorage() != null && order.getStorage().getStorageid() == managedStorage.getStorageid())
+                    .collect(Collectors.toList());
+            model.addAttribute("orders", storageOrders);
+            
+            // Doanh thu từ kho được quản lý
+            double storageRevenue = storageOrders.stream()
+                    .filter(order -> "PAID".equals(order.getStatus()))
+                    .mapToDouble(Order::getTotalAmount)
+                    .sum();
+            model.addAttribute("allRevenue", storageRevenue);
+            model.addAttribute("revenueLabels", new String[]{"Doanh thu kho"});
+            model.addAttribute("revenueValues", new double[]{storageRevenue});
+            
+            // Thống kê trạng thái đơn hàng cho kho này
+            long paidOrderCount = storageOrders.stream().filter(o -> "PAID".equals(o.getStatus())).count();
+            long pendingOrderCount = storageOrders.stream().filter(o -> "PENDING".equals(o.getStatus())).count();
+            long rejectedOrderCount = storageOrders.stream().filter(o -> "REJECTED".equals(o.getStatus())).count();
+            long acceptedOrderCount = storageOrders.stream().filter(o -> "APPROVED".equals(o.getStatus())).count();
+            model.addAttribute("orderPaidCount", paidOrderCount);
+            model.addAttribute("orderPendingCount", pendingOrderCount);
+            model.addAttribute("orderRejectedCount", rejectedOrderCount);
+            model.addAttribute("orderAcceptedCount", acceptedOrderCount);
+            
+            // Khách hàng có đơn hàng tại kho này
+            List<Customer> storageCustomers = storageOrders.stream()
+                    .map(Order::getCustomer)
+                    .filter(java.util.Objects::nonNull)
+                    .distinct()
+                    .collect(Collectors.toList());
+            model.addAttribute("customers", storageCustomers);
+            model.addAttribute("totalUser", storageCustomers.size());
+            
+            // Feedback - sử dụng tất cả feedback vì chưa có filter theo storage
+            List<Feedback> allFeedbacks = feedbackService.getAllFeedbacks();
+            model.addAttribute("feedbacks", allFeedbacks);
+            model.addAttribute("totalFeedback", allFeedbacks.size());
+            
+            // Trạng thái kho
+            model.addAttribute("availableStorages", managedStorage.isStatus() ? 1 : 0);
+            model.addAttribute("rentedStorages", managedStorage.isStatus() ? 0 : 1);
+            
+        } else {
+            // Nếu staff chưa được giao quản lý kho nào
+            model.addAttribute("allRevenue", 0.0);
+            model.addAttribute("totalUser", 0);
+            model.addAttribute("totalFeedback", 0);
+            model.addAttribute("orderPaidCount", 0);
+            model.addAttribute("orderPendingCount", 0);
+            model.addAttribute("orderRejectedCount", 0);
+            model.addAttribute("orderAcceptedCount", 0);
+            model.addAttribute("availableStorages", 0);
+            model.addAttribute("rentedStorages", 0);
+            model.addAttribute("managedStorage", null);
+            
+            // Dữ liệu cho biểu đồ khi chưa có kho được quản lý
+            model.addAttribute("revenueLabels", new String[]{"Chưa có kho"});
+            model.addAttribute("revenueValues", new double[]{0.0});
+            model.addAttribute("orders", List.of());
+            model.addAttribute("customers", List.of());
+            model.addAttribute("feedbacks", List.of());
+        }
 
-        model.addAttribute("allRevenue", totalRevenueAll);
-        model.addAttribute("revenueLabels", new String[]{"Tổng DT dự kiến", "DT Đã thanh toán", "DT Chờ thanh toán"});
-        model.addAttribute("revenueValues", new double[]{totalRevenueAll, revenuePaid, revenueApproved});
-
-        // Danh sách kho
-        List<Storage> storages = storageService.getAll();
-        int totalStorages = storages.size();
-        model.addAttribute("storages", storages);
-        model.addAttribute("totalStorages", totalStorages);
-
-        // Danh sách khách hàng
-        List<Customer> customers = customerService.getAll();
-        model.addAttribute("customers", customers);
-        model.addAttribute("totalUser", customers.size());
-
-        // Feedback
-        List<Feedback> feedbacks = feedbackService.getAllFeedbacks();
-        model.addAttribute("feedbacks", feedbacks);
-        model.addAttribute("totalFeedback", feedbacks.size());
-
-        // Order
-        List<Order> orders = orderService.getAllOrders();
-        model.addAttribute("orders", orders);
-
-        // Recent activities
+        // Recent activities (giữ nguyên - hiển thị tất cả hoạt động)
         List<RecentActivity> activities = recentActivityService.getAllActivities();
         if (activities.size() > 6) {
             activities = activities.subList(0, 6);
         }
         model.addAttribute("recentActivities", activities);
 
-        // Voucher
+        // Voucher (giữ nguyên - hiển thị tất cả voucher)
         List<Voucher> vouchers = voucherService.getAllVouchers();
         int totalVouchers = vouchers.size();
         List<Voucher> latestVouchers = vouchers.size() > 5 ? vouchers.subList(0, 5) : vouchers;
         model.addAttribute("totalVouchers", totalVouchers);
         model.addAttribute("latestVouchers", latestVouchers);
 
-        // ===== Thống kê số lượng theo trạng thái =====
-        // Storage status
-        long countAvailableStorages = storages.stream().filter(Storage::isStatus).count();
-        long countRentedStorages = storages.stream().filter(s -> !s.isStatus()).count();
-        model.addAttribute("availableStorages", countAvailableStorages);
-        model.addAttribute("rentedStorages", countRentedStorages);
 
-        // Order status
-        var orderStatusMap = orderService.countOrdersByStatus();
-        long paidOrderCount = orderStatusMap.getOrDefault("PAID", 0L);
-        long pendingOrderCount = orderStatusMap.getOrDefault("PENDING", 0L);
-        long rejectedOrderCount = orderStatusMap.getOrDefault("REJECTED", 0L);
-        long acceptedOrderCount = orderStatusMap.getOrDefault("APPROVED", 0L);
-        model.addAttribute("orderPaidCount", paidOrderCount);
-        model.addAttribute("orderPendingCount", pendingOrderCount);
-        model.addAttribute("orderRejectedCount", rejectedOrderCount);
-        model.addAttribute("orderAcceptedCount", acceptedOrderCount);
 
         // Voucher status
         long activeVoucherCount = voucherService.countByStatus(VoucherStatus.ACTIVE);

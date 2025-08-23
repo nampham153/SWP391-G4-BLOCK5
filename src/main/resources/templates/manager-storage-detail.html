@@ -198,6 +198,49 @@
             box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
         }
 
+        /* Alert Messages */
+        .alert {
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            border-left: 4px solid;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 500;
+        }
+
+        .alert-success {
+            background-color: #d1fae5;
+            border-left-color: var(--success-color);
+            color: #065f46;
+        }
+
+        .alert-error {
+            background-color: #fee2e2;
+            border-left-color: var(--danger-color);
+            color: #991b1b;
+        }
+
+        .alert-dismissible {
+            position: relative;
+        }
+
+        .btn-close {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            color: inherit;
+            opacity: 0.7;
+            transition: opacity 0.3s ease;
+            margin-left: auto;
+        }
+
+        .btn-close:hover {
+            opacity: 1;
+        }
+
         .btn-save {
             background: var(--success-color);
             color: white;
@@ -498,6 +541,280 @@
             color: white;
         }
 
+        /* Zones Styles */
+        .zones-info {
+            margin-top: 15px;
+        }
+
+        .zones-summary {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .zone-stat {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 15px;
+            background: #f8fafc;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .zone-stat i {
+            color: var(--primary-color);
+            font-size: 1rem;
+        }
+
+        .zone-stat strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .zones-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        @media (max-width: 1400px) {
+            .zones-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .zones-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .zones-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .zones-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .zone-item {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .zone-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            border-color: var(--primary-color);
+        }
+
+        .zone-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .zone-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .zone-edit-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            background: var(--primary-color);
+            color: white;
+            border-radius: 6px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-size: 0.8rem;
+        }
+
+        .zone-edit-btn:hover {
+            background: var(--secondary-color);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(30, 58, 138, 0.3);
+        }
+
+        .zone-delete-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            background: var(--danger-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.8rem;
+        }
+
+        .zone-delete-btn:hover {
+            background: #dc2626;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+        }
+
+        .zone-name {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 1rem;
+        }
+
+        .zone-status {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-available {
+            background: var(--success-color);
+            color: white;
+        }
+
+        .status-occupied {
+            background: var(--warning-color);
+            color: white;
+        }
+
+        .status-maintenance {
+            background: var(--danger-color);
+            color: white;
+        }
+
+        .zone-details {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .zone-area, .zone-price {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .zone-area i, .zone-price i {
+            color: var(--primary-color);
+            width: 16px;
+        }
+
+        .no-zones {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-secondary);
+            background: #f8fafc;
+            border-radius: 8px;
+            border: 2px dashed var(--border-color);
+        }
+
+        .no-zones i {
+            color: var(--text-secondary);
+            margin-bottom: 15px;
+        }
+
+        .no-zones p {
+            margin: 5px 0;
+        }
+
+        /* Pagination Styles */
+        .zones-pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 30px;
+            gap: 10px;
+        }
+
+        .zones-pagination .page-info {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin: 0 15px;
+        }
+
+        .zones-pagination button {
+            background: white;
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            min-width: 40px;
+        }
+
+        .zones-pagination button:hover:not(:disabled) {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .zones-pagination button:disabled {
+            background: #f8fafc;
+            color: #cbd5e1;
+            cursor: not-allowed;
+        }
+
+        .zones-pagination button.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .zones-controls {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .zones-per-page {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .zones-per-page select {
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 6px 10px;
+            background: white;
+            color: var(--text-primary);
+            cursor: pointer;
+        }
+
         @media (max-width: 768px) {
             .detail-header {
                 flex-direction: column;
@@ -585,20 +902,8 @@
                               th:class="${storage.status} ? 'status-badge active' : 'status-badge warning'">Available</span>
                     </div>
                     <div class="info-row">
-                        <span class="detail-label">Giá/ngày:</span>
-                        <span class="detail-value" th:text="${#numbers.formatDecimal(storage.pricePerDay, 0, 'POINT', 0, 'COMMA')} + ' VND'">0 VND</span>
-                    </div>
-                    <div class="info-row">
                         <span class="detail-label">Diện tích:</span>
                         <span class="detail-value" th:text="${totalArea} + ' m²'">0 m²</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="detail-label">Đã thuê:</span>
-                        <span class="detail-value" th:text="${rentedArea} + ' m²'">0 m²</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="detail-label">Còn lại:</span>
-                        <span class="detail-value" th:text="${remainingArea} + ' m²'">0 m²</span>
                     </div>
                 </div>
             </div>
@@ -675,9 +980,99 @@
                     </div>
                 </div>
 
+                <!-- Zones Section -->
+                <div class="detail-field">
+                    <label class="detail-label">Khu Vực Chứa Đồ</label>
+                    <div class="zones-info">
+                        <div class="zones-summary">
+                            <span class="zone-stat">
+                                <i class="fas fa-layer-group"></i>
+                                Tổng: <strong th:text="${zones != null ? zones.size() : 0}">0</strong> khu vực
+                            </span>
+                            <span class="zone-stat">
+                                <i class="fas fa-ruler-combined"></i>
+                                Đã sử dụng: <strong th:text="${#numbers.formatDecimal(totalZoneArea, 1, 2)}">0</strong> m²
+                            </span>
+                            <span class="zone-stat">
+                                <i class="fas fa-arrow-up"></i>
+                                Còn lại: <strong th:text="${#numbers.formatDecimal(availableAreaForNewZone, 1, 2)}">0</strong> m²
+                            </span>
+                        </div>
+                        
+                        <div th:if="${zones != null and zones.size() > 0}" class="zones-list">
+                            <!-- Zones Controls -->
+                            <div class="zones-controls">
+                                <div class="zones-total">
+                                    <span>Tổng: <strong th:text="${zones.size()}">0</strong> khu vực</span>
+                                </div>
+                            </div>
+
+                            <!-- Zones Grid -->
+                            <div class="zones-grid" id="zonesGrid">
+                                <div th:each="zone : ${zones}" class="zone-item" th:data-zone-id="${zone.id}">
+                                    <div class="zone-header">
+                                        <span class="zone-name" th:text="${zone.name}">Zone Name</span>
+                                        <div class="zone-actions">
+                                            <span class="zone-status" th:class="${zone.status == 'available' ? 'status-available' : zone.status == 'occupied' ? 'status-occupied' : 'status-maintenance'}" 
+                                                  th:text="${T(com.example.swp.enums.ZoneStatus).getDisplayName(zone.status)}">
+                                                Status
+                                            </span>
+                                            <a th:href="@{'/admin/storages/' + ${storage.storageid} + '/zones/' + ${zone.id} + '/edit'}" 
+                                               class="zone-edit-btn" title="Chỉnh sửa khu vực">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <form th:action="@{'/admin/storages/' + ${storage.storageid} + '/zones/' + ${zone.id} + '/delete'}" 
+                                                  method="post" 
+                                                  style="display:inline;"
+                                                  onsubmit="return confirm('Bạn có chắc chắn muốn xóa khu vực này?');">
+                                                <button type="submit" class="zone-delete-btn" title="Xóa khu vực">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                    <div class="zone-details">
+                                        <div class="zone-area">
+                                            <i class="fas fa-ruler-combined"></i>
+                                            <span th:text="${zone.zoneArea + ' m²'}">Area</span>
+                                        </div>
+                                        <div class="zone-price">
+                                            <i class="fas fa-tag"></i>
+                                            <span th:text="${#numbers.formatDecimal(zone.pricePerDay, 0, 'POINT', 0, 'COMMA') + ' VND/ngày'}">Price</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Zones Pagination -->
+                            <div class="zones-pagination" id="zonesPagination">
+                                <button id="prevPage" onclick="goToPage(currentPage - 1)" disabled>
+                                    <i class="fas fa-chevron-left"></i>
+                                </button>
+                                <div id="pageNumbers"></div>
+                                <button id="nextPage" onclick="goToPage(currentPage + 1)">
+                                    <i class="fas fa-chevron-right"></i>
+                                </button>
+                                <div class="page-info">
+                                    <span id="pageInfo">Trang 1 / 1</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div th:if="${zones == null or zones.size() == 0}" class="no-zones">
+                            <i class="fas fa-inbox" style="font-size: 2rem; margin-bottom: 10px; display: block; opacity: 0.5;"></i>
+                            <p>Chưa có khu vực nào được tạo.</p>
+                            <p class="text-sm text-gray-500">Sử dụng nút "Thêm Khu Vực" để tạo khu vực đầu tiên.</p>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="detail-actions">
                     <a th:href="@{'/admin/manager-dashboard/storages/' + ${storage.storageid} + '/edit'}" class="btn btn-edit">
                         <i class="fas fa-edit"></i> Edit Storage
+                    </a>
+                    <a th:href="@{'/admin/storages/' + ${storage.storageid} + '/add-zone'}" class="btn btn-assign">
+                        <i class="fas fa-plus"></i> Thêm Khu Vực
                     </a>
                     <button type="button" class="btn btn-assign" onclick="openAssignStaffModal()">
                         <i class="fas fa-user-plus"></i> Gán nhân viên
@@ -998,6 +1393,96 @@
          if (event.target === modal) {
              closeAssignStaffModal();
          }
+     }
+
+     // Zones Pagination JavaScript
+     let allZones = [];
+     let currentPage = 1;
+     let zonesPerPage = 10;
+
+     // Initialize zones pagination when page loads
+     document.addEventListener('DOMContentLoaded', function() {
+         initializeZonesPagination();
+     });
+
+     function initializeZonesPagination() {
+         const zoneItems = document.querySelectorAll('.zone-item');
+         allZones = Array.from(zoneItems);
+         
+         if (allZones.length === 0) return;
+         
+         updateZonesDisplay();
+     }
+
+     function updateZonesDisplay() {
+         const totalPages = Math.ceil(allZones.length / zonesPerPage);
+         const startIndex = (currentPage - 1) * zonesPerPage;
+         const endIndex = startIndex + zonesPerPage;
+
+         // Hide all zones
+         allZones.forEach(zone => {
+             zone.style.display = 'none';
+         });
+
+         // Show zones for current page
+         for (let i = startIndex; i < endIndex && i < allZones.length; i++) {
+             allZones[i].style.display = 'block';
+         }
+
+         updatePaginationControls(totalPages);
+         updatePageInfo(totalPages);
+     }
+
+     function updatePaginationControls(totalPages) {
+         const prevButton = document.getElementById('prevPage');
+         const nextButton = document.getElementById('nextPage');
+         const pageNumbers = document.getElementById('pageNumbers');
+
+         // Update prev/next buttons
+         prevButton.disabled = currentPage === 1;
+         nextButton.disabled = currentPage === totalPages || totalPages === 0;
+
+         // Generate page numbers
+         pageNumbers.innerHTML = '';
+         
+         // Show page numbers (max 5 visible)
+         const maxVisiblePages = 5;
+         let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+         let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+         
+         if (endPage - startPage < maxVisiblePages - 1) {
+             startPage = Math.max(1, endPage - maxVisiblePages + 1);
+         }
+
+         for (let i = startPage; i <= endPage; i++) {
+             const pageButton = document.createElement('button');
+             pageButton.textContent = i;
+             pageButton.onclick = () => goToPage(i);
+             pageButton.classList.toggle('active', i === currentPage);
+             pageNumbers.appendChild(pageButton);
+         }
+     }
+
+     function updatePageInfo(totalPages) {
+         const pageInfo = document.getElementById('pageInfo');
+         const startItem = (currentPage - 1) * zonesPerPage + 1;
+         const endItem = Math.min(currentPage * zonesPerPage, allZones.length);
+         
+         pageInfo.textContent = `Hiển thị ${startItem}-${endItem} trong ${allZones.length} khu vực`;
+     }
+
+     function goToPage(page) {
+         const totalPages = Math.ceil(allZones.length / zonesPerPage);
+         if (page < 1 || page > totalPages) return;
+         
+         currentPage = page;
+         updateZonesDisplay();
+     }
+
+     function changeZonesPerPage(newPerPage) {
+         zonesPerPage = parseInt(newPerPage);
+         currentPage = 1; // Reset to first page
+         updateZonesDisplay();
      }
 </script>
 </body>

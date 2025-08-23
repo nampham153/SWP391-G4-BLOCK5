@@ -1,5 +1,14 @@
 package com.example.swp.service.impl;
 
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+
 import com.example.swp.dto.IssueRequest;
 import com.example.swp.entity.Customer;
 import com.example.swp.entity.Issue;
@@ -10,15 +19,6 @@ import com.example.swp.repository.IssueRepository;
 import com.example.swp.repository.StaffRepository;
 import com.example.swp.service.ActivityLogService;
 import com.example.swp.service.IssueService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 
 @Service
 public class IssueServiceImpl implements IssueService {

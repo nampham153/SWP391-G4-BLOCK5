@@ -21,6 +21,90 @@
         .btn-primary { background: linear-gradient(135deg,#667eea,#764ba2); color:#fff; }
         .btn-secondary { background:#e2e8f0; color:#0f172a; }
         .hint { color:#64748b; font-size:.85rem; margin-top:6px; }
+
+        /* Image Upload Styles */
+        .image-upload-section {
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+        }
+
+        .current-image {
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .current-image-preview {
+            width: 150px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 2px solid #e2e8f0;
+            margin-bottom: 8px;
+        }
+
+        .image-hint {
+            color: #64748b;
+            font-size: 0.85rem;
+            margin: 0;
+        }
+
+        .new-image-upload {
+            flex: 1;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .file-label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            border: 2px dashed #cbd5e1;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f8fafc;
+            min-height: 100px;
+        }
+
+        .file-label:hover {
+            border-color: #667eea;
+            background: #f1f5f9;
+        }
+
+        .file-label i {
+            font-size: 2rem;
+            color: #64748b;
+            margin-bottom: 8px;
+        }
+
+        .file-label span {
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .upload-hint {
+            color: #64748b;
+            font-size: 0.85rem;
+            margin-top: 8px;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .image-upload-section {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .current-image-preview {
+                width: 120px;
+                height: 80px;
+            }
+        }
         /* Manager taskbar overrides to match detail page */
         .sidebar .logo i { color: #fff !important; }
         .sidebar .menu-item a { gap: 0 !important; }
@@ -64,7 +148,7 @@
             <button type="button" class="btn btn-secondary" th:onclick="|goBackDetail(${storage.storageid})|"><i class="fas fa-arrow-left"></i> Quay lại</button>
         </div>
 
-        <form th:action="@{'/admin/manager-dashboard/storages/' + ${storage.storageid}}" th:object="${storage}" method="post">
+        <form th:action="@{'/admin/manager-dashboard/storages/' + ${storage.storageid}}" th:object="${storage}" method="post" enctype="multipart/form-data">
             <input type="hidden" name="returnUrl" value="/admin/manager-dashboard/storages/" />
             <input type="hidden" th:field="*{status}" />
             <div class="form-grid">
@@ -87,10 +171,28 @@
                     <label class="label">Thông tin thuê</label>
                     <div class="row-3">
                         <input class="input" type="number" step="0.01" min="0" th:field="*{area}" placeholder="Diện tích (m²)" required>
-                        <input class="input" type="number" step="0.01" min="0" th:field="*{pricePerDay}" placeholder="Giá/ngày (VND)" required>
+                        <div></div>
                         <div></div>
                     </div>
-                    <div class="hint">Cập nhật diện tích và đơn giá thuê theo ngày</div>
+                    <div class="hint">Cập nhật diện tích kho</div>
+                </div>
+
+                <div class="field">
+                    <label class="label">Ảnh đại diện</label>
+                    <div class="image-upload-section">
+                        <div class="current-image" th:if="${storage.imUrl != null and storage.imUrl != ''}">
+                            <img th:src="${storage.imUrl}" alt="Current storage image" class="current-image-preview">
+                            <p class="image-hint">Ảnh hiện tại</p>
+                        </div>
+                        <div class="new-image-upload">
+                            <input type="file" id="newImage" name="newImage" accept="image/*" class="file-input">
+                            <label for="newImage" class="file-label">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <span>Chọn ảnh mới</span>
+                            </label>
+                            <p class="upload-hint">Định dạng PNG, JPG hoặc GIF. Dung lượng tối đa 10MB.</p>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="field">

@@ -109,7 +109,7 @@
                         <th>Ảnh</th>
                         <th>Tên Kho</th>
                         <th>Diện tích</th>
-                        <th>Giá cả</th>
+                        <th>Số Zone</th>
                         <th>Trạng thái</th>
                         <th>Hành động</th>
                     </tr>
@@ -121,7 +121,7 @@
                         <td><img th:src="${storage.imUrl} ?: '/images/default-storage.jpg'" class="storage-image" /></td>
                         <td th:text="${storage.storagename}"></td>
                         <td th:text="${storage.area + ' m²'}"></td>
-                        <td th:text="${storage.pricePerDay}"></td>
+                        <td th:text="${zoneCountMap[storage.storageid] ?: 0}"></td>
                         <td>
                     <span th:class="${storage.status} ? 'status-badge active' : 'status-badge warning'"
                         th:text="${storage.status} ? 'Còn trống' : 'Đã thuê'"></span>
