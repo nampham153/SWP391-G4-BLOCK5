@@ -36,6 +36,7 @@ import com.example.swp.service.StorageService;
 import com.example.swp.service.VoucherService;
 import com.example.swp.repository.ZoneRepository;
 import com.example.swp.service.VoucherUsageService;
+import com.example.swp.repository.OrderRepository;
 
 import jakarta.servlet.http.HttpSession;
 
@@ -70,6 +71,9 @@ public class BookingController {
 
     @Autowired
     private ZoneRepository zoneRepository;
+
+    @Autowired
+    private OrderRepository orderRepository;
 
     /**
      * Helper method để kiểm tra và lấy customer từ session
@@ -264,6 +268,7 @@ public class BookingController {
             @RequestParam("startDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam("endDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             @RequestParam("rentalArea") double rentalArea,
+            @RequestParam(value = "selectedUnitIndices", required = false) String selectedUnitIndices,
             @RequestParam(value = "zoneId", required = false) Integer zoneId,
             @RequestParam("name") String name,
             @RequestParam("email") String email,
@@ -321,6 +326,39 @@ public class BookingController {
                     "Diện tích thuê (" + rentalArea + " m²) không được vượt quá diện tích kho (" + storage.getArea()
                             + " m²).");
             return "redirect:/SWP/booking/" + storageId + "/booking?startDate=" + startDate + "&endDate=" + endDate;
+        }
+
+        // Nếu có chọn theo ô, kiểm tra xung đột với các đơn trùng thời gian
+        if (selectedUnitIndices != null && !selectedUnitIndices.isBlank()) {
+            // Làm sạch danh sách chỉ số yêu cầu
+            java.util.Set<Integer> requested = java.util.Arrays.stream(selectedUnitIndices.split(","))
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .map(Integer::parseInt)
+                    .collect(java.util.stream.Collectors.toSet());
+
+            List<String> bookedList = orderRepository.findBookedUnitIndicesForOverlap(
+                    storageId, startDate, endDate);
+
+            java.util.Set<Integer> booked = new java.util.HashSet<>();
+            for (String s : bookedList) {
+                if (s == null || s.isBlank()) continue;
+                for (String p : s.split(",")) {
+                    String t = p.trim();
+                    if (!t.isEmpty()) booked.add(Integer.parseInt(t));
+                }
+            }
+            booked.retainAll(requested);
+            if (!booked.isEmpty()) {
+                redirectAttributes.addFlashAttribute("error", "Một số ô bạn chọn đã được đặt trong khoảng thời gian này. Vui lòng chọn lại.");
+                return "redirect:/SWP/booking/" + storageId + "/booking?startDate=" + startDate + "&endDate=" + endDate;
+            }
+
+            // Đảm bảo rentalArea khớp số ô đã chọn (mỗi ô 50 m²)
+            double expectedArea = requested.size() * 50.0;
+            if (expectedArea != rentalArea) {
+                rentalArea = expectedArea; // đồng bộ để tính tiền và lưu DB
+            }
         }
 
         try {
@@ -393,6 +431,11 @@ public class BookingController {
             order.setOrderDate(LocalDate.now());
             order.setTotalAmount(totalCost);
             order.setStatus("PENDING");
+            order.setStorage(storage);
+            order.setRentalArea(rentalArea);
+            if (selectedUnitIndices != null && !selectedUnitIndices.isBlank()) {
+                order.setSelectedUnitIndices(selectedUnitIndices);
+            }
             // Gán zone nếu người dùng đã chọn
             if (zoneId != null) {
                 zoneRepository.findById(zoneId).ifPresent(order::setZone);

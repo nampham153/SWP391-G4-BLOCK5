@@ -89,6 +89,7 @@
                     <input type="hidden" name="orderToken" th:value="${orderToken}" />
                     <input type="hidden" name="zoneId" th:value="${zoneId}" />
                     <input type="hidden" name="preSelectedArea" th:value="${preSelectedArea}" />
+                    <input type="hidden" id="selectedUnitIndices" name="selectedUnitIndices" th:value="${selectedUnitIndices}" />
 
                     <!-- Storage Info -->
                     <div class="form-section">
@@ -230,7 +231,7 @@
 
     <footer class="footer">
         <div class="container">
-            <p>© 2025 QVL Storage. Tất cả quyền được bảo lưu.</p>
+            <p> 2025 QVL Storage. Tất cả quyền được bảo lưu.</p>
         </div>
     </footer>
 </div>
@@ -305,10 +306,16 @@
         // Update rental area based on grid selection or zone
         const rentalAreaInput = document.getElementById('rentalArea');
         const grid = document.getElementById('bfUnitGrid');
+        const indicesInput = document.getElementById('selectedUnitIndices');
         
         if (grid) {
             const selectedTiles = grid.querySelectorAll('.unit-tile.selected');
             const selectedArea = selectedTiles.length * 50; // Each tile = 50m²
+            // Persist selected indices
+            if (indicesInput) {
+                const indices = Array.from(selectedTiles).map(t => t.dataset.index).join(',');
+                indicesInput.value = indices;
+            }
             
             if (selectedArea > 0) {
                 rentalAreaInput.value = selectedArea;
@@ -368,6 +375,8 @@
 
     window.addEventListener('DOMContentLoaded', () => {
         document.querySelector('form').addEventListener('submit', function(e) {
+            // Ensure hidden fields reflect current grid state before submit
+            updateRentalAreaFromGrid();
             if (!this.checkValidity()) {
                 e.preventDefault();
                 alert('Vui lòng kiểm tra lại thông tin nhập vào.');
@@ -405,6 +414,18 @@
                         if (preIndices.has(i)) {
                             tile.classList.add('selected', 'disabled');
                         }
+                        // Enable toggling when not disabled by preSelectedArea
+                        if (preSelectedArea == null) {
+                            tile.addEventListener('click', () => {
+                                tile.classList.toggle('selected');
+                                const cntEl = document.getElementById('bfUnitSelectedCount');
+                                const areaEl = document.getElementById('bfUnitSelectedArea');
+                                const selectedNow = grid.querySelectorAll('.unit-tile.selected').length;
+                                if (cntEl) cntEl.textContent = String(selectedNow);
+                                if (areaEl) areaEl.textContent = String(selectedNow * UNIT_SIZE);
+                                updateRentalAreaFromGrid();
+                            });
+                        }
                         grid.appendChild(tile);
                     }
                 } else {
@@ -424,6 +445,8 @@
                 if (preSelectedArea != null) {
                     grid.style.pointerEvents = 'none';
                 }
+                // Initialize hidden inputs from preselection
+                updateRentalAreaFromGrid();
             }
         } catch (err) {
             console.warn('Unit grid init failed:', err);

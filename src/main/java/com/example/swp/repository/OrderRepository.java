@@ -81,6 +81,22 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
     @Query("SELECT o FROM Order o WHERE o.status = 'PAID' AND o.endDate <= :threshold AND o.endDate >= :today")
     List<Order> findPaidRenewalOrders(LocalDate today, LocalDate threshold);
 
+    // Lấy danh sách chỉ số ô đã được đặt trong khoảng thời gian trùng lặp
+    @Query("""
+        SELECT o.selectedUnitIndices
+        FROM Order o
+        WHERE o.storage.storageid = :storageId
+          AND o.selectedUnitIndices IS NOT NULL
+          AND o.selectedUnitIndices <> ''
+          AND o.status IN ('PENDING','CONFIRMED','ACTIVE','PAID')
+          AND o.startDate < :endDate AND o.endDate > :startDate
+    """)
+    List<String> findBookedUnitIndicesForOverlap(
+            @Param("storageId") int storageId,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate
+    );
+
 }
 
 
