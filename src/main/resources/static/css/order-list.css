@@ -215,3 +215,87 @@ td {
 .btn-view:hover { background:#385a84; }
 .page-btn { padding:6px 10px; border:1px solid #e0e0e0; background:#fff; border-radius:6px; cursor:pointer; }
 .page-btn:disabled { opacity:.5; cursor:not-allowed; }
+/* Put filter + search on one line */
+.form-row-spacebetween{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+    flex-wrap:nowrap;          /* keep single row; change to wrap if you want responsive wrap */
+}
+
+/* Make each form lay out inline */
+.filter-form,
+.search-form{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin:0;                  /* remove default margins if any */
+}
+
+/* Keep labels from breaking lines */
+.filter-form label,
+.search-form label{
+    white-space:nowrap;
+}
+
+/* Keep the search input compact so buttons fit */
+.search-form input[type="number"]{
+    width:160px;               /* tweak as needed */
+    max-width:100%;
+}
+
+/* Ensure all “btn”s are inline elements, same height */
+.btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    padding:8px 12px;
+    line-height:1;
+    height:36px;               /* match select height */
+    white-space:nowrap;
+}
+
+/* Make selects align visually with buttons */
+.filter-form select{
+    height:36px;
+}
+/* Keep filter + search in one row */
+.form-row-spacebetween{
+    display:flex;
+    align-items:center;          /* centers controls vertically */
+    justify-content:space-between;
+    gap:16px;
+    flex-wrap:nowrap;            /* change to wrap if you want responsive wrap */
+}
+
+/* Make both forms inline rows */
+.filter-form,
+.search-form{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin:0;
+}
+
+/* Normalize control sizing so they line up */
+.filter-form select,
+.search-form input[type="number"],
+.search-form .btn,
+.filter-form .btn{
+    font: inherit;
+    letter-spacing: 0;           /* avoid weird VN diacritics spacing */
+    height: 38px;                /* same height for all */
+    padding: 0 12px;             /* 0 top/bottom keeps vertical centering */
+    border-radius: 12px;
+    line-height: 38px;           /* helps inputs; selects may ignore, still fine */
+}
+
+/* Native select sits a touch low on Windows: nudge 1px */
+.filter-form select{ position: relative; top: -1px; }
+
+/* Optional: pick a VN-friendly font for the select text */
+.filter-form select,
+.filter-form option{
+    font-family: "Segoe UI", "Noto Sans", Arial, sans-serif;
+}

@@ -20,6 +20,7 @@ public interface StaffRepository extends JpaRepository<Staff, Integer> {
     Page<Staff> findAll(Pageable pageable);
     @Query("SELECT COUNT(s) FROM Staff s")
     int countAllStaff();
-
+    boolean existsByEmailIgnoreCase(String email);
+    boolean existsByPhone(String phone);
 
 }
