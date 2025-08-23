@@ -27,6 +27,20 @@ public interface UnitSelectionRepository extends JpaRepository<UnitSelection, Lo
     @Query("""
         SELECT u.unitIndex
         FROM UnitSelection u
+        JOIN u.order o
+        WHERE u.storage.storageid = :storageId
+          AND o.status = 'PAID'
+          AND u.startDate < :endDate AND u.endDate > :startDate
+    """)
+    List<Integer> findPaidUnitIndicesForOverlap(
+            @Param("storageId") int storageId,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate
+    );
+
+    @Query("""
+        SELECT u.unitIndex
+        FROM UnitSelection u
         WHERE u.order.id = :orderId
         ORDER BY u.unitIndex
     """)

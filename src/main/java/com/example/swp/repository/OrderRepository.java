@@ -97,6 +97,21 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
             @Param("endDate") LocalDate endDate
     );
 
+    @Query("""
+        SELECT o.selectedUnitIndices
+        FROM Order o
+        WHERE o.storage.storageid = :storageId
+          AND o.selectedUnitIndices IS NOT NULL
+          AND o.selectedUnitIndices <> ''
+          AND o.status = 'PAID'
+          AND o.startDate < :endDate AND o.endDate > :startDate
+    """)
+    List<String> findPaidSelectedUnitIndicesForOverlap(
+            @Param("storageId") int storageId,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate
+    );
+
 }
 
 

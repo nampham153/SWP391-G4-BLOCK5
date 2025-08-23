@@ -18,7 +18,19 @@
         .unit-tile.selected { background-color: #dcfce7; outline: 2px solid #16a34a; }
         .unit-tile.disabled { background-color: #f3f4f6; opacity: .6; pointer-events: none; text-decoration: line-through; }
     </style>
+    <style>
+        .unit-tile.disabled {
+            opacity: 0.5;
+            pointer-events: none;
+            text-decoration: line-through;
+        }
+        .unit-tile.selected {
+            background-color: #dcfce7; /* green-100 */
+            border-color: #22c55e;     /* green-500 */
+        }
+    </style>
 </head>
+
 <body>
 <!-- Navigation Bar -->
 <div th:replace="taskbar/customer-navbar :: customerNavbar"></div>
@@ -265,7 +277,6 @@
 
     
 </div>
-
 <!-- Footer -->
 <div th:replace="taskbar/customer-footer :: customerFooter"></div>
 
@@ -275,6 +286,7 @@
         const today = new Date().toISOString().split('T')[0];
         const startInput = document.getElementById('startDate');
         const endInput = document.getElementById('endDate');
+        const storageId = /*[[${storage.storageid}]]*/ 0;
 
         // Đặt giá trị tối thiểu cho ngày bắt đầu và ngày kết thúc
         startInput.setAttribute('min', today);
@@ -302,6 +314,86 @@
                 tile.dataset.index = String(i);
                 unitGrid.appendChild(tile);
             }
+
+            // Helper: apply unavailable index list to grid
+            function applyUnavailable(indices) {
+                const raw = Array.isArray(indices) ? indices.slice() : [];
+                // Tự nhận biết dữ liệu 1-based: tất cả >=1, không có 0, và max <= totalUnits
+                let normalized = raw;
+                if (raw.length > 0) {
+                    const minIdx = Math.min(...raw);
+                    const maxIdx = Math.max(...raw);
+                    const assumeOneBased = minIdx >= 1 && !raw.includes(0) && maxIdx <= totalUnits;
+                    if (assumeOneBased) {
+                        normalized = raw.map(i => i - 1);
+                        console.debug('[Grid] Converted 1-based -> 0-based:', raw, '=>', normalized);
+                    }
+                }
+                // Loại bỏ index ngoài phạm vi grid
+                normalized = normalized.filter(i => Number.isInteger(i) && i >= 0 && i < totalUnits);
+                const set = new Set(normalized);
+                Array.from(unitGrid.children).forEach(ch => {
+                    const idx = parseInt(ch.dataset.index);
+                    if (set.has(idx)) {
+                        ch.classList.add('disabled');
+                        ch.classList.remove('selected');
+                    } else {
+                        ch.classList.remove('disabled');
+                    }
+                });
+                console.debug('[Grid] Applied unavailable indices:', Array.from(set));
+                updateUnitSelectionCount();
+            }
+
+            // Fetch unavailable tiles from server when both dates valid
+            function toIsoDateStr(inputEl) {
+                // Ưu tiên valueAsDate nếu có, fallback parse thủ công
+                const d = inputEl.valueAsDate;
+                if (d instanceof Date && !isNaN(d)) {
+                    const y = d.getFullYear();
+                    const m = String(d.getMonth() + 1).padStart(2, '0');
+                    const day = String(d.getDate()).padStart(2, '0');
+                    return `${y}-${m}-${day}`;
+                }
+                // Fallback: cố gắng parse các định dạng phổ biến
+                const raw = (inputEl.value || '').trim();
+                if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw; // ISO ok
+                const m = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/); // MM/DD/YYYY
+                if (m) {
+                    const mm = m[1].padStart(2, '0');
+                    const dd = m[2].padStart(2, '0');
+                    const yyyy = m[3];
+                    return `${yyyy}-${mm}-${dd}`;
+                }
+                // Không parse được => trả về chuỗi rỗng để tránh gọi API sai
+                return '';
+            }
+
+            async function refreshUnavailable() {
+                const s = toIsoDateStr(startInput);
+                const e = toIsoDateStr(endInput);
+                if (!s || !e) return;
+                if (new Date(e) <= new Date(s)) return;
+                try {
+                    const url = `/SWP/booking/${storageId}/unavailable?startDate=${encodeURIComponent(s)}&endDate=${encodeURIComponent(e)}`;
+                    console.debug('[Fetch] storageId:', storageId, 'start:', s, 'end:', e);
+                    console.debug('[Fetch] Unavailable URL:', url);
+                    const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+                    if (!res.ok) {
+                        console.error('[Fetch] HTTP error', res.status, res.statusText);
+                        throw new Error('Network error');
+                    }
+                    const data = await res.json();
+                    console.debug('[Fetch] Unavailable data:', data);
+                    applyUnavailable(Array.isArray(data) ? data : []);
+                } catch (err) {
+                    // On error, clear unavailable markers
+                    console.error('[Fetch] Unavailable failed:', err);
+                    applyUnavailable([]);
+                }
+            }
+            // Expose to global so openModal() can force refresh immediately
+            window.refreshUnavailable = refreshUnavailable;
 
             // Drag-to-select rectangle
             let isDragging = false;
@@ -337,6 +429,7 @@
             unitGrid.addEventListener('mousedown', (e) => {
                 const tile = e.target.closest('.unit-tile');
                 if (!tile) return;
+                if (tile.classList.contains('disabled')) return; // block interaction on disabled
                 isMouseDown = true;
                 startIndex = parseInt(tile.dataset.index);
                 lastDownTile = tile;
@@ -346,6 +439,7 @@
                 if (!isMouseDown) return;
                 const tile = e.target.closest('.unit-tile');
                 if (!tile) return;
+                if (tile.classList.contains('disabled')) return; // ignore drag over disabled
                 const idx = parseInt(tile.dataset.index);
                 if (!isDragging && idx !== startIndex) {
                     isDragging = true; // start drag only when moving to another tile
@@ -357,7 +451,9 @@
             document.addEventListener('mouseup', (e) => {
                 // If mouse was pressed on a tile and no drag happened => treat as simple click toggle
                 if (isMouseDown && !isDragging && lastDownTile) {
-                    lastDownTile.classList.toggle('selected');
+                    if (!lastDownTile.classList.contains('disabled')) {
+                        lastDownTile.classList.toggle('selected');
+                    }
                     updateUnitSelectionCount();
                 }
                 isMouseDown = false;
@@ -387,6 +483,12 @@
                     document.querySelectorAll('#zoneGrid .zone-tile.selected').forEach(el => el.classList.remove('selected'));
                 }
             }
+            // Trigger refresh when dates change
+            startInput.addEventListener('change', refreshUnavailable);
+            endInput.addEventListener('change', refreshUnavailable);
+
+            // Initial refresh if dates prefilled
+            refreshUnavailable();
         }
     });
 
@@ -394,6 +496,30 @@
     function openModal() {
         const modal = document.getElementById('bookingModal');
         modal.classList.remove('hidden');
+        // Prefill default dates if empty: today and tomorrow
+        const startInput = document.getElementById('startDate');
+        const endInput = document.getElementById('endDate');
+        if (startInput && endInput) {
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+            const todayStr = `${yyyy}-${mm}-${dd}`;
+            const tomorrow = new Date(today.getTime() + 24*60*60*1000);
+            const yyyy2 = tomorrow.getFullYear();
+            const mm2 = String(tomorrow.getMonth() + 1).padStart(2, '0');
+            const dd2 = String(tomorrow.getDate()).padStart(2, '0');
+            const tomorrowStr = `${yyyy2}-${mm2}-${dd2}`;
+            if (!startInput.value) startInput.value = todayStr;
+            // Ensure end > start
+            if (!endInput.value || new Date(endInput.value) <= new Date(startInput.value)) {
+                endInput.value = tomorrowStr;
+            }
+        }
+        // Force refresh unavailable immediately on modal open
+        if (window.refreshUnavailable) {
+            window.refreshUnavailable();
+        }
     }
 
     // Hàm đóng modal

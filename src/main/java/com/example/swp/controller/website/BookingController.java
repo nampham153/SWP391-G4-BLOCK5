@@ -184,6 +184,20 @@ public class BookingController {
         model.addAttribute("endDate", endDate);
         model.addAttribute("remainArea", remainArea);
         model.addAttribute("orderToken", orderToken);
+
+        // Tính các ô đã bị đặt trong khoảng thời gian để disable trên grid (GET)
+        try {
+            java.util.List<Integer> booked = unitSelectionRepository
+                    .findBookedUnitIndicesForOverlap(storageId, startDate, endDate);
+            String unavailableCsv = booked.stream()
+                    .distinct()
+                    .sorted()
+                    .map(String::valueOf)
+                    .collect(java.util.stream.Collectors.joining(","));
+            model.addAttribute("unavailableUnitIndices", unavailableCsv);
+        } catch (Exception ignore) {
+            model.addAttribute("unavailableUnitIndices", "");
+        }
         if (preSelectedArea != null && preSelectedArea > 0) {
             model.addAttribute("preSelectedArea", preSelectedArea);
         }
@@ -578,6 +592,47 @@ public class BookingController {
         } catch (Exception ignore) { }
 
         return "booking-detail";
+    }
+
+    /**
+     * API: Lấy danh sách chỉ số ô đã đặt (để bôi xám) theo khoảng ngày cho một kho
+     * Trả về JSON array các index (Integer)
+     */
+    @GetMapping("/booking/{storageId}/unavailable")
+    @ResponseBody
+    public java.util.List<Integer> getUnavailableUnitIndices(
+            @PathVariable int storageId,
+            @RequestParam("startDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam("endDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate
+    ) {
+        if (startDate == null || endDate == null || !endDate.isAfter(startDate)) {
+            return java.util.Collections.emptyList();
+        }
+        try {
+            // Nguồn 1: bảng UnitSelection (đã chuẩn hoá từng ô)
+            java.util.List<Integer> merged = new java.util.ArrayList<>(
+                    unitSelectionRepository.findPaidUnitIndicesForOverlap(storageId, startDate, endDate)
+            );
+
+            // Nguồn 2: cột CSV selectedUnitIndices trong Order (đơn PAID, overlap)
+            java.util.List<String> csvList = orderRepository.findPaidSelectedUnitIndicesForOverlap(storageId, startDate, endDate);
+            if (csvList != null) {
+                for (String csv : csvList) {
+                    if (csv == null || csv.isBlank()) continue;
+                    for (String part : csv.split(",")) {
+                        String t = part.trim();
+                        if (t.isEmpty()) continue;
+                        try {
+                            merged.add(Integer.parseInt(t));
+                        } catch (NumberFormatException ignore) { }
+                    }
+                }
+            }
+
+            return merged.stream().distinct().sorted().toList();
+        } catch (Exception ex) {
+            return java.util.Collections.emptyList();
+        }
     }
 
     /**
