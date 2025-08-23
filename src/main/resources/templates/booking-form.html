@@ -174,21 +174,6 @@
                         </div>
                     </div>
 
-                    <!-- Unit selection (50 m²) -->
-                    <div class="form-section">
-                        <h3 class="section-title"><i class="fas fa-th"></i> Chọn diện tích theo ô 50 m²</h3>
-                        <div class="info-card" style="padding: 12px;">
-                            <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                                <div class="info-label">Kéo để chọn theo hình chữ nhật hoặc nhấp để cộng dồn</div>
-                                <div class="info-value" style="font-size: 14px;">
-                                    Đã chọn: <span id="bfUnitSelectedCount">0</span> ô (<span id="bfUnitSelectedArea">0</span> m²)
-                                </div>
-                            </div>
-                            <div id="bfUnitGrid" class="grid" style="display:grid; gap:8px;"
-                                 th:attr="data-preselected=${selectedUnitIndices},data-unavailable=${unavailableUnitIndices}"></div>
-                            <small class="form-text">Mỗi ô = 50 m². Khi chọn theo ô, hệ thống sẽ bỏ chọn Zone (nếu có).</small>
-                        </div>
-                    </div>
 
                     <!-- Customer Info -->
                     <div class="section-title" style="display: flex; justify-content: space-between; align-items: center;">
@@ -198,7 +183,7 @@
                     <input type="hidden" name="voucherId" id="voucherId" />
 
                     <!-- Hidden field for rental area - will be set automatically from grid or zone -->
-                    <input type="hidden" id="rentalArea" name="rentalArea" th:value="${preSelectedArea} != null ? preSelectedArea : (selectedZone != null ? selectedZone.zoneArea : 0)" />
+                    <input type="hidden" id="rentalArea" name="rentalArea" th:value="0" />
 
                     <div class="form-group">
                         <label for="name" class="form-label">Họ và tên *</label>
@@ -333,26 +318,11 @@
     }
 
     function updateRentalAreaFromGrid() {
-        // Update rental area based on grid selection or zone
+        // Update rental area based on zone selection (no more grid selection)
         const rentalAreaInput = document.getElementById('rentalArea');
-        const grid = document.getElementById('bfUnitGrid');
-        const indicesInput = document.getElementById('selectedUnitIndices');
         
-        if (grid) {
-            const selectedTiles = grid.querySelectorAll('.unit-tile.selected');
-            const selectedArea = selectedTiles.length * 50; // Each tile = 50m²
-            // Persist selected indices
-            if (indicesInput) {
-                const indices = Array.from(selectedTiles).map(t => t.dataset.index).join(',');
-                indicesInput.value = indices;
-            }
-            
-            if (selectedArea > 0) {
-                rentalAreaInput.value = selectedArea;
-            } else if (area > 0) {
-                // Fallback to zone area if no grid selection
-                rentalAreaInput.value = area;
-            }
+        if (rentalAreaInput && area > 0) {
+            rentalAreaInput.value = area;
         }
         calculateTotal();
     }
@@ -421,97 +391,23 @@
     };
 
     window.addEventListener('DOMContentLoaded', () => {
+        // Set initial rental area based on selected zones
+        const rentalAreaInput = document.getElementById('rentalArea');
+        if (rentalAreaInput && area > 0) {
+            rentalAreaInput.value = area;
+        }
+        
         document.querySelector('form').addEventListener('submit', function(e) {
             // Ensure hidden fields reflect current grid state before submit
             updateRentalAreaFromGrid();
-            // Require selecting tiles when no zone chosen
-            const zoneInput = document.querySelector('input[name="zoneId"]');
-            const zoneVal = zoneInput && zoneInput.value ? zoneInput.value : '';
-            const indicesVal = (document.getElementById('selectedUnitIndices') || { value: '' }).value.trim();
-            if (!zoneVal && indicesVal.length === 0) {
-                e.preventDefault();
-                alert('Vui lòng chọn các ô 50 m² để tiếp tục.');
-                return;
-            }
+            
             if (!this.checkValidity()) {
                 e.preventDefault();
                 alert('Vui lòng kiểm tra lại thông tin nhập vào.');
             }
         });
         
-        // Build 50 m² grid and reflect preselected tiles from storage detail
-        try {
-            const UNIT_SIZE = 50;
-            const storageArea = /*[[${storage.area}]]*/ 0;
-            const totalUnits = Math.max(0, Math.floor(storageArea / UNIT_SIZE));
-            const grid = document.getElementById('bfUnitGrid');
-            const preSelectedArea = /*[[${preSelectedArea}]]*/ null;
-            const preIndicesStr = grid ? (grid.getAttribute('data-preselected') || '') : '';
-            const preIndices = new Set(preIndicesStr.split(',').map(s => s.trim()).filter(Boolean).map(n => parseInt(n, 10)).filter(n => !isNaN(n)));
-            const unavailableStr = grid ? (grid.getAttribute('data-unavailable') || '') : '';
-            const unavailable = new Set(unavailableStr.split(',').map(s => s.trim()).filter(Boolean).map(n => parseInt(n, 10)).filter(n => !isNaN(n)));
-            
-            console.log('Grid debug:', {
-                storageArea,
-                totalUnits,
-                gridExists: !!grid,
-                preSelectedArea,
-                preIndicesStr,
-                preIndicesSize: preIndices.size
-            });
-            
-            if (grid) {
-                if (totalUnits > 0) {
-                    const cols = Math.max(1, Math.ceil(Math.sqrt(totalUnits)));
-                    grid.style.gridTemplateColumns = `repeat(${cols}, minmax(0, 1fr))`;
-                    for (let i = 0; i < totalUnits; i++) {
-                        const tile = document.createElement('div');
-                        tile.className = 'unit-tile';
-                        tile.textContent = `${UNIT_SIZE} m²`;
-                        tile.dataset.index = String(i);
-                        if (preIndices.has(i)) {
-                            tile.classList.add('selected', 'disabled');
-                        } else if (unavailable.has(i)) {
-                            tile.classList.add('disabled');
-                        }
-                        // Enable toggling when not disabled by preSelectedArea
-                        if (preSelectedArea == null) {
-                            tile.addEventListener('click', () => {
-                                if (tile.classList.contains('disabled')) return;
-                                tile.classList.toggle('selected');
-                                const cntEl = document.getElementById('bfUnitSelectedCount');
-                                const areaEl = document.getElementById('bfUnitSelectedArea');
-                                const selectedNow = grid.querySelectorAll('.unit-tile.selected').length;
-                                if (cntEl) cntEl.textContent = String(selectedNow);
-                                if (areaEl) areaEl.textContent = String(selectedNow * UNIT_SIZE);
-                                updateRentalAreaFromGrid();
-                            });
-                        }
-                        grid.appendChild(tile);
-                    }
-                } else {
-                    // Show message when no units available
-                    grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 20px; color: #666;">Không có ô 50 m² khả dụng cho kho này</div>';
-                }
-                
-                // Update header counts according to preselection
-                const count = preIndices.size;
-                const areaSel = count * UNIT_SIZE;
-                const cntEl = document.getElementById('bfUnitSelectedCount');
-                const areaEl = document.getElementById('bfUnitSelectedArea');
-                if (cntEl) cntEl.textContent = String(count);
-                if (areaEl) areaEl.textContent = String(areaSel);
-                
-                // Disable interactions when preSelectedArea is set (selection came from previous page)
-                if (preSelectedArea != null) {
-                    grid.style.pointerEvents = 'none';
-                }
-                // Initialize hidden inputs from preselection
-                updateRentalAreaFromGrid();
-            }
-        } catch (err) {
-            console.warn('Unit grid init failed:', err);
-        }
+        // No more grid functionality needed since user removed it
         
         // Set initial rental area and calculate total
         updateRentalAreaFromGrid();
