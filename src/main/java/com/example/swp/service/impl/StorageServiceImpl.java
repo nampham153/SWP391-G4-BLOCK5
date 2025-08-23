@@ -16,9 +16,11 @@ import org.springframework.stereotype.Component;
 import com.example.swp.dto.StorageRequest;
 import com.example.swp.entity.Staff;
 import com.example.swp.entity.Storage;
+import com.example.swp.entity.Zone;
 import com.example.swp.repository.StaffRepository;
 import com.example.swp.repository.StorageRepository;
 import com.example.swp.service.StorageService;
+import com.example.swp.service.ZoneService;
 
 import jakarta.validation.Valid;
 
@@ -29,6 +31,9 @@ public class StorageServiceImpl implements StorageService {
 
     @Autowired
     private StaffRepository staffRepository;
+
+    @Autowired
+    private ZoneService zoneService;
 
     @Autowired
     @Lazy
@@ -71,8 +76,15 @@ public class StorageServiceImpl implements StorageService {
             storage.setImUrl(storageRequest.getImUrl());
         }
 
+        // Lưu storage trước để có ID
+        Storage savedStorage = storageRepository.save(storage);
 
-        return storageRepository.save(storage);
+        // Tạo zones tự động nếu được yêu cầu
+        if (storageRequest.getCreateZones() != null && storageRequest.getCreateZones()) {
+            createZonesForStorage(savedStorage, storageRequest);
+        }
+
+        return savedStorage;
     }
 
     @Override
@@ -112,6 +124,13 @@ public class StorageServiceImpl implements StorageService {
 
     @Override
     public void deleteStorageById(int id) {
+        // Xóa tất cả zones của storage trước
+        List<Zone> zones = zoneService.getZonesByStorageId(id);
+        for (Zone zone : zones) {
+            zoneService.deleteZone(zone.getId());
+        }
+        
+        // Sau đó xóa storage
         storageRepository.deleteById(id);
     }
 
@@ -198,5 +217,29 @@ public class StorageServiceImpl implements StorageService {
     @Override
     public List<Storage> findByStaffId(int staffId) {
         return storageRepository.findByStaff_Staffid(staffId);
+    }
+
+    /**
+     * Tạo zones tự động cho storage dựa trên diện tích kho
+     */
+    private void createZonesForStorage(Storage storage, StorageRequest storageRequest) {
+        // Tự động tính số zones dựa trên diện tích kho chia cho 50m²
+        int zoneCount = (int) Math.floor(storage.getArea() / 50.0);
+        
+        if (zoneCount <= 0) {
+            return; // Không tạo zone nếu diện tích quá nhỏ
+        }
+
+        // Tạo zones
+        for (int i = 1; i <= zoneCount; i++) {
+            Zone zone = new Zone();
+            zone.setStorage(storage);
+            zone.setName("Zone " + i);
+            zone.setZoneArea(50.0); // Mỗi zone 50m²
+            zone.setPricePerDay(storage.getPricePerDay());
+            zone.setStatus("available"); // Mặc định available
+
+            zoneService.createZone(zone);
+        }
     }
 }

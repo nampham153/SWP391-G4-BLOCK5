@@ -28,11 +28,13 @@ public class StorageRequest {
     @DecimalMin(value = "0.0", inclusive = true, message = "Diện tích không được âm")
     private double area;
     @NotNull(message = "Giá thuê không được để trống")
-    @DecimalMin(value = "5000000.0", inclusive = true, message = "Giá thuê phải từ 5.000.000 VNĐ trở lên")
-    @jakarta.validation.constraints.DecimalMax(value = "25000000.0", inclusive = true, message = "Giá thuê không được vượt quá 25.000.000 VNĐ")
+    @DecimalMin(value = "0.0", inclusive = true, message = "Giá thuê không được âm")
     private double pricePerDay;
     private String description;
     private String imUrl;
     private Boolean status;
     private Integer staffid;
+    
+    // Tự động tạo zones dựa trên diện tích kho
+    private Boolean createZones = true; // Mặc định tạo zones
 }

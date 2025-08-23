@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Thêm Kho Lưu Trữ</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script>
         tailwind.config = {
             theme: {
@@ -797,13 +798,13 @@
                             type="number"
                             id="pricePerDay"
                             name="pricePerDay"
-                            min="5000000"
-                            max="25000000"
+                            min="500000"
+                            max="10000000"
                             required
                             class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition duration-200 ease-in-out"
-                            placeholder="5000000"
+                            placeholder="500000"
                     />
-                    <p class="mt-1 text-xs text-gray-500">Giá cho mỗi ô 50m² (5.000.000 - 25.000.000 VNĐ)</p>
+                    <p class="mt-1 text-xs text-gray-500">Giá cho mỗi ô 50m² (500.000 - 10.000.000 VNĐ)</p>
                 </div>
             </div>
 
@@ -819,6 +820,19 @@
                         class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition duration-200 ease-in-out resize-vertical"
                         placeholder="Nhập mô tả chi tiết về kho lưu trữ..."
                 ></textarea>
+            </div>
+
+            <!-- Zone Information -->
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div class="flex items-center">
+                    <i class="fas fa-info-circle text-blue-600 mr-2"></i>
+                    <span class="text-sm font-medium text-blue-900">
+                        Hệ thống sẽ tự động tạo các khu cho thuê 50m² dựa trên diện tích kho
+                    </span>
+                </div>
+                <div id="zonePreview" class="mt-2 text-sm text-blue-700">
+                    Dự kiến tạo <span id="previewCount">0</span> khu cho thuê
+                </div>
             </div>
 
             <!-- Status and Image Row -->
@@ -888,7 +902,25 @@
     document.addEventListener('DOMContentLoaded', function() {
         const form = document.querySelector('form');
         const inputs = form.querySelectorAll('input[required], textarea[required]');
-        const priceInput = document.getElementById('pricePerDay');
+
+        // Zone preview elements
+        const areaInput = document.getElementById('area');
+        const previewCount = document.getElementById('previewCount');
+
+        // Update zone preview when area changes
+        function updateZonePreview() {
+            const area = parseFloat(areaInput.value) || 0;
+            const zoneCount = Math.floor(area / 50);
+            previewCount.textContent = zoneCount > 0 ? zoneCount : 0;
+        }
+
+        // Add event listener for area input
+        if (areaInput) {
+            areaInput.addEventListener('input', updateZonePreview);
+        }
+
+        // Initial preview update
+        updateZonePreview();
 
         // Add real-time validation
         inputs.forEach(input => {
@@ -903,68 +935,38 @@
             });
         });
 
-        // Price validation
-        priceInput.addEventListener('input', function() {
-            const value = parseFloat(this.value);
-            const min = 5000000;
-            const max = 25000000;
-            
-            if (value < min) {
-                this.classList.add('border-red-500');
-                this.classList.remove('border-gray-300');
-                this.setCustomValidity(`Giá phải từ ${min.toLocaleString('vi-VN')} VNĐ trở lên`);
-            } else if (value > max) {
-                this.classList.add('border-red-500');
-                this.classList.remove('border-gray-300');
-                this.setCustomValidity(`Giá không được vượt quá ${max.toLocaleString('vi-VN')} VNĐ`);
-            } else {
-                this.classList.remove('border-red-500');
-                this.classList.add('border-gray-300');
-                this.setCustomValidity('');
-            }
-        });
-
-        // Format price input with number formatting
-        priceInput.addEventListener('blur', function() {
-            const value = parseFloat(this.value);
-            if (!isNaN(value)) {
-                this.value = value.toLocaleString('vi-VN');
-            }
-        });
-
-        priceInput.addEventListener('focus', function() {
-            this.value = this.value.replace(/[^\d]/g, '');
-        });
+        // Format price input
+        const priceInput = document.getElementById('pricePerDay');
+        if (priceInput) {
+            priceInput.addEventListener('input', function() {
+                let value = this.value.replace(/[^\d.]/g, '');
+                this.value = value;
+            });
+        }
 
         // Format area input
-        const areaInput = document.getElementById('area');
-        areaInput.addEventListener('input', function() {
-            let value = this.value.replace(/[^\d.]/g, '');
-            this.value = value;
-        });
+        if (areaInput) {
+            areaInput.addEventListener('input', function() {
+                let value = this.value.replace(/[^\d.]/g, '');
+                this.value = value;
+                updateZonePreview(); // Update preview when area changes
+            });
+        }
 
-        // Image validation
+        // Image preview
         const imageInput = document.getElementById('image');
-        imageInput.addEventListener('change', function() {
-            const file = this.files[0];
-            if (file) {
-                const fileSize = file.size / 1024 / 1024; // MB
-                if (fileSize > 10) {
-                    alert('Kích thước file không được vượt quá 10MB');
-                    this.value = '';
+        if (imageInput) {
+            imageInput.addEventListener('change', function() {
+                const file = this.files[0];
+                if (file) {
+                    const fileSize = file.size / 1024 / 1024; // MB
+                    if (fileSize > 10) {
+                        alert('Kích thước file không được vượt quá 10MB');
+                        this.value = '';
+                    }
                 }
-            }
-        });
-
-        // Form submission validation
-        form.addEventListener('submit', function(e) {
-            const price = parseFloat(priceInput.value.replace(/[^\d]/g, ''));
-            if (price < 5000000 || price > 25000000) {
-                e.preventDefault();
-                alert('Giá phải từ 5.000.000 VNĐ đến 25.000.000 VNĐ');
-                priceInput.focus();
-            }
-        });
+            });
+        }
     });
 </script>
 </body>

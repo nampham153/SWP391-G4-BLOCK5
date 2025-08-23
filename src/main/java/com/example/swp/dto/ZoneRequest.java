@@ -24,8 +24,8 @@ public class ZoneRequest {
     private Double zoneArea;
     
     @NotNull(message = "Giá thuê không được để trống")
-    @DecimalMin(value = "5000000", message = "Giá thuê phải từ 5,000,000 VNĐ trở lên")
-    @DecimalMax(value = "25000000", message = "Giá thuê không được vượt quá 25,000,000 VNĐ")
+    @DecimalMin(value = "500000", message = "Giá thuê phải lớn hơn 500,000 VNĐ")
+    @DecimalMax(value = "10000000", message = "Giá thuê phải nhỏ hơn 10,000,000 VNĐ")
     private Double pricePerDay;
     
     private ZoneStatus status;
