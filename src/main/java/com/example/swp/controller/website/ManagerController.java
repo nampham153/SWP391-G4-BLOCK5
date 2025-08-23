@@ -162,13 +162,28 @@ public class ManagerController {
         List<Storage> storages = storageService.getAll();
         model.addAttribute("storages", storages);
 
-        // Tạo Map để chứa số lượng zone cho mỗi storage
-        Map<Integer, Integer> zoneCountMap = new HashMap<>();
+        // Tạo Map để chứa thông tin zone và grid cho mỗi storage
+        Map<Integer, Map<String, Object>> storageInfoMap = new HashMap<>();
         for (Storage storage : storages) {
             List<Zone> zones = zoneService.getZonesByStorageId(storage.getStorageid());
-            zoneCountMap.put(storage.getStorageid(), zones.size());
+            
+            // Tính số zone có thể thuê (status = available hoặc null)
+            long rentableZones = zones.stream()
+                .filter(zone -> zone.getStatus() == null || "available".equals(zone.getStatus()))
+                .count();
+            
+            // Tính số ô 50m² có thể chia từ diện tích kho
+            int gridUnits = (int) Math.floor(storage.getArea() / 50);
+            
+            Map<String, Object> info = new HashMap<>();
+            info.put("totalZones", zones.size());
+            info.put("rentableZones", rentableZones);
+            info.put("gridUnits", gridUnits);
+            info.put("storageArea", storage.getArea());
+            
+            storageInfoMap.put(storage.getStorageid(), info);
         }
-        model.addAttribute("zoneCountMap", zoneCountMap);
+        model.addAttribute("storageInfoMap", storageInfoMap);
 
         return "manager-all-storage"; // Tên file HTML tương ứng
     }

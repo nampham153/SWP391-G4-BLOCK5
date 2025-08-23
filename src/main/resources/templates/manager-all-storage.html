@@ -12,6 +12,42 @@
         /* Align icon-text spacing like manager dashboard */
         .sidebar .menu-item a { gap: 0 !important; }
         .sidebar .menu-item i { margin-right: 12px !important; }
+        
+        /* Styles for the new rental zones and grid column */
+        .rental-info {
+            text-align: center;
+            padding: 8px 4px;
+        }
+        
+        .rental-info .rental-count {
+            font-weight: bold;
+            color: #1e3a8a;
+            margin-bottom: 4px;
+            font-size: 0.9rem;
+        }
+        
+        .rental-info .grid-count {
+            font-size: 0.85rem;
+            color: #64748b;
+            margin-bottom: 2px;
+        }
+        
+        .rental-info .total-zones {
+            font-size: 0.75rem;
+            color: #94a3b8;
+            margin-top: 2px;
+        }
+        
+        .rental-info i {
+            margin-right: 4px;
+        }
+        
+        /* Make the table column wider to accommodate the new content */
+        .data-table th:nth-child(6),
+        .data-table td:nth-child(6) {
+            min-width: 120px;
+            width: 120px;
+        }
     </style>
 </head>
 <body>
@@ -109,7 +145,8 @@
                         <th>Ảnh</th>
                         <th>Tên Kho</th>
                         <th>Diện tích</th>
-                        <th>Số Zone</th>
+                        <th>Giá/ô 50m²</th>
+                        <th>Khu cho thuê & Grid</th>
                         <th>Trạng thái</th>
                         <th>Hành động</th>
                     </tr>
@@ -121,7 +158,22 @@
                         <td><img th:src="${storage.imUrl} ?: '/images/default-storage.jpg'" class="storage-image" /></td>
                         <td th:text="${storage.storagename}"></td>
                         <td th:text="${storage.area + ' m²'}"></td>
-                        <td th:text="${zoneCountMap[storage.storageid] ?: 0}"></td>
+                        <td th:text="${#numbers.formatDecimal(storage.pricePerDay / 50, 0, 0) + ' VNĐ'}"></td>
+                        <td>
+                            <div class="rental-info" title="Khu thuê: Số zone có thể thuê | Ô 50m²: Số ô có thể chia từ diện tích kho | Tổng zone: Tổng số zone trong kho">
+                                <div class="rental-count">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    <span th:text="${storageInfoMap[storage.storageid].rentableZones}">0</span> khu thuê
+                                </div>
+                                <div class="grid-count">
+                                    <i class="fas fa-th"></i>
+                                    <span th:text="${storageInfoMap[storage.storageid].gridUnits}">0</span> ô 50m²
+                                </div>
+                                <div class="total-zones">
+                                    Tổng: <span th:text="${storageInfoMap[storage.storageid].totalZones}">0</span> zone
+                                </div>
+                            </div>
+                        </td>
                         <td>
                     <span th:class="${storage.status} ? 'status-badge active' : 'status-badge warning'"
                         th:text="${storage.status} ? 'Còn trống' : 'Đã thuê'"></span>
@@ -168,7 +220,7 @@
 </main>
 
 <script>
-    const COLUMN_COUNT = 7;
+    const COLUMN_COUNT = 8;
     const rowsPerPage = 10;
     let currentPage = 1;
 

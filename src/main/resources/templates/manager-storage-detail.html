@@ -815,6 +815,107 @@
             cursor: pointer;
         }
 
+        /* New styles for 50m² grid */
+        .unit-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+            gap: 6px;
+            padding: 15px;
+            background: linear-gradient(135deg, #e0e7ff, #f0f7ff);
+            border-radius: 12px;
+            border: 2px solid var(--primary-color);
+            max-width: 100%;
+            overflow-x: auto;
+        }
+
+        .unit-grid .unit-item {
+            width: 100%;
+            height: 60px;
+            background: #ffffff;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            color: var(--text-primary);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            padding: 4px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .unit-grid .unit-item:hover {
+            background: var(--primary-color);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(30, 58, 138, 0.3);
+        }
+
+        .unit-grid .unit-item.selected {
+            background: var(--success-color);
+            color: white;
+            border-color: var(--success-color);
+            transform: scale(1.05);
+        }
+
+        .unit-grid .unit-item.occupied {
+            background: var(--warning-color);
+            color: white;
+            border-color: var(--warning-color);
+            cursor: not-allowed;
+        }
+
+        .unit-grid .unit-item.available {
+            background: var(--success-color);
+            color: white;
+            border-color: var(--success-color);
+        }
+
+        .unit-grid .unit-item.maintenance {
+            background: var(--danger-color);
+            color: white;
+            border-color: var(--danger-color);
+            cursor: not-allowed;
+        }
+
+        .grid-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .grid-stats {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .grid-stat {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: rgba(30, 58, 138, 0.1);
+            border-radius: 6px;
+            font-size: 0.85rem;
+            color: var(--primary-color);
+        }
+
+        .grid-stat i {
+            color: var(--primary-color);
+        }
+
+        .grid-stat strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
         @media (max-width: 768px) {
             .detail-header {
                 flex-direction: column;
@@ -832,6 +933,39 @@
 
             .detail-actions {
                 flex-direction: column;
+            }
+
+            .unit-grid {
+                grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
+                gap: 4px;
+                padding: 10px;
+            }
+
+            .unit-grid .unit-item {
+                height: 50px;
+                font-size: 0.65rem;
+            }
+
+            .grid-stats {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .grid-stat {
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .unit-grid {
+                grid-template-columns: repeat(auto-fill, minmax(45px, 1fr));
+                gap: 3px;
+                padding: 8px;
+            }
+
+            .unit-grid .unit-item {
+                height: 45px;
+                font-size: 0.6rem;
             }
         }
 
@@ -901,10 +1035,14 @@
                         <span th:text="${storage.status} ? 'Available' : 'Occupied'"
                               th:class="${storage.status} ? 'status-badge active' : 'status-badge warning'">Available</span>
                     </div>
-                    <div class="info-row">
-                        <span class="detail-label">Diện tích:</span>
-                        <span class="detail-value" th:text="${totalArea} + ' m²'">0 m²</span>
-                    </div>
+                                         <div class="info-row">
+                         <span class="detail-label">Diện tích:</span>
+                         <span class="detail-value" th:text="${totalArea} + ' m²'">0 m²</span>
+                     </div>
+                     <div class="info-row">
+                         <span class="detail-label">Giá/ô 50m²:</span>
+                         <span class="detail-value" th:text="${#numbers.formatDecimal(storage.pricePerDay / 50, 0, 0) + ' VNĐ'}">0 VNĐ</span>
+                     </div>
                 </div>
             </div>
 
@@ -942,6 +1080,15 @@
                         <label class="detail-label">Description</label>
                         <textarea class="field-edit" rows="4" th:field="*{description}" placeholder="Enter storage description..."></textarea>
                     </div>
+                    <div class="detail-field">
+                        <label class="detail-label">Giá/ô 50m² (VNĐ)</label>
+                        <input class="field-edit" type="number" th:field="*{pricePerDay}" min="5000000" max="25000000" placeholder="5000000" required>
+                        <div class="field-hints">
+                            <span>Giá cho mỗi ô 50m²</span>
+                            <span>Min: 5.000.000 VNĐ</span>
+                            <span>Max: 25.000.000 VNĐ</span>
+                        </div>
+                    </div>
 
                     <div class="detail-field">
                         <label class="detail-label">Thông tin thuê</label>
@@ -966,104 +1113,72 @@
 
             <!-- View Section -->
             <div id="viewSection" class="detail-content">
+                                     <div class="detail-field">
+                         <label class="detail-label">Full Address</label>
+                         <div class="detail-value" th:text="${storage.address} + ', ' + ${storage.state} + ', ' + ${storage.city}">
+                             123 Storage Street, California, Los Angeles
+                         </div>
+                     </div>
+                     <div class="detail-field">
+                         <label class="detail-label">Giá/ô 50m²</label>
+                         <div class="detail-value" th:text="${#numbers.formatDecimal(storage.pricePerDay / 50, 0, 0) + ' VNĐ'}">
+                             0 VNĐ
+                         </div>
+                         <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 5px;">
+                             <i class="fas fa-info-circle"></i> 
+                             Khách hàng sẽ trả giá này cho mỗi ô 50m² khi đặt kho
+                         </div>
+                     </div>
+
+                                 <div class="detail-field">
+                     <label class="detail-label">Description</label>
+                     <div class="detail-value" th:text="${storage.description}">
+                         Secure storage facility with 24/7 access and climate control.
+                     </div>
+                 </div>
+                 <div class="detail-field">
+                     <label class="detail-label">Giá/ô 50m²</label>
+                     <div class="detail-value" th:text="${#numbers.formatDecimal(storage.pricePerDay / 50, 0, 0) + ' VNĐ'}">
+                         0 VNĐ
+                     </div>
+                     <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 5px;">
+                         <i class="fas fa-info-circle"></i> 
+                         Khách hàng sẽ trả giá này cho mỗi ô 50m² khi đặt kho
+                     </div>
+                 </div>
+
+                <!-- 50m² Grid Section -->
                 <div class="detail-field">
-                    <label class="detail-label">Full Address</label>
-                    <div class="detail-value" th:text="${storage.address} + ', ' + ${storage.state} + ', ' + ${storage.city}">
-                        123 Storage Street, California, Los Angeles
+                    <label class="detail-label">
+                        <i class="fas fa-th"></i> Grid Ô 50m² - Cách Khách Hàng Đặt Kho
+                    </label>
+                    <div class="grid-info">
+                        <div class="grid-stats">
+                            <span class="grid-stat">
+                                <i class="fas fa-cube"></i>
+                                Mỗi ô = <strong>50 m²</strong>
+                            </span>
+                            <span class="grid-stat">
+                                <i class="fas fa-th-large"></i>
+                                Tổng: <strong th:text="${#numbers.formatDecimal(storage.area / 50, 0, 0)}">0</strong> ô
+                            </span>
+                            <span class="grid-stat">
+                                <i class="fas fa-info-circle"></i>
+                                Khách hàng chọn theo ô hoặc Zone
+                            </span>
+                        </div>
                     </div>
-                </div>
-
-                <div class="detail-field">
-                    <label class="detail-label">Description</label>
-                    <div class="detail-value" th:text="${storage.description}">
-                        Secure storage facility with 24/7 access and climate control.
+                    
+                    <!-- 50m² Grid -->
+                    <div id="unitGrid" class="unit-grid" 
+                         th:attr="data-storage-area=${storage.area}"
+                         style="margin-bottom: 15px;">
+                        <!-- Grid sẽ được tạo bằng JavaScript -->
                     </div>
-                </div>
-
-                <!-- Zones Section -->
-                <div class="detail-field">
-                    <label class="detail-label">Khu Vực Chứa Đồ</label>
-                    <div class="zones-info">
-                        <div class="zones-summary">
-                            <span class="zone-stat">
-                                <i class="fas fa-layer-group"></i>
-                                Tổng: <strong th:text="${zones != null ? zones.size() : 0}">0</strong> khu vực
-                            </span>
-                            <span class="zone-stat">
-                                <i class="fas fa-ruler-combined"></i>
-                                Đã sử dụng: <strong th:text="${#numbers.formatDecimal(totalZoneArea, 1, 2)}">0</strong> m²
-                            </span>
-                            <span class="zone-stat">
-                                <i class="fas fa-arrow-up"></i>
-                                Còn lại: <strong th:text="${#numbers.formatDecimal(availableAreaForNewZone, 1, 2)}">0</strong> m²
-                            </span>
-                        </div>
-                        
-                        <div th:if="${zones != null and zones.size() > 0}" class="zones-list">
-                            <!-- Zones Controls -->
-                            <div class="zones-controls">
-                                <div class="zones-total">
-                                    <span>Tổng: <strong th:text="${zones.size()}">0</strong> khu vực</span>
-                                </div>
-                            </div>
-
-                            <!-- Zones Grid -->
-                            <div class="zones-grid" id="zonesGrid">
-                                <div th:each="zone : ${zones}" class="zone-item" th:data-zone-id="${zone.id}">
-                                    <div class="zone-header">
-                                        <span class="zone-name" th:text="${zone.name}">Zone Name</span>
-                                        <div class="zone-actions">
-                                            <span class="zone-status" th:class="${zone.status == 'available' ? 'status-available' : zone.status == 'occupied' ? 'status-occupied' : 'status-maintenance'}" 
-                                                  th:text="${T(com.example.swp.enums.ZoneStatus).getDisplayName(zone.status)}">
-                                                Status
-                                            </span>
-                                            <a th:href="@{'/admin/storages/' + ${storage.storageid} + '/zones/' + ${zone.id} + '/edit'}" 
-                                               class="zone-edit-btn" title="Chỉnh sửa khu vực">
-                                                <i class="fas fa-edit"></i>
-                                            </a>
-                                            <form th:action="@{'/admin/storages/' + ${storage.storageid} + '/zones/' + ${zone.id} + '/delete'}" 
-                                                  method="post" 
-                                                  style="display:inline;"
-                                                  onsubmit="return confirm('Bạn có chắc chắn muốn xóa khu vực này?');">
-                                                <button type="submit" class="zone-delete-btn" title="Xóa khu vực">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </form>
-                                        </div>
-                                    </div>
-                                    <div class="zone-details">
-                                        <div class="zone-area">
-                                            <i class="fas fa-ruler-combined"></i>
-                                            <span th:text="${zone.zoneArea + ' m²'}">Area</span>
-                                        </div>
-                                        <div class="zone-price">
-                                            <i class="fas fa-tag"></i>
-                                            <span th:text="${#numbers.formatDecimal(zone.pricePerDay, 0, 'POINT', 0, 'COMMA') + ' VND/ngày'}">Price</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Zones Pagination -->
-                            <div class="zones-pagination" id="zonesPagination">
-                                <button id="prevPage" onclick="goToPage(currentPage - 1)" disabled>
-                                    <i class="fas fa-chevron-left"></i>
-                                </button>
-                                <div id="pageNumbers"></div>
-                                <button id="nextPage" onclick="goToPage(currentPage + 1)">
-                                    <i class="fas fa-chevron-right"></i>
-                                </button>
-                                <div class="page-info">
-                                    <span id="pageInfo">Trang 1 / 1</span>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div th:if="${zones == null or zones.size() == 0}" class="no-zones">
-                            <i class="fas fa-inbox" style="font-size: 2rem; margin-bottom: 10px; display: block; opacity: 0.5;"></i>
-                            <p>Chưa có khu vực nào được tạo.</p>
-                            <p class="text-sm text-gray-500">Sử dụng nút "Thêm Khu Vực" để tạo khu vực đầu tiên.</p>
-                        </div>
+                    
+                    <div style="font-size: 0.8rem; color: var(--text-secondary); text-align: center; padding: 10px; background: rgba(30, 58, 138, 0.05); border-radius: 6px;">
+                        <i class="fas fa-lightbulb"></i> 
+                        <strong>Lưu ý:</strong> Grid này hiển thị cách khách hàng chọn diện tích khi đặt kho. Mỗi ô đại diện cho 50m² có thể thuê.
                     </div>
                 </div>
 
@@ -1071,9 +1186,7 @@
                     <a th:href="@{'/admin/manager-dashboard/storages/' + ${storage.storageid} + '/edit'}" class="btn btn-edit">
                         <i class="fas fa-edit"></i> Edit Storage
                     </a>
-                    <a th:href="@{'/admin/storages/' + ${storage.storageid} + '/add-zone'}" class="btn btn-assign">
-                        <i class="fas fa-plus"></i> Thêm Khu Vực
-                    </a>
+
                     <button type="button" class="btn btn-assign" onclick="openAssignStaffModal()">
                         <i class="fas fa-user-plus"></i> Gán nhân viên
                     </button>
@@ -1483,6 +1596,109 @@
          zonesPerPage = parseInt(newPerPage);
          currentPage = 1; // Reset to first page
          updateZonesDisplay();
+     }
+
+     // 50m² Grid JavaScript
+     document.addEventListener('DOMContentLoaded', function() {
+         initialize50m2Grid();
+     });
+
+     function initialize50m2Grid() {
+         const unitGrid = document.getElementById('unitGrid');
+         if (!unitGrid) return;
+         
+         const storageArea = parseFloat(unitGrid.getAttribute('data-storage-area')) || 0;
+         const totalUnits = Math.floor(storageArea / 50);
+         
+         if (totalUnits <= 0) {
+             unitGrid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 20px; color: var(--text-secondary); font-style: italic;">Kho này không đủ diện tích để chia thành ô 50m²</div>';
+             return;
+         }
+         
+         // Tính số cột tối ưu để hiển thị đẹp
+         const optimalCols = Math.ceil(Math.sqrt(totalUnits));
+         unitGrid.style.gridTemplateColumns = `repeat(${optimalCols}, 1fr)`;
+         
+         // Tạo các ô
+         for (let i = 0; i < totalUnits; i++) {
+             const unitItem = document.createElement('div');
+             unitItem.className = 'unit-item';
+             unitItem.setAttribute('data-unit-index', i);
+             unitItem.setAttribute('data-unit-area', '50');
+             
+             // Hiển thị số thứ tự và diện tích
+             unitItem.innerHTML = `<div style="font-size: 0.7rem; line-height: 1.2;">
+                 <div style="font-weight: bold;">${i + 1}</div>
+                 <div>50m²</div>
+             </div>`;
+             
+             // Thêm tooltip
+             unitItem.title = `Ô ${i + 1}: 50m²`;
+             
+             // Xử lý click (chỉ để demo, không thực sự thay đổi trạng thái)
+             unitItem.addEventListener('click', function() {
+                 // Chỉ để demo - hiển thị thông tin ô được chọn
+                 const isSelected = this.classList.contains('selected');
+                 
+                 // Bỏ chọn tất cả
+                 document.querySelectorAll('.unit-item').forEach(item => {
+                     item.classList.remove('selected');
+                 });
+                 
+                 // Chọn ô này nếu chưa được chọn
+                 if (!isSelected) {
+                     this.classList.add('selected');
+                     
+                     // Hiển thị thông tin ô được chọn
+                     const unitIndex = this.getAttribute('data-unit-index');
+                     const unitArea = this.getAttribute('data-unit-area');
+                     
+                     // Tạo thông báo tạm thời
+                     const notification = document.createElement('div');
+                     notification.style.cssText = `
+                         position: fixed;
+                         top: 20px;
+                         right: 20px;
+                         background: var(--success-color);
+                         color: white;
+                         padding: 12px 20px;
+                         border-radius: 8px;
+                         box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                         z-index: 1000;
+                         font-size: 0.9rem;
+                         max-width: 300px;
+                     `;
+                     notification.innerHTML = `
+                         <i class="fas fa-check-circle"></i>
+                         Đã chọn: Ô ${parseInt(unitIndex) + 1} (${unitArea}m²)
+                         <br><small>Đây là cách khách hàng chọn khi đặt kho</small>
+                     `;
+                     
+                     document.body.appendChild(notification);
+                     
+                     // Tự động ẩn sau 3 giây
+                     setTimeout(() => {
+                         if (notification.parentNode) {
+                             notification.parentNode.removeChild(notification);
+                         }
+                     }, 3000);
+                 }
+             });
+             
+             unitGrid.appendChild(unitItem);
+         }
+         
+         // Thêm thông tin tổng quan
+         const gridInfo = unitGrid.parentNode.querySelector('.grid-stats');
+         if (gridInfo) {
+             const totalAreaInfo = gridInfo.querySelector('.grid-stat:nth-child(2)');
+             if (totalAreaInfo) {
+                 totalAreaInfo.innerHTML = `
+                     <i class="fas fa-th-large"></i>
+                     Tổng: <strong>${totalUnits}</strong> ô (${storageArea}m²)
+                 `;
+             }
+         }
      }
 </script>
 </body>
