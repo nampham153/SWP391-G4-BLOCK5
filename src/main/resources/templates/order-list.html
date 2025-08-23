@@ -43,11 +43,23 @@
         <form th:action="@{${base} + '/orders'}" method="get" class="search-form">
             <label for="orderId">Tìm kiếm theo ID:</label>
             <input type="number" id="orderId" name="orderId" placeholder="Nhập mã đơn..." required>
+
             <!-- keep current filters when searching -->
             <input type="hidden" name="status" th:value="${selectedStatus}">
-            <input type="hidden" name="sort" th:value="${selectedSort}">
+            <input type="hidden" name="sort"   th:value="${selectedSort}">
+
             <button type="submit" class="btn btn-dark">Tìm</button>
+
+            <!-- NEW: clear the search but keep current status/sort -->
+            <button type="button" class="btn btn-light" onclick="clearOrderSearch()">Xóa</button>
+
+            <!-- NEW: reset everything to default (ALL + newest) -->
+            <a class="btn btn-ghost"
+               th:href="@{${base} + '/orders'(status='ALL', sort='newest')}">
+                Mặc định
+            </a>
         </form>
+
 
 
     </div>
@@ -125,6 +137,15 @@
 
         render();
     })();
+    function clearOrderSearch() {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('orderId');        // remove the search
+        // keep status/sort if present; otherwise set defaults
+        if (!url.searchParams.has('status')) url.searchParams.set('status', 'ALL');
+        if (!url.searchParams.has('sort'))   url.searchParams.set('sort', 'newest');
+        // navigate
+        window.location.href = url.pathname + '?' + url.searchParams.toString();
+    }
 </script>
 </body>
 </html>
