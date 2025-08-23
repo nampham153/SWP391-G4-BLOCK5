@@ -443,12 +443,69 @@ public class BookingController {
         }
 
         try {
-            // Hủy các đơn hàng cũ của khách hàng cho cùng kho này (nếu có)
-            orderService.cancelExistingOrdersForCustomerAndStorage(
-                customer.getId(), 
-                storageId, 
-                "Khách hàng đặt lại cùng kho - Hủy đơn hàng cũ tự động"
-            );
+            // Kiểm tra xung đột với đơn hàng hiện tại của khách hàng theo zone/unit
+            // Yêu cầu: nếu đặt thêm zone khác (không trùng zone đã đặt) trong cùng thời gian -> vẫn cho phép
+            List<Order> existingOrders = orderService.findActiveOrdersByCustomerAndStorage(customer.getId(), storageId);
+            if (!existingOrders.isEmpty()) {
+                // Tập zone người dùng đang yêu cầu ở request hiện tại
+                java.util.Set<Integer> requestedZoneIds = new java.util.HashSet<>();
+                if (hasZoneIds && zoneIds != null && !zoneIds.trim().isEmpty()) {
+                    requestedZoneIds.addAll(
+                        java.util.Arrays.stream(zoneIds.split(","))
+                            .map(String::trim)
+                            .filter(s -> !s.isEmpty())
+                            .map(Integer::parseInt)
+                            .collect(java.util.stream.Collectors.toSet())
+                    );
+                }
+                if (hasZoneId && zoneId != null) {
+                    requestedZoneIds.add(zoneId);
+                }
+
+                boolean hasZoneConflict = false;
+
+                for (Order ex : existingOrders) {
+                    LocalDate exStart = ex.getStartDate();
+                    LocalDate exEnd = ex.getEndDate();
+                    boolean timeOverlap = (startDate.isBefore(exEnd.plusDays(1)) || startDate.isEqual(exEnd))
+                            && (exStart.isBefore(endDate.plusDays(1)) || exStart.isEqual(endDate));
+
+                    if (!timeOverlap) continue; // không trùng thời gian thì bỏ qua
+
+                    // Lấy các zone của đơn hiện hữu
+                    java.util.Set<Integer> existingZoneIds = new java.util.HashSet<>();
+                    if (ex.getSelectedZoneIds() != null && !ex.getSelectedZoneIds().trim().isEmpty()) {
+                        existingZoneIds.addAll(
+                            java.util.Arrays.stream(ex.getSelectedZoneIds().split(","))
+                                .map(String::trim)
+                                .filter(s -> !s.isEmpty())
+                                .map(Integer::parseInt)
+                                .collect(java.util.stream.Collectors.toSet())
+                        );
+                    }
+                    if (ex.getZone() != null) {
+                        existingZoneIds.add(ex.getZone().getId());
+                    }
+
+                    // Nếu người dùng đặt theo ô 50m² (selectedUnitIndices) thì xung đột đã được kiểm ở trên
+                    // Tại đây chỉ kiểm zone. Nếu không có zone yêu cầu, bỏ qua check zone.
+                    if (!requestedZoneIds.isEmpty() && !existingZoneIds.isEmpty()) {
+                        java.util.Set<Integer> intersection = new java.util.HashSet<>(requestedZoneIds);
+                        intersection.retainAll(existingZoneIds);
+                        if (!intersection.isEmpty()) {
+                            hasZoneConflict = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (hasZoneConflict) {
+                    redirectAttributes.addFlashAttribute("error",
+                            "Một hoặc nhiều Zone bạn chọn đã được đặt bởi đơn hiện có của bạn trong khoảng thời gian này. " +
+                                    "Vui lòng bỏ chọn các Zone trùng hoặc đổi thời gian.");
+                    return "redirect:/SWP/booking/" + storageId + "/booking?startDate=" + startDate + "&endDate=" + endDate;
+                }
+            }
 
             // Chuẩn hóa ngày kết thúc về cuối tháng để tính theo tháng
             LocalDate normalizedEndDate = normalizeToEndOfMonth(endDate);
