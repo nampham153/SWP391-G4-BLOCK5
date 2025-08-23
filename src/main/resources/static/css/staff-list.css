@@ -520,3 +520,15 @@ body {
 .btn-icon{background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:8px;cursor:pointer}
 .btn-icon:hover{background:#f3f4f6}
 .btn-icon.danger{border-color:#fecaca}.btn-icon.danger:hover{background:#fee2e2}
+.btn-add{
+    background: linear-gradient(135deg,#10b981,#059669);
+    color:#fff;
+    border-radius:12px;
+    padding:10px 16px;
+    font-weight:700;
+    box-shadow:0 8px 20px rgba(16,185,129,.25);
+}
+.btn-add:hover{
+    filter:brightness(.95);
+    transform: translateY(-1px);
+}

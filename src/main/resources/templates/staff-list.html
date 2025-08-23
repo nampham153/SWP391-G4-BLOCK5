@@ -34,6 +34,10 @@
             <div class="page-actions">
                 <a th:href="@{'/admin/manager-dashboard'}" class="btn-secondary btn-back">
                     <i class="fas fa-arrow-left"></i> Back to Home </a>
+                <!-- NEW: add staff -->
+                <a th:href="@{'/admin/staff-list/add'}" class="btn btn-add" style="margin-left:8px;">
+                    + Thêm nhân viên
+                </a>
             </div>
         </div>
         <!-- Filter Section -->
@@ -117,7 +121,14 @@
                                        th:classappend="${#strings.toUpperCase(staff.roleName)} == 'BLOCKED' ? ' fa-lock-open' : ' fa-lock'"></i>
                                 </button>
                             </form>
-
+                            <form th:action="@{'/admin/staffs/' + ${staff.staffid} + '/delete'}"
+                                  method="post" style="display:inline;"
+                                  onsubmit="return confirm('Bạn có chắc chắn muốn xoá nhân viên này?');">
+                                <input type="hidden" name="_csrf" th:value="${_csrf?.token}"/>
+                                <button type="submit" class="btn-icon" title="Xoá" style="color:#dc2626;">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
 
                         </div>
                     </td>

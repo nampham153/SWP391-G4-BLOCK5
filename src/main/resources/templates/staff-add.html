@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <title>Thêm nhân viên</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" th:href="@{/css/staff-edit.css}">
+    <style>
+        .add-card{max-width:720px;margin:100px auto;padding:24px;background:#fff;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.06)}
+        .field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+        .field input,.field select{padding:10px 12px;border:1px solid #e2e8f0;border-radius:10px}
+        .error{color:#dc2626;font-size:13px}
+        .actions{display:flex;gap:12px;margin-top:10px}
+        .btn{padding:10px 16px;border-radius:10px;border:0;color:#fff;background:#2c3e50;cursor:pointer}
+        .btn.secondary{background:#64748b}
+        .alert{margin-bottom:12px;padding:10px 12px;border-radius:10px;background:#fef2f2;color:#991b1b}
+    </style>
+</head>
+<body>
+<div th:replace="taskbar/manager-taskbar :: managerTaskbar"></div>
+
+<div class="add-card">
+    <h2>Thêm nhân viên</h2>
+
+
+
+    <form th:action="@{/admin/staff-list/add}" th:object="${form}" method="post">
+        <!-- CSRF null-safe -->
+        <input type="hidden" name="_csrf" th:value="${_csrf?.token}" />
+        <div class="alert" th:if="${#fields.hasGlobalErrors()}"
+             th:text="${#fields.globalErrors()[0].defaultMessage}">Có lỗi</div>
+        <!-- GLOBAL ERROR (now inside th:object scope) -->
+        <div class="alert"
+             th:if="${#fields.hasGlobalErrors()}"
+             th:text="${#fields.globalErrors()[0].defaultMessage}">
+            Có lỗi
+        </div>
+
+        <div class="field">
+            <label for="fullname">Họ tên</label>
+            <input id="fullname" type="text" th:field="*{fullname}" required />
+            <div class="error" th:errors="*{fullname}"></div>
+        </div>
+
+        <div class="field">
+            <label for="email">Email</label>
+            <input id="email" type="email" th:field="*{email}" required />
+            <div class="error" th:errors="*{email}"></div>
+        </div>
+
+        <div class="field">
+            <label for="phone">SĐT</label>
+            <input id="phone" type="text" th:field="*{phone}"
+                   minlength="10" maxlength="11"
+                   pattern="^\d{10,11}$"
+                   required />
+            <div class="error" th:errors="*{phone}"></div>
+        </div>
+
+        <div class="field">
+            <label for="sex">Giới tính</label>
+            <select id="sex" th:field="*{sex}">
+                <option th:value="true">Nam</option>
+                <option th:value="false">Nữ</option>
+            </select>
+            <div class="error" th:errors="*{sex}"></div>
+        </div>
+
+        <!-- inside your <form th:object="${form}"> -->
+        <input type="hidden" th:field="*{roleName}" value="STAFF"/>
+
+        <div class="field">
+            <label>Chức vụ</label>
+            <input type="text" value="STAFF" readonly class="readonly"/>
+        </div>
+
+        <div class="actions">
+            <button type="submit" class="btn">Tạo nhân viên</button>
+            <a class="btn secondary" th:href="@{/admin/staff-list}">Hủy</a>
+        </div>
+    </form>
+
+
+    <p style="margin-top:10px;color:#475569;font-size:13px">
+        * Sau khi tạo, hệ thống sẽ gửi <b>mật khẩu tạm</b> vào email của nhân viên.
+    </p>
+</div>
+</body>
+</html>

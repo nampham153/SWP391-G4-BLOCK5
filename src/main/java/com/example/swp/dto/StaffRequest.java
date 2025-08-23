@@ -20,5 +20,4 @@ public class StaffRequest {
     private String phone;
     private RoleName roleName;
     private boolean sex;
-    private String idCitizenCard;
 }

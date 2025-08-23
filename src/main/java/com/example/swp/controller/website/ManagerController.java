@@ -6,6 +6,7 @@ import java.util.Optional;
 import com.example.swp.enums.RoleName;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -308,23 +309,25 @@ public class ManagerController {
 
     //danh sách staff
     @GetMapping("/staff-list")
-    public String showStaffList(
-            Model model,
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "6") int size
-    ) {
-        Page<Staff> staffPage = staffService.getStaffsByPage(page - 1, size);
+    public String showStaffList(Model model,
+                                @RequestParam(defaultValue = "1") int page,
+                                @RequestParam(defaultValue = "6") int size) {
 
-        int totalStaff = staffService.countAllStaff();
+        Page<Staff> staffPage = staffService.getStaffsByPage(
+                page - 1, size, Sort.by("fullname").ascending()
+                // or Sort.by("staffid").ascending()
+        );
 
         model.addAttribute("staffPage", staffPage);
         model.addAttribute("staffs", staffPage.getContent());
         model.addAttribute("currentPage", page);
         model.addAttribute("totalPages", staffPage.getTotalPages());
-        model.addAttribute("totalStaff", totalStaff);
-
+        model.addAttribute("totalStaff", (int) staffPage.getTotalElements());
+        model.addAttribute("size", size);
         return "staff-list";
     }
+
+
 
     @GetMapping("/staff-list/detail/{id}")
     public String viewStaffDetail(@PathVariable int id, Model model) {
@@ -337,17 +340,7 @@ public class ManagerController {
         return "staff-detail";
     }
 
-    @GetMapping("/staff-list/edit/{id}")
-    public String showEditStaffForm(@PathVariable int id, Model model, RedirectAttributes redirectAttributes) {
-        Optional<Staff> staffOpt = staffService.findById(id);
-        if (staffOpt.isPresent()) {
-            model.addAttribute("staff", staffOpt.get());
-            return "edit-staff";
-        } else {
-            redirectAttributes.addFlashAttribute("error", "Staff not found!");
-            return "redirect:/admin/staff-list";
-        }
-    }
+
 
 
      @PostMapping("/staffs/{id}/toggle-block")
@@ -372,7 +365,58 @@ public class ManagerController {
                 ? ("redirect:/admin/staff-list/detail/" + id)
                 : "redirect:/admin/staff-list";
     }
+    // ==== ADD STAFF (form) ====
+    @GetMapping("/staff-list/add")
+    public String showAddStaffForm(Model model) {
+        model.addAttribute("form", new com.example.swp.dto.NewStaffForm());
+        return "staff-add"; // new view below
+    }
 
+    @PostMapping("/staff-list/add")
+    public String handleAddStaff(
+            @ModelAttribute("form") @jakarta.validation.Valid com.example.swp.dto.NewStaffForm form,
+            org.springframework.validation.BindingResult binding,
+            RedirectAttributes ra,
+            Model model
+    ) {
+        if (binding.hasErrors()) {
+            return "staff-add";
+        }
+        try {
+            staffService.createFromForm(form);
+            ra.addFlashAttribute("success", "Đã tạo nhân viên và gửi mật khẩu qua email.");
+            return "redirect:/admin/staff-list";
+        } catch (IllegalArgumentException ex) {
+            switch (ex.getMessage()) {
+                case "duplicate-email":
+                    binding.rejectValue("email", "duplicate", "Email đã tồn tại");
+                    break;
+                case "duplicate-phone":
+                    binding.rejectValue("phone", "duplicate", "SĐT đã tồn tại");
+                    break;
+                default:
+                    binding.reject("db", "Email hoặc SĐT đã tồn tại");
+            }
+            return "staff-add";
+        }
+    }
+
+    // ==== DELETE STAFF ====
+    @PostMapping("/staffs/{id}/delete")
+    public String deleteStaff(
+            @PathVariable int id,
+            @RequestParam(value = "from", required = false) String from,
+            RedirectAttributes ra
+    ) {
+        try {
+            staffService.deleteById(id);
+            ra.addFlashAttribute("success", "Đã xoá nhân viên #" + id);
+        } catch (IllegalStateException e) {
+            ra.addFlashAttribute("error", e.getMessage());
+        }
+        // Usually go back to list
+        return "redirect:/admin/staff-list";
+    }
 
     @GetMapping("/manager-inbox")
     public String managerInbox() {
