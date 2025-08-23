@@ -33,7 +33,7 @@
 
 <body>
 <!-- Navigation Bar -->
-<div th:replace="taskbar/customer-navbar :: customerNavbar"></div>
+<div th:replace="~{taskbar/customer-navbar :: customerNavbar}"></div>
 
 <div class="container">
     <!-- Hiển thị thông báo thành công -->
@@ -78,13 +78,14 @@
                                 <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
                                 <circle cx="12" cy="10" r="3"/>
                             </svg>
-                            <span th:text="${storage.getState()} + ', ' + ${storage.getCity()}"></span>
+                            <span th:text="|${storage.state}, ${storage.city}|"></span>
                         </div>
                     </div>
                 </div>
 
                 <div class="price-container">
-                    <span class="price" th:text="${storage.getPricePerDay()} + ' VND'"></span>
+                    <span class="price"
+                          th:text="${storage.getPricePerDay() != null ? #numbers.formatDecimal(storage.getPricePerDay(), 0, 'POINT', 0, 'COMMA') : 0} + ' VND'"></span>
                     <span class="price-unit">/ngày</span>
                 </div>
             </div>
@@ -125,7 +126,7 @@
                 <div class="address-section">
                     <label>Địa chỉ đầy đủ</label>
                     <div class="address-content">
-                        <p class="address-main" th:text="${storage.getAddress() + ', ' + storage.getState()} + ', ' + ${storage.getCity()}"></p>
+                        <p class="address-main" th:text="|${storage.address}, ${storage.state}, ${storage.city}|"></p>
                     </div>
                 </div>
             </div>
@@ -191,21 +192,35 @@
                             <label class="block text-sm font-medium mb-1 text-gray-700">Chọn Zone</label>
                             <input type="hidden" id="zoneIdHidden" name="zoneId">
                             <div id="zoneGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                                <div th:each="z : ${zones}"
+                                <!-- Available zone -->
+                                <div th:if="${z.status == null or (z.status != null and #strings.equalsIgnoreCase(z.status, 'AVAILABLE'))}"
+                                     th:each="z : ${zones}"
                                      class="zone-tile cursor-pointer border rounded p-3 text-center select-none"
-                                     th:classappend="${z.status} == 'AVAILABLE' ? '' : ' opacity-50 pointer-events-none line-through'"
-                                     th:attr="data-zone-id=${z.id},data-available=${z.status},data-name=${z.name},data-area=${z.zoneArea},data-price=${#numbers.formatDecimal(z.pricePerDay, 0, 'POINT', 0, 'COMMA')}"
+                                     th:attr="data-zone-id=${z.id},data-available=${z.status},data-name=${z.name != null ? z.name : 'Zone'},data-area=${z.zoneArea != null ? z.zoneArea : 0},data-price=${z.pricePerDay != null ? z.pricePerDay : 0}"
                                      onclick="selectZone(this)">
-                                    <div class="font-semibold" th:text="${z.name}">Zone</div>
+                                    <div class="font-semibold" th:text="${z.name != null ? z.name : 'Zone'}">Zone</div>
                                     <div class="text-xs text-gray-600">
-                                        <span th:text="${z.zoneArea} + ' m²'"></span> •
-                                        <span th:text="${#numbers.formatDecimal(z.pricePerDay, 0, 'POINT', 0, 'COMMA')} + ' VND/ngày'"></span>
+                                        <span th:text="${(z.zoneArea != null ? z.zoneArea : 0)} + ' m²'"></span> •
+                                        <span th:text="${(z.pricePerDay != null ? #numbers.formatDecimal(z.pricePerDay, 0, 'POINT', 0, 'COMMA') : '0')} + ' VND/ngày'"></span>
                                     </div>
-                                    <div class="mt-1 text-xs" th:text="${z.status} == 'AVAILABLE' ? 'Còn trống' : 'Đã thuê'"></div>
+                                    <div class="mt-1 text-xs">Còn trống</div>
+                                </div>
+                                <!-- Unavailable zone -->
+                                <div th:unless="${z.status == null or (z.status != null and #strings.equalsIgnoreCase(z.status, 'AVAILABLE'))}"
+                                     th:each="z : ${zones}"
+                                     class="zone-tile cursor-pointer border rounded p-3 text-center select-none opacity-50 pointer-events-none line-through"
+                                     th:attr="data-zone-id=${z.id},data-available=${z.status},data-name=${z.name != null ? z.name : 'Zone'},data-area=${z.zoneArea != null ? z.zoneArea : 0},data-price=${z.pricePerDay != null ? z.pricePerDay : 0}"
+                                     onclick="selectZone(this)">
+                                    <div class="font-semibold" th:text="${z.name != null ? z.name : 'Zone'}">Zone</div>
+                                    <div class="text-xs text-gray-600">
+                                        <span th:text="${(z.zoneArea != null ? z.zoneArea : 0)} + ' m²'"></span> •
+                                        <span th:text="${(z.pricePerDay != null ? #numbers.formatDecimal(z.pricePerDay, 0, 'POINT', 0, 'COMMA') : '0')} + ' VND/ngày'"></span>
+                                    </div>
+                                    <div class="mt-1 text-xs">Đã thuê</div>
                                 </div>
                             </div>
 
-                            <div class="pt-2 border-t">
+                            <div class="pt-2 border-t" th:if="${false}">
                                 <div class="flex items-center justify-between mb-1">
                                     <label class="block text-sm font-medium text-gray-700">Chọn diện tích theo ô 50 m²</label>
                                     <div class="text-sm text-gray-600">
@@ -278,7 +293,7 @@
     
 </div>
 <!-- Footer -->
-<div th:replace="taskbar/customer-footer :: customerFooter"></div>
+<div th:replace="~{taskbar/customer-footer :: customerFooter}"></div>
 
 <!-- Scripts -->
 <script th:inline="javascript">
@@ -304,13 +319,13 @@
         const unitGrid = document.getElementById('unitGrid');
         if (unitGrid && totalUnits > 0) {
             const cols = Math.max(1, Math.ceil(Math.sqrt(totalUnits))); // near-square
-            unitGrid.style.gridTemplateColumns = `repeat(${cols}, minmax(0, 1fr))`;
+            unitGrid.style.gridTemplateColumns = 'repeat(' + cols + ', minmax(0, 1fr))';
 
             // Create tiles
             for (let i = 0; i < totalUnits; i++) {
                 const tile = document.createElement('div');
                 tile.className = 'unit-tile border rounded h-10 flex items-center justify-center text-xs cursor-pointer select-none';
-                tile.textContent = `${UNIT_SIZE} m²`;
+                tile.textContent = UNIT_SIZE + ' m²';
                 tile.dataset.index = String(i);
                 unitGrid.appendChild(tile);
             }
@@ -351,9 +366,9 @@
                 const d = inputEl.valueAsDate;
                 if (d instanceof Date && !isNaN(d)) {
                     const y = d.getFullYear();
-                    const m = String(d.getMonth() + 1).padStart(2, '0');
+                    const mth = String(d.getMonth() + 1).padStart(2, '0');
                     const day = String(d.getDate()).padStart(2, '0');
-                    return `${y}-${m}-${day}`;
+                    return y + '-' + mth + '-' + day;
                 }
                 // Fallback: cố gắng parse các định dạng phổ biến
                 const raw = (inputEl.value || '').trim();
@@ -363,7 +378,7 @@
                     const mm = m[1].padStart(2, '0');
                     const dd = m[2].padStart(2, '0');
                     const yyyy = m[3];
-                    return `${yyyy}-${mm}-${dd}`;
+                    return yyyy + '-' + mm + '-' + dd;
                 }
                 // Không parse được => trả về chuỗi rỗng để tránh gọi API sai
                 return '';
@@ -375,7 +390,7 @@
                 if (!s || !e) return;
                 if (new Date(e) <= new Date(s)) return;
                 try {
-                    const url = `/SWP/booking/${storageId}/unavailable?startDate=${encodeURIComponent(s)}&endDate=${encodeURIComponent(e)}`;
+                    const url = '/SWP/booking/' + storageId + '/unavailable?startDate=' + encodeURIComponent(s) + '&endDate=' + encodeURIComponent(e);
                     console.debug('[Fetch] storageId:', storageId, 'start:', s, 'end:', e);
                     console.debug('[Fetch] Unavailable URL:', url);
                     const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
@@ -504,12 +519,14 @@
             const yyyy = today.getFullYear();
             const mm = String(today.getMonth() + 1).padStart(2, '0');
             const dd = String(today.getDate()).padStart(2, '0');
-            const todayStr = `${yyyy}-${mm}-${dd}`;
+            const todayStr = yyyy + '-' + mm + '-' + dd;
+
             const tomorrow = new Date(today.getTime() + 24*60*60*1000);
             const yyyy2 = tomorrow.getFullYear();
             const mm2 = String(tomorrow.getMonth() + 1).padStart(2, '0');
             const dd2 = String(tomorrow.getDate()).padStart(2, '0');
-            const tomorrowStr = `${yyyy2}-${mm2}-${dd2}`;
+            const tomorrowStr = yyyy2 + '-' + mm2 + '-' + dd2;
+
             if (!startInput.value) startInput.value = todayStr;
             // Ensure end > start
             if (!endInput.value || new Date(endInput.value) <= new Date(startInput.value)) {
