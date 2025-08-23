@@ -372,13 +372,29 @@ public class OrderServiceimpl implements OrderService {
 
     @Override
     public List<Integer> findBookedZoneIds(int storageId, LocalDate startDate, LocalDate endDate) {
-        // Lấy danh sách zone đã được đặt và thanh toán (PAID hoặc CONFIRMED) trong khoảng thời gian
-        List<Order> bookedOrders = orderRepository.findAll().stream()
+        System.out.println("[DEBUG] findBookedZoneIds called with:");
+        System.out.println("  storageId: " + storageId);
+        System.out.println("  startDate: " + startDate);
+        System.out.println("  endDate: " + endDate);
+        
+        // Lấy danh sách zone đã được đặt và thanh toán (PAID hoặc CONFIRMED) theo tháng
+        List<Order> allOrders = orderRepository.findAll();
+        System.out.println("[DEBUG] Total orders in database: " + allOrders.size());
+        
+        List<Order> bookedOrders = allOrders.stream()
             .filter(order -> order.getStorage() != null && order.getStorage().getStorageid() == storageId)
             .filter(order -> "PAID".equals(order.getStatus()) || "CONFIRMED".equals(order.getStatus()))
             .filter(order -> order.getStartDate() != null && order.getEndDate() != null)
-            .filter(order -> !order.getEndDate().isBefore(startDate) && !order.getStartDate().isAfter(endDate))
+            .filter(order -> {
+                boolean hasOverlap = hasMonthOverlap(order.getStartDate(), order.getEndDate(), startDate, endDate);
+                System.out.println("[DEBUG] Order " + order.getId() + " (status: " + order.getStatus() + 
+                    ", dates: " + order.getStartDate() + " to " + order.getEndDate() + 
+                    ", selectedZoneIds: " + order.getSelectedZoneIds() + ") -> hasOverlap: " + hasOverlap);
+                return hasOverlap;
+            })
             .collect(Collectors.toList());
+            
+        System.out.println("[DEBUG] Found " + bookedOrders.size() + " booked orders with month overlap");
         
         // Trích xuất tất cả zone IDs từ cả selectedZoneIds và zone đơn lẻ
         Set<Integer> allZoneIds = new HashSet<>();
@@ -405,7 +421,32 @@ public class OrderServiceimpl implements OrderService {
             }
         }
         
+        System.out.println("[DEBUG] Final result - booked zone IDs: " + allZoneIds);
         return new ArrayList<>(allZoneIds);
+    }
+    
+    /**
+     * Kiểm tra xem có overlap theo tháng không
+     * Vì thuê theo tháng, nên cần kiểm tra xem có tháng nào trùng nhau không
+     */
+    private boolean hasMonthOverlap(LocalDate orderStart, LocalDate orderEnd, LocalDate queryStart, LocalDate queryEnd) {
+        // Chuẩn hóa về đầu tháng và cuối tháng
+        LocalDate orderStartMonth = LocalDate.of(orderStart.getYear(), orderStart.getMonth(), 1);
+        LocalDate orderEndMonth = LocalDate.of(orderEnd.getYear(), orderEnd.getMonth(), 1).plusMonths(1).minusDays(1);
+        
+        LocalDate queryStartMonth = LocalDate.of(queryStart.getYear(), queryStart.getMonth(), 1);
+        LocalDate queryEndMonth = LocalDate.of(queryEnd.getYear(), queryEnd.getMonth(), 1).plusMonths(1).minusDays(1);
+        
+        // Kiểm tra overlap theo tháng
+        boolean hasOverlap = !orderEndMonth.isBefore(queryStartMonth) && !orderStartMonth.isAfter(queryEndMonth);
+        
+        // Debug log
+        System.out.println("[DEBUG] Month overlap check:");
+        System.out.println("  Order: " + orderStart + " to " + orderEnd + " -> " + orderStartMonth + " to " + orderEndMonth);
+        System.out.println("  Query: " + queryStart + " to " + queryEnd + " -> " + queryStartMonth + " to " + queryEndMonth);
+        System.out.println("  Has overlap: " + hasOverlap);
+        
+        return hasOverlap;
     }
 
 //    @Override

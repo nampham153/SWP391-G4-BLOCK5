@@ -425,6 +425,81 @@
         });
     }
 
+    // Validation và điều chỉnh thuê theo tháng
+    function validateAndAdjustMonthlyRental() {
+        const startInput = document.getElementById('startDate');
+        const endInput = document.getElementById('endDate');
+        
+        if (!startInput || !endInput || !startInput.value || !endInput.value) {
+            return;
+        }
+        
+        const startDate = new Date(startInput.value);
+        const endDate = new Date(endInput.value);
+        
+        if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+            return;
+        }
+        
+        // Điều chỉnh ngày bắt đầu về đầu tháng
+        const adjustedStartDate = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
+        
+        // Điều chỉnh ngày kết thúc về cuối tháng
+        const adjustedEndDate = new Date(endDate.getFullYear(), endDate.getMonth() + 1, 0);
+        
+        let hasAdjustment = false;
+        let warningMessage = '';
+        
+        // Bỏ validation ngày bắt đầu - cho phép người dùng chọn bất kỳ ngày nào
+        
+        // Kiểm tra và điều chỉnh ngày kết thúc về ngày cuối cùng của tháng
+        // Sử dụng cách tính ngày cuối tháng chính xác
+        const correctEndDate = new Date(endDate.getFullYear(), endDate.getMonth() + 1, 1);
+        const lastDayOfMonth = correctEndDate.getDate();
+        
+        if (endDate.getDate() !== lastDayOfMonth) {
+            hasAdjustment = true;
+            const adjustedEndStr = correctEndDate.toISOString().split('T')[0];
+            endInput.value = adjustedEndStr;
+            // Lấy ngày thực tế từ ngày đã điều chỉnh để đảm bảo chính xác
+            const actualDay = correctEndDate.getDate();
+            warningMessage += `Ngày kết thúc đã được điều chỉnh về cuối tháng: ${adjustedEndStr} .`;
+        }
+        
+        // Hiển thị cảnh báo nếu có điều chỉnh
+        if (hasAdjustment) {
+            console.log('[Debug] Monthly rental adjustment:', warningMessage);
+            
+            // Hiển thị thông báo cho người dùng chỉ khi có điều chỉnh ngày kết thúc
+            const existingAlert = document.getElementById('monthlyRentalAlert');
+            if (existingAlert) {
+                existingAlert.remove();
+            }
+            
+            const alertDiv = document.createElement('div');
+            alertDiv.id = 'monthlyRentalAlert';
+            alertDiv.className = 'bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mb-4';
+            alertDiv.innerHTML = `
+                <strong>Thông báo:</strong> ${warningMessage}
+                <br><small>Ngày kết thúc đã được tự động điều chỉnh về cuối tháng.</small>
+            `;
+            
+            const modal = document.getElementById('bookingModal');
+            const form = modal.querySelector('form');
+            if (form) {
+                form.insertBefore(alertDiv, form.firstChild);
+            }
+            
+            // Refresh lại dữ liệu sau khi điều chỉnh ngày
+            setTimeout(() => {
+                console.log('[Debug] Refreshing data after monthly adjustment...');
+                refreshUnavailable();
+                refreshUnavailableZones();
+                calculateEstimatedCost();
+            }, 200);
+        }
+    }
+
     // Helper function for date conversion
     function toIsoDateStr(inputEl) {
         // Ưu tiên valueAsDate nếu có, fallback parse thủ công
@@ -468,6 +543,14 @@
         // Cập nhật ngày tối thiểu của ngày kết thúc khi ngày bắt đầu thay đổi
         startInput.addEventListener('change', function () {
             endInput.setAttribute('min', startInput.value);
+            // Gọi validation thuê theo tháng và refresh zone
+            validateAndAdjustMonthlyRental();
+        });
+
+        // Thêm event listener cho endInput để gọi validation khi thay đổi
+        endInput.addEventListener('change', function () {
+            // Gọi validation thuê theo tháng và refresh zone
+            validateAndAdjustMonthlyRental();
         });
 
         // Build 50 m² unit grid once on load
@@ -652,19 +735,7 @@
                 }
             }
 
-            // Event listeners for date changes
-            startInput.addEventListener('change', function() {
-                updateEstimatedCost();
-                refreshUnavailable();
-                refreshUnavailableZones();
-            });
-            endInput.addEventListener('change', function() {
-                updateEstimatedCost();
-                refreshUnavailable();
-                refreshUnavailableZones();
-            });
-
-            // Initial refresh if dates prefilled
+            // Initial load
             refreshUnavailable();
             refreshUnavailableZones();
         }
