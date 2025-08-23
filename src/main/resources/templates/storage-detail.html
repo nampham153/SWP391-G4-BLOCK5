@@ -389,14 +389,9 @@
                 const s = toIsoDateStr(startInput);
                 const e = toIsoDateStr(endInput);
                 if (!s || !e) return;
-                if (new Date(e) <= new Date(s)) return;
                 try {
-                    const url = '/SWP/booking/' + storageId + '/unavailable?startDate=' + encodeURIComponent(s) + '&endDate=' + encodeURIComponent(e);
-                    console.debug('[Fetch] storageId:', storageId, 'start:', s, 'end:', e);
-                    console.debug('[Fetch] Unavailable URL:', url);
-                    const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+                    const res = await fetch(`/SWP/booking/${storageId}/unavailable?startDate=${startInput.value}&endDate=${endInput.value}`);
                     if (!res.ok) {
-                        console.error('[Fetch] HTTP error', res.status, res.statusText);
                         throw new Error('Network error');
                     }
                     const data = await res.json();
@@ -408,8 +403,57 @@
                     applyUnavailable([]);
                 }
             }
+
+            // Fetch unavailable zones for the date range
+            async function refreshUnavailableZones() {
+                if (!startInput.value || !endInput.value) return;
+                try {
+                    const res = await fetch(`/SWP/booking/${storageId}/unavailable-zones?startDate=${startInput.value}&endDate=${endInput.value}`);
+                    if (!res.ok) {
+                        throw new Error('Network error');
+                    }
+                    const data = await res.json();
+                    console.debug('[Fetch] Unavailable zones:', data);
+                    applyUnavailableZones(Array.isArray(data) ? data : []);
+                } catch (err) {
+                    // On error, clear unavailable markers
+                    console.error('[Fetch] Unavailable zones failed:', err);
+                    applyUnavailableZones([]);
+                }
+            }
+
+            // Apply unavailable zones styling
+            function applyUnavailableZones(unavailableZoneIds) {
+                const zoneTiles = document.querySelectorAll('.zone-tile');
+                zoneTiles.forEach(tile => {
+                    const zoneId = parseInt(tile.getAttribute('data-zone-id'));
+                    if (unavailableZoneIds.includes(zoneId)) {
+                        tile.classList.add('zone-unavailable');
+                        tile.style.pointerEvents = 'none';
+                        tile.style.opacity = '0.5';
+                        tile.style.backgroundColor = '#f3f4f6';
+                        tile.style.color = '#6b7280';
+                        const statusDiv = tile.querySelector('.mt-1.text-xs');
+                        if (statusDiv) {
+                            statusDiv.textContent = 'Đã thuê';
+                        }
+                    } else {
+                        tile.classList.remove('zone-unavailable');
+                        tile.style.pointerEvents = '';
+                        tile.style.opacity = '';
+                        tile.style.backgroundColor = '';
+                        tile.style.color = '';
+                        const statusDiv = tile.querySelector('.mt-1.text-xs');
+                        if (statusDiv) {
+                            statusDiv.textContent = 'Còn trống';
+                        }
+                    }
+                });
+            }
+
             // Expose to global so openModal() can force refresh immediately
             window.refreshUnavailable = refreshUnavailable;
+            window.refreshUnavailableZones = refreshUnavailableZones;
 
             // Drag-to-select rectangle
             let isDragging = false;
@@ -549,12 +593,21 @@
                 }
             }
 
-            // Trigger refresh when dates change
-            startInput.addEventListener('change', refreshUnavailable);
-            endInput.addEventListener('change', refreshUnavailable);
+            // Event listeners for date changes
+            startInput.addEventListener('change', function() {
+                updateEstimatedCost();
+                refreshUnavailable();
+                refreshUnavailableZones();
+            });
+            endInput.addEventListener('change', function() {
+                updateEstimatedCost();
+                refreshUnavailable();
+                refreshUnavailableZones();
+            });
 
             // Initial refresh if dates prefilled
             refreshUnavailable();
+            refreshUnavailableZones();
         }
     });
 
@@ -584,9 +637,12 @@
                 endInput.value = tomorrowStr;
             }
         }
-        // Force refresh unavailable immediately on modal open
+        // Force refresh unavailable and unavailable zones when modal opens
         if (window.refreshUnavailable) {
             window.refreshUnavailable();
+        }
+        if (window.refreshUnavailableZones) {
+            window.refreshUnavailableZones();
         }
     }
 
@@ -632,6 +688,11 @@
 </script>
 <script>
     function selectZone(el) {
+        // Kiểm tra nếu zone đã được thanh toán (unavailable)
+        if (el.classList.contains('zone-unavailable') || el.style.pointerEvents === 'none') {
+            return; // Không cho phép chọn zone đã được thanh toán
+        }
+        
         // Toggle selection cho zone hiện tại
         el.classList.toggle('selected');
         

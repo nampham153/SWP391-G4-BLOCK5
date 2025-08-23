@@ -128,19 +128,52 @@
                             </div>
                         </div>
 
-                        <!-- Selected 50 m² units visualization -->
-                        <div class="info-card" style="margin-top: 24px;"
-                             th:with="selCsv=${selectedUnitIndices != null && !#strings.isEmpty(selectedUnitIndices) ? selectedUnitIndices : order.selectedUnitIndices}">
-                            <h3 style="margin:0 0 8px 0; font-size: 18px;"><i class="fas fa-th"></i> Các ô 50 m² đã chọn</h3>
-                            <div class="muted">
-                                Đã chọn: <span id="bdUnitSelectedCount">0</span> ô
-                                (<span id="bdUnitSelectedArea">0</span> m²)
-                                <span th:if="${selCsv != null and !#strings.isEmpty(selCsv)}">
-                                    • Danh sách: <span th:text="${selCsv}">0</span>
-                                </span>
+                        <!-- Zone information -->
+                        <div class="info-card" style="margin-top: 24px;" th:if="${selectedZones != null and !selectedZones.isEmpty()}">
+                            <h3 style="margin:0 0 8px 0; font-size: 18px;">
+                                <i class="fas fa-map-marked-alt"></i> 
+                                <span th:text="${selectedZones.size() > 1 ? 'Các Zone đã chọn (' + selectedZones.size() + ' zone)' : 'Zone đã chọn'}">Zone đã chọn</span>
+                            </h3>
+                            
+                            <!-- Tổng quan -->
+                            <div class="info-grid" style="margin-bottom: 16px; padding: 12px; background: #f8f9fa; border-radius: 8px;">
+                                <div class="info-item">
+                                    <div class="info-label">
+                                        <i class="fas fa-expand-arrows-alt"></i>
+                                        Tổng diện tích
+                                    </div>
+                                    <div class="info-value" th:text="${totalZoneArea != null ? totalZoneArea + ' m²' : '0 m²'}">0 m²</div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-label">
+                                        <i class="fas fa-money-bill-wave"></i>
+                                        Tổng giá/tháng
+                                    </div>
+                                    <div class="info-value" th:text="${totalZonePrice != null ? #numbers.formatDecimal(totalZonePrice, 0, 'POINT', 0, 'COMMA') + ' VNĐ/tháng' : '0 VNĐ/tháng'}">0 VNĐ/tháng</div>
+                                </div>
                             </div>
-                            <div id="bdUnitGrid" class="unit-grid" th:attr="data-selected=${selCsv != null ? selCsv : ''}"></div>
-                            <small class="muted">Mỗi ô = 50 m². Lưới chỉ mang tính minh họa, không tương tác.</small>
+                            
+                            <!-- Chi tiết từng zone -->
+                            <div th:each="zone, iterStat : ${selectedZones}" class="zone-detail" style="margin-bottom: 12px; padding: 12px; border: 1px solid #e5e7eb; border-radius: 8px;">
+                                <h4 style="margin: 0 0 8px 0; font-size: 16px; color: #374151;">
+                                    <i class="fas fa-tag"></i>
+                                    <span th:text="${zone.name}">Zone A</span>
+                                </h4>
+                                <div class="info-grid">
+                                    <div class="info-item">
+                                        <div class="info-label">Diện tích</div>
+                                        <div class="info-value" th:text="${zone.zoneArea} + ' m²'">0 m²</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <div class="info-label">Giá thuê/tháng</div>
+                                        <div class="info-value" th:text="${#numbers.formatDecimal(zone.pricePerDay, 0, 'POINT', 0, 'COMMA')} + ' VNĐ'">0 VNĐ</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <div class="info-label">Trạng thái</div>
+                                        <div class="info-value" th:text="${zone.status}">AVAILABLE</div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Action buttons -->
@@ -172,39 +205,6 @@
     <div th:replace="taskbar/customer-footer :: customerFooter"></div>
 </div>
 
-<script th:inline="javascript">
-//<![CDATA[
-(function initDetailGrid(){
-    try {
-        const UNIT_SIZE = 50;
-        const grid = document.getElementById('bdUnitGrid');
-        if (!grid) return;
-        const storageArea = /*[[${order.storage.area}]]*/ 0;
-        const totalUnits = Math.max(0, Math.floor(storageArea / UNIT_SIZE));
-        const selStr = grid.getAttribute('data-selected') || '';
-        const selected = new Set(selStr.split(',').map(s=>s.trim()).filter(Boolean).map(n=>parseInt(n,10)).filter(n=>!isNaN(n)));
-
-        const cols = Math.max(1, Math.ceil(Math.sqrt(totalUnits)));
-        grid.style.gridTemplateColumns = `repeat(${cols}, minmax(0, 1fr))`;
-        for (let i=0;i<totalUnits;i++){
-            const tile = document.createElement('div');
-            tile.className = 'unit-tile' + (selected.has(i) ? ' selected' : '');
-            tile.textContent = `${UNIT_SIZE} m²`;
-            tile.dataset.index = String(i);
-            grid.appendChild(tile);
-        }
-        // update counters
-        const cnt = selected.size;
-        const area = cnt * UNIT_SIZE;
-        const cntEl = document.getElementById('bdUnitSelectedCount');
-        const areaEl = document.getElementById('bdUnitSelectedArea');
-        if (cntEl) cntEl.textContent = String(cnt);
-        if (areaEl) areaEl.textContent = String(area);
-    } catch(err){
-        console.warn('Render detail grid failed:', err);
-    }
-})();
-//]]>
-</script>
+<!-- No JavaScript needed for zone display -->
 </body>
 </html>

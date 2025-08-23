@@ -358,25 +358,29 @@ public class OrderServiceimpl implements OrderService {
     @Override
     @Transactional
     public void cancelExistingOrdersForCustomerAndStorage(int customerId, int storageId, String reason) {
-        List<Order> existingOrders = findActiveOrdersByCustomerAndStorage(customerId, storageId);
-        
-        for (Order order : existingOrders) {
-            // Chỉ hủy các đơn hàng chưa thanh toán (PENDING, APPROVED)
-            if ("PENDING".equals(order.getStatus()) || "APPROVED".equals(order.getStatus())) {
-                order.setStatus("CANCELLED");
-                order.setCancelReason(reason);
-                orderRepository.save(order);
-                
-                // Ghi log hoạt động
-                activityLogService.logActivity(
-                    "Hủy đơn hàng tự động",
-                    "Đơn hàng #" + order.getId() + " đã bị hủy tự động do khách hàng đặt lại cùng kho",
-                    order.getCustomer(),
-                    order,
-                    null, null, null, null
-                );
-            }
+        List<Order> activeOrders = findActiveOrdersByCustomerAndStorage(customerId, storageId);
+        for (Order order : activeOrders) {
+            order.setStatus("CANCELLED");
+            order.setCancelReason(reason);
+            orderRepository.save(order);
         }
+    }
+
+    @Override
+    public List<Integer> findBookedZoneIds(int storageId, LocalDate startDate, LocalDate endDate) {
+        // Lấy danh sách zone đã được đặt và thanh toán (PAID hoặc CONFIRMED) trong khoảng thời gian
+        List<Order> bookedOrders = orderRepository.findAll().stream()
+            .filter(order -> order.getStorage() != null && order.getStorage().getStorageid() == storageId)
+            .filter(order -> "PAID".equals(order.getStatus()) || "CONFIRMED".equals(order.getStatus()))
+            .filter(order -> order.getStartDate() != null && order.getEndDate() != null)
+            .filter(order -> !order.getEndDate().isBefore(startDate) && !order.getStartDate().isAfter(endDate))
+            .collect(Collectors.toList());
+        
+        return bookedOrders.stream()
+            .filter(order -> order.getZone() != null)
+            .map(order -> order.getZone().getId())
+            .distinct()
+            .collect(Collectors.toList());
     }
 
 //    @Override
