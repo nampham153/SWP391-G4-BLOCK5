@@ -80,11 +80,17 @@ public class Order {
         // Lưu danh sách chỉ số ô 50m² đã chọn (CSV: "0,1,5,6")
         @Column(name = "selected_unit_indices", length = 1000)
         private String selectedUnitIndices;
+        
+        // Lưu danh sách zone IDs đã chọn (CSV: "1,2,3")
+        @Column(name = "selected_zone_ids", length = 500)
+        private String selectedZoneIds;
+        
         @Column(length = 500)
         private String cancelReason;
 
 
         @OneToOne(mappedBy = "order", cascade = CascadeType.ALL)
+        @JsonIgnore
         private EContract eContract;
 
         public Order(int id) {

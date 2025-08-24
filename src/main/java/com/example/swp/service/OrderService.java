@@ -56,5 +56,10 @@ public interface OrderService {
     
     List<Order> findActiveOrdersByCustomerAndStorage(int customerId, int storageId);
     void cancelExistingOrdersForCustomerAndStorage(int customerId, int storageId, String reason);
+    
+    List<Integer> findBookedZoneIds(int storageId, LocalDate startDate, LocalDate endDate);
+
+    // Đơn hàng đã hết hạn của một customer
+    List<Order> findExpiredOrdersByCustomer(int customerId);
 
 }

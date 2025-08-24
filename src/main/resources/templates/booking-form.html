@@ -88,6 +88,7 @@
                     <input type="hidden" name="endDate" th:value="${endDate}" />
                     <input type="hidden" name="orderToken" th:value="${orderToken}" />
                     <input type="hidden" name="zoneId" th:value="${zoneId}" />
+                    <input type="hidden" name="zoneIds" th:value="${zoneIds}" />
                     <input type="hidden" name="preSelectedArea" th:value="${preSelectedArea}" />
                     <input type="hidden" id="selectedUnitIndices" name="selectedUnitIndices" th:value="${selectedUnitIndices}" />
 
@@ -102,14 +103,28 @@
                                     <span th:text="${storage.status} ? 'CÒN TRỐNG' : 'ĐANG THUÊ'">CÒN TRỐNG</span>
                                 </div>
                             </div>
-                            <div class="info-card" th:if="${selectedZone} != null">
+                            <!-- Hiển thị nhiều zone đã chọn -->
+                            <div th:if="${selectedZones != null and !selectedZones.isEmpty()}" class="info-card">
+                                <div class="info-label">ZONE ĐÃ CHỌN</div>
+                                <div class="info-value">
+                                    <div th:each="zone : ${selectedZones}" style="margin-bottom: 8px;">
+                                        <span style="font-weight:600" th:text="${zone.name}">Zone A</span>
+                                        <span> • </span>
+                                        <span th:text="${zone.zoneArea} + ' m²'">0 m²</span>
+                                        <span> • </span>
+                                        <span th:text="${#numbers.formatDecimal(zone.pricePerDay, 0, 'POINT', 0, 'COMMA')} + ' VNĐ/tháng'" style="color: #28a745; font-weight: 600;">0 VNĐ/tháng</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Fallback cho single zone (backward compatibility) -->
+                            <div th:if="${selectedZone != null and (selectedZones == null or selectedZones.isEmpty())}" class="info-card">
                                 <div class="info-label">ZONE ĐÃ CHỌN</div>
                                 <div class="info-value">
                                     <span style="font-weight:600" th:text="${selectedZone.name}">Zone A</span>
                                     <span> • </span>
                                     <span th:text="${selectedZone.zoneArea} + ' m²'">0 m²</span>
                                     <span> • </span>
-                                    <span th:text="${#numbers.formatDecimal(selectedZone.pricePerDay, 0, 'POINT', 0, 'COMMA')} + ' VNĐ/ngày'">0 VNĐ/ngày</span>
+                                    <span th:text="${#numbers.formatDecimal(selectedZone.pricePerDay, 0, 'POINT', 0, 'COMMA')} + ' VNĐ/tháng'" style="color: #28a745; font-weight: 600;">0 VNĐ/tháng</span>
                                 </div>
                             </div>
                             <div class="info-card">
@@ -121,8 +136,8 @@
                                 <div class="info-value" th:text="${storage.storageid}">ID</div>
                             </div>
                             <div class="info-card">
-                                <div class="info-label">GIÁ/NGÀY</div>
-                                <div class="info-value" th:text="${#numbers.formatDecimal(storage.pricePerDay, 0, 'POINT', 0, 'COMMA')} + ' VNĐ/ngày'">0 VNĐ/ngày</div>
+                                <div class="info-label">GIÁ/THÁNG</div>
+                                <div class="info-value" th:text="${#numbers.formatDecimal(storage.pricePerDay, 0, 'POINT', 0, 'COMMA')} + ' VNĐ/tháng'">0 VNĐ/tháng</div>
                             </div>
                             <div class="info-card">
                                 <div class="info-label">DIỆN TÍCH TỔNG</div>
@@ -183,7 +198,7 @@
                     <input type="hidden" name="voucherId" id="voucherId" />
 
                     <!-- Hidden field for rental area - will be set automatically from grid or zone -->
-                    <input type="hidden" id="rentalArea" name="rentalArea" th:value="${preSelectedArea} != null ? preSelectedArea : (selectedZone != null ? selectedZone.zoneArea : 0)" />
+                    <input type="hidden" id="rentalArea" name="rentalArea" th:value="0" />
 
                     <div class="form-group">
                         <label for="name" class="form-label">Họ và tên *</label>
@@ -253,9 +268,24 @@
     const startDate = new Date(/*[[${startDate}]]*/);
     const endDate = new Date(/*[[${endDate}]]*/);
     let selectedVoucher = null;
-    // If a zone was selected, use zone pricing and area
-    /*[# th:if="${selectedZone != null}"]*/
-        pricePerDay = /*[[${selectedZone.pricePerDay}]]*/ pricePerDay;
+    // Công thức mới: Đơn giá 1 zone/tháng × Số zone × Số tháng
+    let firstZonePricePerDay = 0;
+    let zoneCount = 0;
+    let totalZoneArea = 0;
+    /*[# th:if="${selectedZones != null and !selectedZones.isEmpty()}"]*/
+        firstZonePricePerDay = /*[[${selectedZones[0].pricePerDay}]]*/ 0;
+        zoneCount = /*[[${selectedZones.size()}]]*/ 0;
+        /*[# th:each="zone : ${selectedZones}"]*/
+            totalZoneArea += /*[[${zone.zoneArea}]]*/ 0;
+        /*[/]*/
+        pricePerDay = firstZonePricePerDay;
+        area = totalZoneArea;
+    /*[/]*/
+    // Fallback for single zone (backward compatibility)
+    /*[# th:if="${selectedZone != null and (selectedZones == null or selectedZones.isEmpty())}"]*/
+        firstZonePricePerDay = /*[[${selectedZone.pricePerDay}]]*/ 0;
+        zoneCount = 1;
+        pricePerDay = firstZonePricePerDay;
         area = /*[[${selectedZone.zoneArea}]]*/ area;
     /*[/]*/
 
@@ -303,34 +333,36 @@
     }
 
     function updateRentalAreaFromGrid() {
-        // Update rental area based on grid selection or zone
+        // Update rental area based on zone selection (no more grid selection)
         const rentalAreaInput = document.getElementById('rentalArea');
-        const grid = document.getElementById('bfUnitGrid');
-        const indicesInput = document.getElementById('selectedUnitIndices');
 
-        if (grid) {
-            const selectedTiles = grid.querySelectorAll('.unit-tile.selected');
-            const selectedArea = selectedTiles.length * 50; // Each tile = 50m²
-            // Persist selected indices
-            if (indicesInput) {
-                const indices = Array.from(selectedTiles).map(t => t.dataset.index).join(',');
-                indicesInput.value = indices;
-            }
-
-            if (selectedArea > 0) {
-                rentalAreaInput.value = selectedArea;
-            } else if (area > 0) {
-                // Fallback to zone area if no grid selection
-                rentalAreaInput.value = area;
-            }
+        if (rentalAreaInput && area > 0) {
+            rentalAreaInput.value = area;
         }
         calculateTotal();
     }
 
     function calculateTotal() {
         const rentalArea = parseFloat(document.getElementById('rentalArea').value) || 0;
-        const days = Math.max(1, Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)));
-        const originalTotal = (days * pricePerDay * rentalArea / area);
+
+        // Tính số tháng thuê (chuẩn hóa về cuối tháng)
+        const normalizedEndDate = new Date(endDate.getFullYear(), endDate.getMonth() + 1, 0);
+        const monthsDiff = (normalizedEndDate.getFullYear() - startDate.getFullYear()) * 12 +
+                          (normalizedEndDate.getMonth() - startDate.getMonth()) + 1;
+        const monthsCount = Math.max(1, monthsDiff);
+
+        let originalTotal = 0;
+
+        // Áp dụng công thức mới: Đơn giá 1 zone/tháng × Số zone × Số tháng
+        // Note: pricePerDay trong DB thực chất là giá/tháng
+        if (zoneCount > 0) {
+            const firstZonePricePerMonth = firstZonePricePerDay;
+            originalTotal = firstZonePricePerMonth * zoneCount * monthsCount;
+        } else {
+            // Fallback: tính theo diện tích storage
+            const pricePerMonth = pricePerDay;
+            originalTotal = monthsCount * pricePerMonth * (rentalArea / area);
+        }
 
         document.getElementById('originalCostDisplay').innerText = formatVNDNumber(originalTotal) + ' VNĐ';
 
@@ -374,98 +406,24 @@
     };
 
     window.addEventListener('DOMContentLoaded', () => {
+        // Set initial rental area based on selected zones
+        const rentalAreaInput = document.getElementById('rentalArea');
+        if (rentalAreaInput && area > 0) {
+            rentalAreaInput.value = area;
+        }
+
         document.querySelector('form').addEventListener('submit', function(e) {
             // Ensure hidden fields reflect current grid state before submit
             updateRentalAreaFromGrid();
-            // Require selecting tiles when no zone chosen
-            const zoneInput = document.querySelector('input[name="zoneId"]');
-            const zoneVal = zoneInput && zoneInput.value ? zoneInput.value : '';
-            const indicesVal = (document.getElementById('selectedUnitIndices') || { value: '' }).value.trim();
-            if (!zoneVal && indicesVal.length === 0) {
-                e.preventDefault();
-                alert('Vui lòng chọn các ô 50 m² để tiếp tục.');
-                return;
-            }
+
             if (!this.checkValidity()) {
                 e.preventDefault();
                 alert('Vui lòng kiểm tra lại thông tin nhập vào.');
             }
         });
-
-        // Build 50 m² grid and reflect preselected tiles from storage detail
-        try {
-            const UNIT_SIZE = 50;
-            const storageArea = /*[[${storage.area}]]*/ 0;
-            const totalUnits = Math.max(0, Math.floor(storageArea / UNIT_SIZE));
-            const grid = document.getElementById('bfUnitGrid');
-            const preSelectedArea = /*[[${preSelectedArea}]]*/ null;
-            const preIndicesStr = grid ? (grid.getAttribute('data-preselected') || '') : '';
-            const preIndices = new Set(preIndicesStr.split(',').map(s => s.trim()).filter(Boolean).map(n => parseInt(n, 10)).filter(n => !isNaN(n)));
-            const unavailableStr = grid ? (grid.getAttribute('data-unavailable') || '') : '';
-            const unavailable = new Set(unavailableStr.split(',').map(s => s.trim()).filter(Boolean).map(n => parseInt(n, 10)).filter(n => !isNaN(n)));
-
-            console.log('Grid debug:', {
-                storageArea,
-                totalUnits,
-                gridExists: !!grid,
-                preSelectedArea,
-                preIndicesStr,
-                preIndicesSize: preIndices.size
-            });
-
-            if (grid) {
-                if (totalUnits > 0) {
-                    const cols = Math.max(1, Math.ceil(Math.sqrt(totalUnits)));
-                    grid.style.gridTemplateColumns = `repeat(${cols}, minmax(0, 1fr))`;
-                    for (let i = 0; i < totalUnits; i++) {
-                        const tile = document.createElement('div');
-                        tile.className = 'unit-tile';
-                        tile.textContent = `${UNIT_SIZE} m²`;
-                        tile.dataset.index = String(i);
-                        if (preIndices.has(i)) {
-                            tile.classList.add('selected', 'disabled');
-                        } else if (unavailable.has(i)) {
-                            tile.classList.add('disabled');
-                        }
-                        // Enable toggling when not disabled by preSelectedArea
-                        if (preSelectedArea == null) {
-                            tile.addEventListener('click', () => {
-                                if (tile.classList.contains('disabled')) return;
-                                tile.classList.toggle('selected');
-                                const cntEl = document.getElementById('bfUnitSelectedCount');
-                                const areaEl = document.getElementById('bfUnitSelectedArea');
-                                const selectedNow = grid.querySelectorAll('.unit-tile.selected').length;
-                                if (cntEl) cntEl.textContent = String(selectedNow);
-                                if (areaEl) areaEl.textContent = String(selectedNow * UNIT_SIZE);
-                                updateRentalAreaFromGrid();
-                            });
-                        }
-                        grid.appendChild(tile);
-                    }
-                } else {
-                    // Show message when no units available
-                    grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 20px; color: #666;">Không có ô 50 m² khả dụng cho kho này</div>';
-                }
-
-                // Update header counts according to preselection
-                const count = preIndices.size;
-                const areaSel = count * UNIT_SIZE;
-                const cntEl = document.getElementById('bfUnitSelectedCount');
-                const areaEl = document.getElementById('bfUnitSelectedArea');
-                if (cntEl) cntEl.textContent = String(count);
-                if (areaEl) areaEl.textContent = String(areaSel);
-
-                // Disable interactions when preSelectedArea is set (selection came from previous page)
-                if (preSelectedArea != null) {
-                    grid.style.pointerEvents = 'none';
-                }
-                // Initialize hidden inputs from preselection
-                updateRentalAreaFromGrid();
-            }
-        } catch (err) {
-            console.warn('Unit grid init failed:', err);
-        }
-
+        
+        // No more grid functionality needed since user removed it
+        
         // Set initial rental area and calculate total
         updateRentalAreaFromGrid();
     });

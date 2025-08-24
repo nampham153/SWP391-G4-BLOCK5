@@ -4,9 +4,13 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -344,6 +348,10 @@ public class OrderServiceimpl implements OrderService {
         return Math.max(0, totalArea - maxUsed);
     }
     @Override
+    public List<Order> findExpiredOrdersByCustomer(int customerId) {
+        return orderRepository.findExpiredOrdersByCustomer(customerId, LocalDate.now());
+    }
+    @Override
     public Optional<Order> findOrderByCustomerAndStorage(int customerId, int storageId) {
         return orderRepository.findByCustomer_IdAndStorage_Storageid(customerId, storageId);
     }
@@ -356,25 +364,82 @@ public class OrderServiceimpl implements OrderService {
     @Override
     @Transactional
     public void cancelExistingOrdersForCustomerAndStorage(int customerId, int storageId, String reason) {
-        List<Order> existingOrders = findActiveOrdersByCustomerAndStorage(customerId, storageId);
+        List<Order> activeOrders = findActiveOrdersByCustomerAndStorage(customerId, storageId);
+        for (Order order : activeOrders) {
+            order.setStatus("CANCELLED");
+            order.setCancelReason(reason);
+            orderRepository.save(order);
+        }
+    }
+
+    @Override
+    public List<Integer> findBookedZoneIds(int storageId, LocalDate startDate, LocalDate endDate) {
+        System.out.println("[DEBUG] findBookedZoneIds called with:");
+        System.out.println("  storageId: " + storageId);
+        System.out.println("  startDate: " + startDate);
+        System.out.println("  endDate: " + endDate);
         
-        for (Order order : existingOrders) {
-            // Chỉ hủy các đơn hàng chưa thanh toán (PENDING, APPROVED)
-            if ("PENDING".equals(order.getStatus()) || "APPROVED".equals(order.getStatus())) {
-                order.setStatus("CANCELLED");
-                order.setCancelReason(reason);
-                orderRepository.save(order);
-                
-                // Ghi log hoạt động
-                activityLogService.logActivity(
-                    "Hủy đơn hàng tự động",
-                    "Đơn hàng #" + order.getId() + " đã bị hủy tự động do khách hàng đặt lại cùng kho",
-                    order.getCustomer(),
-                    order,
-                    null, null, null, null
-                );
+        // Lấy danh sách zone đã được đặt và thanh toán (PAID hoặc CONFIRMED) theo tháng
+        List<Order> allOrders = orderRepository.findAll();
+        System.out.println("[DEBUG] Total orders in database: " + allOrders.size());
+        
+        List<Order> bookedOrders = allOrders.stream()
+            .filter(order -> order.getStorage() != null && order.getStorage().getStorageid() == storageId)
+            .filter(order -> "PAID".equals(order.getStatus()) || "CONFIRMED".equals(order.getStatus()))
+            .filter(order -> order.getStartDate() != null && order.getEndDate() != null)
+            .filter(order -> {
+                boolean hasOverlap = hasMonthOverlap(order.getStartDate(), order.getEndDate(), startDate, endDate);
+                System.out.println("[DEBUG] Order " + order.getId() + " (status: " + order.getStatus() + 
+                    ", dates: " + order.getStartDate() + " to " + order.getEndDate() + 
+                    ", selectedZoneIds: " + order.getSelectedZoneIds() + ") -> hasOverlap: " + hasOverlap);
+                return hasOverlap;
+            })
+            .collect(Collectors.toList());
+            
+        System.out.println("[DEBUG] Found " + bookedOrders.size() + " booked orders with month overlap");
+        
+        // Trích xuất tất cả zone IDs từ cả selectedZoneIds và zone đơn lẻ
+        Set<Integer> allZoneIds = new HashSet<>();
+        
+        for (Order order : bookedOrders) {
+            // Ưu tiên lấy từ selectedZoneIds trước
+            String selectedZoneIds = order.getSelectedZoneIds();
+            if (selectedZoneIds != null && !selectedZoneIds.trim().isEmpty()) {
+                try {
+                    Arrays.stream(selectedZoneIds.split(","))
+                        .map(String::trim)
+                        .filter(s -> !s.isEmpty())
+                        .map(Integer::parseInt)
+                        .forEach(allZoneIds::add);
+                } catch (Exception e) {
+                    // Nếu lỗi parse selectedZoneIds, fallback về zone đơn lẻ
+                    if (order.getZone() != null) {
+                        allZoneIds.add(order.getZone().getId());
+                    }
+                }
+            } else if (order.getZone() != null) {
+                // Fallback về zone đơn lẻ nếu không có selectedZoneIds
+                allZoneIds.add(order.getZone().getId());
             }
         }
+        
+        System.out.println("[DEBUG] Final result - booked zone IDs: " + allZoneIds);
+        return new ArrayList<>(allZoneIds);
+    }
+    
+    /**
+     * Kiểm tra overlap theo ngày (day-level):
+     * Có overlap khi: !(orderEnd < queryStart || orderStart > queryEnd)
+     * Điều này đảm bảo zone được giải phóng ngay sau khi đơn hết hạn.
+     */
+    private boolean hasMonthOverlap(LocalDate orderStart, LocalDate orderEnd, LocalDate queryStart, LocalDate queryEnd) {
+        boolean hasOverlap = !orderEnd.isBefore(queryStart) && !orderStart.isAfter(queryEnd);
+        // Debug log
+        System.out.println("[DEBUG] Day overlap check:");
+        System.out.println("  Order: " + orderStart + " to " + orderEnd);
+        System.out.println("  Query: " + queryStart + " to " + queryEnd);
+        System.out.println("  Has overlap: " + hasOverlap);
+        return hasOverlap;
     }
 
 //    @Override

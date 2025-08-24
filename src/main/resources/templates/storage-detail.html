@@ -191,6 +191,7 @@
                         <div class="space-y-3">
                             <label class="block text-sm font-medium mb-1 text-gray-700">Chọn Zone</label>
                             <input type="hidden" id="zoneIdHidden" name="zoneId">
+                            <input type="hidden" id="zoneIdsHidden" name="zoneIds">
                             <div id="zoneGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-3">
                                 <!-- Available zone -->
                                 <div th:if="${z.status == null or (z.status != null and #strings.equalsIgnoreCase(z.status, 'AVAILABLE'))}"
@@ -199,10 +200,10 @@
                                      th:attr="data-zone-id=${z.id},data-available=${z.status},data-name=${z.name != null ? z.name : 'Zone'},data-area=${z.zoneArea != null ? z.zoneArea : 0},data-price=${z.pricePerDay != null ? z.pricePerDay : 0}"
                                      onclick="selectZone(this)">
                                     <div class="font-semibold" th:text="${z.name != null ? z.name : 'Zone'}">Zone</div>
-                                    <div class="text-xs text-gray-600">
-                                        <span th:text="${(z.zoneArea != null ? z.zoneArea : 0)} + ' m²'"></span> •
-                                        <span th:text="${(z.pricePerDay != null ? #numbers.formatDecimal(z.pricePerDay, 0, 'POINT', 0, 'COMMA') : '0')} + ' VND/ngày'"></span>
-                                    </div>
+<!--                                    <div class="text-xs text-gray-600">-->
+<!--                                        <span th:text="${(z.zoneArea != null ? z.zoneArea : 0)} + ' m²'"></span> •-->
+<!--                                        <span th:text="${(z.pricePerDay != null ? #numbers.formatDecimal(z.pricePerDay, 0, 'POINT', 0, 'COMMA') : '0')} + ' VND/ngày'"></span>-->
+<!--                                    </div>-->
                                     <div class="mt-1 text-xs">Còn trống</div>
                                 </div>
                                 <!-- Unavailable zone -->
@@ -297,11 +298,243 @@
 
 <!-- Scripts -->
 <script th:inline="javascript">
-    document.addEventListener('DOMContentLoaded', function () {
-        const today = new Date().toISOString().split('T')[0];
+    // Global variables and functions for modal access
+    let startInput, endInput, storageId, unitGrid, totalUnits;
+    const UNIT_SIZE = 50;
+    
+    // Global apply unavailable function for 50m² units
+    function applyUnavailable(indices) {
+        // Check if unitGrid exists
+        if (!unitGrid || !unitGrid.children) {
+            console.debug('[Grid] unitGrid not available, skipping apply unavailable');
+            return;
+        }
+        
+        const raw = Array.isArray(indices) ? indices.slice() : [];
+        // Tự nhận biết dữ liệu 1-based: tất cả >=1, không có 0, và max <= totalUnits
+        let normalized = raw;
+        if (raw.length > 0) {
+            const minIdx = Math.min(...raw);
+            const maxIdx = Math.max(...raw);
+            const assumeOneBased = minIdx >= 1 && !raw.includes(0) && maxIdx <= totalUnits;
+            if (assumeOneBased) {
+                normalized = raw.map(i => i - 1);
+                console.debug('[Grid] Converted 1-based -> 0-based:', raw, '=>', normalized);
+            }
+        }
+        // Loại bỏ index ngoài phạm vi grid
+        normalized = normalized.filter(i => Number.isInteger(i) && i >= 0 && i < totalUnits);
+        const set = new Set(normalized);
+        Array.from(unitGrid.children).forEach(ch => {
+            const idx = parseInt(ch.dataset.index);
+            if (set.has(idx)) {
+                ch.classList.add('disabled');
+                ch.classList.remove('selected');
+            } else {
+                ch.classList.remove('disabled');
+            }
+        });
+        console.debug('[Grid] Applied unavailable indices:', Array.from(set));
+        if (typeof updateUnitSelectionCount === 'function') {
+            updateUnitSelectionCount();
+        }
+    }
+    
+    // Global refresh functions
+    async function refreshUnavailable() {
+        const s = toIsoDateStr(startInput);
+        const e = toIsoDateStr(endInput);
+        if (!s || !e) return;
+        try {
+            const res = await fetch(`/SWP/booking/${storageId}/unavailable?startDate=${startInput.value}&endDate=${endInput.value}`);
+            if (!res.ok) {
+                throw new Error('Network error');
+            }
+            const data = await res.json();
+            console.debug('[Fetch] Unavailable data:', data);
+            applyUnavailable(Array.isArray(data) ? data : []);
+        } catch (err) {
+            // On error, clear unavailable markers
+            console.error('[Fetch] Unavailable failed:', err);
+            applyUnavailable([]);
+        }
+    }
+
+    // Global refresh unavailable zones function
+    async function refreshUnavailableZones() {
+        const startDate = startInput.value;
+        const endDate = endInput.value;
+        console.log('[Debug] refreshUnavailableZones called with:', { startDate, endDate });
+        
+        if (!startDate || !endDate) {
+            console.log('[Debug] Missing dates, skipping zone check');
+            return;
+        }
+        
+        try {
+            const url = `/SWP/booking/${storageId}/unavailable-zones?startDate=${startDate}&endDate=${endDate}`;
+            console.log('[Debug] Fetching unavailable zones from:', url);
+            
+            const res = await fetch(url);
+            if (!res.ok) {
+                throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+            }
+            const data = await res.json();
+            console.log('[Debug] Unavailable zones response:', data);
+            applyUnavailableZones(Array.isArray(data) ? data : []);
+        } catch (err) {
+            // On error, clear unavailable markers
+            console.error('[Error] Unavailable zones failed:', err);
+            applyUnavailableZones([]);
+        }
+    }
+
+    // Global apply unavailable zones function
+    function applyUnavailableZones(unavailableZoneIds) {
+        console.log('[Debug] applyUnavailableZones called with:', unavailableZoneIds);
+        const zoneTiles = document.querySelectorAll('.zone-tile');
+        console.log('[Debug] Found zone tiles:', zoneTiles.length);
+        
+        zoneTiles.forEach((tile, index) => {
+            const zoneId = parseInt(tile.getAttribute('data-zone-id'));
+            console.log(`[Debug] Processing tile ${index}: zoneId=${zoneId}, unavailable=${unavailableZoneIds.includes(zoneId)}`);
+            
+            if (unavailableZoneIds.includes(zoneId)) {
+                console.log(`[Debug] Marking zone ${zoneId} as unavailable`);
+                tile.classList.add('zone-unavailable');
+                tile.style.pointerEvents = 'none';
+                tile.style.opacity = '0.5';
+                tile.style.backgroundColor = '#f3f4f6';
+                tile.style.color = '#6b7280';
+                const statusDiv = tile.querySelector('.mt-1.text-xs');
+                if (statusDiv) {
+                    statusDiv.textContent = 'Đã thuê';
+                }
+            } else {
+                console.log(`[Debug] Marking zone ${zoneId} as available`);
+                tile.classList.remove('zone-unavailable');
+                tile.style.pointerEvents = '';
+                tile.style.opacity = '';
+                tile.style.backgroundColor = '';
+                tile.style.color = '';
+                const statusDiv = tile.querySelector('.mt-1.text-xs');
+                if (statusDiv) {
+                    statusDiv.textContent = 'Còn trống';
+                }
+            }
+        });
+    }
+
+    // Validation và điều chỉnh thuê theo tháng
+    function validateAndAdjustMonthlyRental() {
         const startInput = document.getElementById('startDate');
         const endInput = document.getElementById('endDate');
-        const storageId = /*[[${storage.storageid}]]*/ 0;
+        
+        if (!startInput || !endInput || !startInput.value || !endInput.value) {
+            return;
+        }
+        
+        const startDate = new Date(startInput.value);
+        const endDate = new Date(endInput.value);
+        
+        if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+            return;
+        }
+        
+        // Điều chỉnh ngày bắt đầu về đầu tháng
+        const adjustedStartDate = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
+        
+        // Điều chỉnh ngày kết thúc về cuối tháng
+        const adjustedEndDate = new Date(endDate.getFullYear(), endDate.getMonth() + 1, 0);
+        
+        let hasAdjustment = false;
+        let warningMessage = '';
+        
+        // Bỏ validation ngày bắt đầu - cho phép người dùng chọn bất kỳ ngày nào
+        
+        // Kiểm tra và điều chỉnh ngày kết thúc về ngày cuối cùng của tháng
+        // Sử dụng cách tính ngày cuối tháng chính xác
+        const correctEndDate = new Date(endDate.getFullYear(), endDate.getMonth() + 1, 1);
+        const lastDayOfMonth = correctEndDate.getDate();
+        
+        if (endDate.getDate() !== lastDayOfMonth) {
+            hasAdjustment = true;
+            const adjustedEndStr = correctEndDate.toISOString().split('T')[0];
+            endInput.value = adjustedEndStr;
+            // Lấy ngày thực tế từ ngày đã điều chỉnh để đảm bảo chính xác
+            const actualDay = correctEndDate.getDate();
+            warningMessage += `Ngày kết thúc đã được điều chỉnh về cuối tháng: ${adjustedEndStr} .`;
+        }
+        
+        // Hiển thị cảnh báo nếu có điều chỉnh
+        if (hasAdjustment) {
+            console.log('[Debug] Monthly rental adjustment:', warningMessage);
+            
+            // Hiển thị thông báo cho người dùng chỉ khi có điều chỉnh ngày kết thúc
+            const existingAlert = document.getElementById('monthlyRentalAlert');
+            if (existingAlert) {
+                existingAlert.remove();
+            }
+            
+            const alertDiv = document.createElement('div');
+            alertDiv.id = 'monthlyRentalAlert';
+            alertDiv.className = 'bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mb-4';
+            alertDiv.innerHTML = `
+                <strong>Thông báo:</strong> ${warningMessage}
+                <br><small>Ngày kết thúc đã được tự động điều chỉnh về cuối tháng.</small>
+            `;
+            
+            const modal = document.getElementById('bookingModal');
+            const form = modal.querySelector('form');
+            if (form) {
+                form.insertBefore(alertDiv, form.firstChild);
+            }
+            
+            // Refresh lại dữ liệu sau khi điều chỉnh ngày
+            setTimeout(() => {
+                console.log('[Debug] Refreshing data after monthly adjustment...');
+                refreshUnavailable();
+                refreshUnavailableZones();
+                calculateEstimatedCost();
+            }, 200);
+        }
+    }
+
+    // Helper function for date conversion
+    function toIsoDateStr(inputEl) {
+        // Ưu tiên valueAsDate nếu có, fallback parse thủ công
+        const d = inputEl.valueAsDate;
+        if (d instanceof Date && !isNaN(d)) {
+            const y = d.getFullYear();
+            const mth = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return y + '-' + mth + '-' + day;
+        }
+        // Fallback: cố gắng parse các định dạng phổ biến
+        const raw = (inputEl.value || '').trim();
+        if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw; // ISO ok
+        const m = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/); // MM/DD/YYYY
+        if (m) {
+            const mm = m[1].padStart(2, '0');
+            const dd = m[2].padStart(2, '0');
+            const yyyy = m[3];
+            return yyyy + '-' + mm + '-' + dd;
+        }
+        // Không parse được => trả về chuỗi rỗng để tránh gọi API sai
+        return '';
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const today = new Date().toISOString().split('T')[0];
+        startInput = document.getElementById('startDate');
+        endInput = document.getElementById('endDate');
+        storageId = /*[[${storage.storageid}]]*/ 0;
+        
+        // Initialize unit grid variables
+        const UNIT_SIZE = 50;
+        const storageArea = /*[[${storage.area}]]*/ 0;
+        totalUnits = Math.max(0, Math.floor(storageArea / UNIT_SIZE));
+        unitGrid = document.getElementById('unitGrid');
 
         // Đặt giá trị tối thiểu cho ngày bắt đầu và ngày kết thúc
         startInput.setAttribute('min', today);
@@ -310,13 +543,17 @@
         // Cập nhật ngày tối thiểu của ngày kết thúc khi ngày bắt đầu thay đổi
         startInput.addEventListener('change', function () {
             endInput.setAttribute('min', startInput.value);
+            // Gọi validation thuê theo tháng và refresh zone
+            validateAndAdjustMonthlyRental();
+        });
+
+        // Thêm event listener cho endInput để gọi validation khi thay đổi
+        endInput.addEventListener('change', function () {
+            // Gọi validation thuê theo tháng và refresh zone
+            validateAndAdjustMonthlyRental();
         });
 
         // Build 50 m² unit grid once on load
-        const UNIT_SIZE = 50;
-        const storageArea = /*[[${storage.area}]]*/ 0;
-        const totalUnits = Math.max(0, Math.floor(storageArea / UNIT_SIZE));
-        const unitGrid = document.getElementById('unitGrid');
         if (unitGrid && totalUnits > 0) {
             const cols = Math.max(1, Math.ceil(Math.sqrt(totalUnits))); // near-square
             unitGrid.style.gridTemplateColumns = 'repeat(' + cols + ', minmax(0, 1fr))';
@@ -359,56 +596,6 @@
                 console.debug('[Grid] Applied unavailable indices:', Array.from(set));
                 updateUnitSelectionCount();
             }
-
-            // Fetch unavailable tiles from server when both dates valid
-            function toIsoDateStr(inputEl) {
-                // Ưu tiên valueAsDate nếu có, fallback parse thủ công
-                const d = inputEl.valueAsDate;
-                if (d instanceof Date && !isNaN(d)) {
-                    const y = d.getFullYear();
-                    const mth = String(d.getMonth() + 1).padStart(2, '0');
-                    const day = String(d.getDate()).padStart(2, '0');
-                    return y + '-' + mth + '-' + day;
-                }
-                // Fallback: cố gắng parse các định dạng phổ biến
-                const raw = (inputEl.value || '').trim();
-                if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw; // ISO ok
-                const m = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/); // MM/DD/YYYY
-                if (m) {
-                    const mm = m[1].padStart(2, '0');
-                    const dd = m[2].padStart(2, '0');
-                    const yyyy = m[3];
-                    return yyyy + '-' + mm + '-' + dd;
-                }
-                // Không parse được => trả về chuỗi rỗng để tránh gọi API sai
-                return '';
-            }
-
-            async function refreshUnavailable() {
-                const s = toIsoDateStr(startInput);
-                const e = toIsoDateStr(endInput);
-                if (!s || !e) return;
-                if (new Date(e) <= new Date(s)) return;
-                try {
-                    const url = '/SWP/booking/' + storageId + '/unavailable?startDate=' + encodeURIComponent(s) + '&endDate=' + encodeURIComponent(e);
-                    console.debug('[Fetch] storageId:', storageId, 'start:', s, 'end:', e);
-                    console.debug('[Fetch] Unavailable URL:', url);
-                    const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
-                    if (!res.ok) {
-                        console.error('[Fetch] HTTP error', res.status, res.statusText);
-                        throw new Error('Network error');
-                    }
-                    const data = await res.json();
-                    console.debug('[Fetch] Unavailable data:', data);
-                    applyUnavailable(Array.isArray(data) ? data : []);
-                } catch (err) {
-                    // On error, clear unavailable markers
-                    console.error('[Fetch] Unavailable failed:', err);
-                    applyUnavailable([]);
-                }
-            }
-            // Expose to global so openModal() can force refresh immediately
-            window.refreshUnavailable = refreshUnavailable;
 
             // Drag-to-select rectangle
             let isDragging = false;
@@ -497,13 +684,60 @@
                     if (zoneHidden) zoneHidden.value = '';
                     document.querySelectorAll('#zoneGrid .zone-tile.selected').forEach(el => el.classList.remove('selected'));
                 }
+                calculateEstimatedCost();
             }
-            // Trigger refresh when dates change
-            startInput.addEventListener('change', refreshUnavailable);
-            endInput.addEventListener('change', refreshUnavailable);
 
-            // Initial refresh if dates prefilled
+            function calculateEstimatedCost() {
+                const startInput = document.getElementById('startDate');
+                const endInput = document.getElementById('endDate');
+                
+                if (!startInput || !endInput || !startInput.value || !endInput.value) {
+                    return;
+                }
+                
+                const startDate = new Date(startInput.value);
+                const endDate = new Date(endInput.value);
+                
+                if (endDate <= startDate) {
+                    return;
+                }
+                
+                // Chuẩn hóa ngày kết thúc về cuối tháng
+                const normalizedEndDate = new Date(endDate.getFullYear(), endDate.getMonth() + 1, 0);
+                
+                // Tính số tháng thuê
+                const monthsDiff = (normalizedEndDate.getFullYear() - startDate.getFullYear()) * 12 + 
+                                  (normalizedEndDate.getMonth() - startDate.getMonth()) + 1;
+                const monthsCount = Math.max(1, monthsDiff);
+                
+                let totalCost = 0;
+                
+                // Tính theo zone đã chọn - Công thức mới: Đơn giá 1 zone/tháng × Số zone × Số tháng
+                const selectedZoneElements = document.querySelectorAll('.zone-tile.selected');
+                if (selectedZoneElements.length > 0) {
+                    // Lấy giá từ zone đầu tiên đã chọn
+                    // Note: pricePerDay trong DB thực chất là giá/tháng
+                    const firstZoneElement = selectedZoneElements[0];
+                    const firstZonePricePerMonth = parseFloat(firstZoneElement.dataset.pricePerDay || 0);
+                    const zoneCount = selectedZoneElements.length;
+                    totalCost = firstZonePricePerMonth * zoneCount * monthsCount;
+                } else {
+                    // Fallback: tính theo diện tích storage
+                    // Note: pricePerDay trong DB thực chất là giá/tháng
+                    const storagePricePerMonth = /*[[${storage.pricePerDay}]]*/ 0;
+                    totalCost = monthsCount * storagePricePerMonth;
+                }
+                
+                // Hiển thị kết quả
+                const costDisplay = document.getElementById('estimatedCost');
+                if (costDisplay) {
+                    costDisplay.textContent = totalCost.toLocaleString('vi-VN') + ' VNĐ (' + monthsCount + ' tháng)';
+                }
+            }
+
+            // Initial load
             refreshUnavailable();
+            refreshUnavailableZones();
         }
     });
 
@@ -533,10 +767,16 @@
                 endInput.value = tomorrowStr;
             }
         }
-        // Force refresh unavailable immediately on modal open
-        if (window.refreshUnavailable) {
-            window.refreshUnavailable();
-        }
+        // Force refresh unavailable and unavailable zones when modal opens
+        console.log('[Debug] openModal called, calling refresh functions...');
+        
+        setTimeout(() => {
+            console.log('[Debug] Timeout executed, calling refresh functions...');
+            console.log('[Debug] Calling refreshUnavailable...');
+            refreshUnavailable();
+            console.log('[Debug] Calling refreshUnavailableZones...');
+            refreshUnavailableZones();
+        }, 100); // Delay để đảm bảo modal đã render xong
     }
 
     // Hàm đóng modal
@@ -581,30 +821,40 @@
 </script>
 <script>
     function selectZone(el) {
-        // Bỏ chọn các tile khác
-        document.querySelectorAll('#zoneGrid .zone-tile').forEach(function (tile) {
-            tile.classList.remove('selected');
+        // Kiểm tra nếu zone đã được thanh toán (unavailable)
+        if (el.classList.contains('zone-unavailable') || el.style.pointerEvents === 'none') {
+            return; // Không cho phép chọn zone đã được thanh toán
+        }
+        
+        // Toggle selection cho zone hiện tại
+        el.classList.toggle('selected');
+        
+        // Lấy tất cả zone đã chọn
+        var selectedZones = document.querySelectorAll('#zoneGrid .zone-tile.selected');
+        var zoneIds = Array.from(selectedZones).map(function(zone) {
+            return zone.getAttribute('data-zone-id');
         });
-
-        // Đánh dấu tile được chọn
-        el.classList.add('selected');
-
-        // Set hidden input zoneId
-        var zoneId = el.getAttribute('data-zone-id');
-        document.getElementById('zoneIdHidden').value = zoneId;
-    }
-
-    // Nếu cần, tự chọn tile đầu tiên còn trống khi mở modal
-    document.addEventListener('DOMContentLoaded', function () {
-        var current = document.getElementById('zoneIdHidden').value;
-        if (!current) {
-            var firstAvailable = Array.from(document.querySelectorAll('#zoneGrid .zone-tile'))
-                .find(function (tile) { return !tile.classList.contains('opacity-50'); });
-            if (firstAvailable) {
-                selectZone(firstAvailable);
+        
+        // Cập nhật hidden inputs
+        document.getElementById('zoneIdHidden').value = zoneIds.length > 0 ? zoneIds[0] : '';
+        document.getElementById('zoneIdsHidden').value = zoneIds.join(',');
+        
+        // Bỏ chọn unit tiles nếu có zone được chọn
+        if (zoneIds.length > 0) {
+            document.querySelectorAll('#unitGrid .unit-tile.selected').forEach(function (tile) {
+                tile.classList.remove('selected');
+            });
+            // Cập nhật số lượng unit đã chọn về 0
+            if (typeof updateUnitSelectionCount === 'function') {
+                updateUnitSelectionCount();
             }
         }
-    });
+        
+        // Cập nhật chi phí dự kiến
+        if (typeof calculateEstimatedCost === 'function') {
+            calculateEstimatedCost();
+        }
+    };
 </script>
 </body>
 </html>

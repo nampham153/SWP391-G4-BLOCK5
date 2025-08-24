@@ -2,12 +2,10 @@ package com.example.swp.repository;
 
 import com.example.swp.entity.Order;
 import com.example.swp.entity.Storage;
-import org.springframework.cglib.core.Local;
 import org.springframework.data.jpa.repository.JpaRepository;
 import com.example.swp.entity.Customer;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
@@ -111,6 +109,18 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate
     );
+
+    /**
+     * Đơn hết hạn của khách (endDate < today) với trạng thái còn hiệu lực/đã thanh toán.
+     */
+    @Query("""
+        SELECT o FROM Order o
+        WHERE o.customer.id = :customerId
+          AND o.endDate < :today
+          AND o.status IN ('PAID','APPROVED','ACTIVE','CONFIRMED')
+        ORDER BY o.endDate DESC
+    """)
+    List<Order> findExpiredOrdersByCustomer(@Param("customerId") int customerId, @Param("today") LocalDate today);
 
 }
 
