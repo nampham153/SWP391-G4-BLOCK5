@@ -150,10 +150,6 @@
             <label for="regPhone">Số điện thoại:</label>
             <input type="text" id="regPhone" name="phone" placeholder="Nhập số điện thoại" required>
         </div>
-        <div class="input-group">
-            <label for="regIdCitizen">CCCD:</label>
-            <input type="text" id="regIdCitizen" name="id_citizen" placeholder="Nhập số CCCD">
-        </div>
         <button type="submit">Đăng ký</button>
     </form>
     <div id="registerMessage" class="message"></div>
@@ -190,7 +186,6 @@
             email: document.getElementById('regEmail').value.trim(),
             address: document.getElementById('regAddress').value.trim(),
             phone: document.getElementById('regPhone').value.trim(),
-            id_citizen: document.getElementById('regIdCitizen').value.trim()
         };
 
         try {

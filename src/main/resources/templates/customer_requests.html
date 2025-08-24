@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Yêu cầu nhập/xuất hàng</title>
+    <link rel="stylesheet" href="/css/storage-list.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root{
+          --bg:#ffffff;
+          --text:#1f2937;            /* gray-800 */
+          --muted:#64748b;           /* slate-500 */
+          --border:#e2e8f0;          /* slate-200 */
+          --soft:#f8fafc;            /* slate-50 */
+          --primary:#2c3e50;         /* your brand tone */
+          --ring:rgba(44,62,80,.18);
+          --ok:#16a34a;
+          --bad:#dc2626;
+        }
+        *{box-sizing:border-box}
+        body{
+          margin:0; background:var(--bg); color:var(--text);
+          font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+          min-height:100vh; padding:16px;
+        }
+
+        .shell{
+          max-width:1100px; margin:20px auto;
+          display:grid; grid-template-columns:260px 1fr; gap:24px;
+        }
+        @media (max-width: 960px){ .shell{ grid-template-columns:1fr } }
+
+        /* Back button (kept) */
+        .back-button{
+          position:sticky; top:8px; z-index:1000;
+          display:inline-flex; align-items:center; gap:8px;
+          padding:10px 14px; border-radius:999px;
+          background:var(--soft); color:var(--text); text-decoration:none;
+          border:1px solid var(--border);
+          margin:6px 0 10px 0;
+        }
+        .back-button:hover{ box-shadow:0 0 0 4px var(--ring); }
+
+        /* Sidebar */
+        .sidebar{
+          background:#fff; border:1px solid var(--border); border-radius:16px;
+          padding:18px; position:sticky; top:56px; height:fit-content;
+        }
+        .profile-mini{display:flex;gap:12px;align-items:center;margin-bottom:12px; min-width:0;}
+        .profile-mini img{width:42px;height:42px;border-radius:50%;object-fit:cover;border:1px solid var(--border)}
+        .profile-mini .name{font-weight:700;letter-spacing:.2px; max-width:180px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+        .profile-mini .muted{color:var(--muted); max-width:180px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+
+        .tabs{display:flex;flex-direction:column;gap:8px;margin-top:6px}
+        .tab-btn{
+          width:100%; text-align:left; background:#fff; color:var(--text);
+          border:1px solid var(--border); padding:12px 14px; border-radius:10px; cursor:pointer;
+          display:flex; align-items:center; gap:10px; transition: box-shadow .18s ease, border-color .18s ease, background .18s ease;
+        }
+        .tab-btn:hover{border-color:var(--primary); box-shadow:0 0 0 4px var(--ring); background:#fff}
+        .tab-btn.active{border-color:var(--primary); background:linear-gradient(0deg,#fff, #fff) padding-box, linear-gradient(135deg, #cbd5e1, #e2e8f0) border-box;}
+
+        /* Main */
+        .main{ display:flex; flex-direction:column; gap:20px; }
+
+        .hero{
+          background:#fff; border:1px solid var(--border); border-radius:16px;
+          padding:18px; display:flex; align-items:center; gap:16px;
+        }
+        .hero-avatar img{width:76px;height:76px;border-radius:50%;object-fit:cover;border:1px solid var(--border)}
+        .hero .meta .title{font-size:22px;font-weight:800;letter-spacing:.3px}
+        .hero .meta .sub{color:var(--muted);margin-top:4px}
+        .chip{
+          margin-left:auto; display:inline-flex; align-items:center; gap:6px;
+          border:1px solid var(--border); padding:6px 10px; border-radius:999px; background:var(--soft);
+          color:#0f172a;
+        }
+
+        .card{
+          background:#fff; border:1px solid var(--border); border-radius:16px; padding:18px;
+        }
+        .card h3{margin:0 0 12px 0; font-size:16px; letter-spacing:.4px; color:#0f172a; font-weight:700}
+
+        /* Key–value profile grid */
+        .kv{display:grid;grid-template-columns:180px 1fr; gap:10px 16px}
+        .kv .label{color:var(--muted);letter-spacing:.2px}
+        .kv > div:nth-child(2n){
+          min-width:0; overflow-wrap:anywhere; word-break: break-word;
+        }
+
+        /* Forms */
+        .form-grid{display:grid;grid-template-columns:repeat(2,1fr); gap:14px}
+        .form-group{display:flex;flex-direction:column;gap:8px}
+        .form-group.small{grid-column:1/-1}
+        .form-label{color:#0f172a;font-weight:600;font-size:.95rem}
+        .input, .file{
+          background:#fff; border:1px solid var(--border); border-radius:10px; padding:12px 14px; color:var(--text);
+          outline:none; transition: box-shadow .15s ease, border-color .15s ease; width:100%;
+        }
+        .input:focus, .file:focus{border-color:var(--primary); box-shadow:0 0 0 4px var(--ring)}
+        .input[readonly]{background:#f3f4f6; color:#6b7280; cursor:not-allowed}
+
+        .avatar-drop{display:flex;gap:14px;align-items:center;padding:12px;border:1px dashed var(--border);border-radius:12px;background:var(--soft)}
+        .avatar-drop img{width:64px;height:64px;border-radius:12px;object-fit:cover;border:1px solid var(--border)}
+        .counter{color:var(--muted);font-size:.85rem; text-align:right}
+
+        .actions{display:flex;gap:10px;margin-top:6px; flex-wrap:wrap}
+        .btn{
+          border:none; border-radius:10px; padding:11px 14px; font-weight:800; letter-spacing:.3px; cursor:pointer;
+          color:white; background:var(--primary);
+          box-shadow:0 10px 30px -10px rgba(44,62,80,.35);
+        }
+        .btn.secondary{background:#fff;color:var(--text);border:1px solid var(--border)}
+
+        /* tabs content */
+        .tab-pane{display:none}
+        .tab-pane.active{display:block}
+
+        /* success/error banners */
+        .banner{border-radius:12px;padding:10px 12px; margin-top:10px; border:1px solid var(--border); background:var(--soft)}
+        .banner.ok{border-color:#bbf7d0; background:#f0fdf4; color:#065f46}
+        .banner.bad{border-color:#fecaca; background:#fef2f2; color:#7f1d1d}
+
+        @media (max-width: 720px){
+          body{padding:12px}
+          .shell{gap:16px}
+          .form-grid{grid-template-columns:1fr}
+          .kv{grid-template-columns:1fr}
+        }
+        .banner:empty { display: none; }
+    </style>
+</head>
+<body class="bg-light">
+<div class="navbar" style="margin-bottom: 10px;">
+    <div th:replace="taskbar/customer-navbar :: customerNavbar"></div>
+</div>
+<div class="container py-4">
+    <h2 class="mb-3">Danh sách yêu cầu nhập/xuất hàng</h2>
+
+    <div class="mb-3">
+        <a th:href="@{'/customer/' + ${customerId} + '/requests/new'}" class="btn btn-primary">
+            + Tạo yêu cầu mới
+        </a>
+        <a th:href="@{'/customer/' + ${customerId} + '/items'}" class="btn btn-secondary">
+            Xem hàng trong kho
+        </a>
+    </div>
+
+    <table class="table table-hover table-bordered bg-white">
+        <thead class="table-dark">
+        <tr>
+            <th>ID</th>
+            <th>Loại giao dịch</th>
+            <th>Trạng thái</th>
+            <th>Tên hàng</th>
+            <th>Số lượng</th>
+            <th>Ngày yêu cầu</th>
+            <th>Lý do từ chối</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="req : ${requests}">
+            <td th:text="${req.id}"></td>
+            <td>
+                <span th:text="${req.transactionType}"></span>
+            </td>
+            <td>
+                <span th:text="${req.status}"
+                      th:classappend="${req.status=='APPROVED'} ? 'text-success' :
+                                      (${req.status=='REJECTED'} ? 'text-danger' : 'text-warning')"></span>
+            </td>
+            <td th:text="${req.itemName}"></td>
+            <td th:text="${req.quantity}"></td>
+            <td th:text="${#temporals.format(req.transactionDate, 'dd/MM/yyyy HH:mm')}"></td>
+            <td th:text="${req.rejectionReason}"></td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+</body>
+</html>
