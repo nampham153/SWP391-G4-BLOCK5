@@ -8,123 +8,118 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
-<div class="page-wrapper">
+<div class="page-wrapper transactions">
     <!-- Navigation -->
     <div th:replace="taskbar/customer-navbar :: customerNavbar"></div>
 
-    <!-- Hero section -->
-    <div class="hero-section">
+    <!-- Slim hero -->
+    <section class="hero-section">
         <div class="hero-content">
             <h1>Lịch sử giao dịch</h1>
             <p th:text="'Xin chào, ' + ${customer.fullname} + '. Đây là tất cả giao dịch của bạn.'"></p>
         </div>
-    </div>
+    </section>
 
-    <!-- Main Content -->
-    <div class="container">
-        <div class="content-section">
-            <div class="section-header">
-                <div class="header-info">
-                    <h2><i class="fas fa-history"></i> Lịch sử giao dịch</h2>
-                    <p>Theo dõi tất cả các giao dịch của bạn tại đây</p>
-                </div>
-
-                <div class="header-actions" style="display:flex;gap:10px;align-items:center;">
-
-
-                    <!-- Sort by date -->
-                    <form method="get" action="/SWP/customers/my-transactions" style="display:flex;gap:10px;align-items:center;">
-                        <select name="sort" class="filter-select" onchange="this.form.submit()">
-                            <option value="newest" th:selected="${sort == 'newest'}">Mới → Cũ</option>
-                            <option value="oldest" th:selected="${sort == 'oldest'}">Cũ → Mới</option>
-                        </select>
-                        <!-- Quay lại -->
-                        <a href="#" class="btn btn-secondary" onclick="return goBack(event)">
-                            <i class="fas fa-arrow-left"></i> Quay lại
-                        </a>
-
-                    </form>
+    <main class="container">
+        <!-- Toolbar -->
+        <div class="toolbar card">
+            <div class="toolbar-left">
+                <button class="btn btn-ghost btn-sm" onclick="return goBack(event)">
+                    <i class="fa-solid fa-arrow-left" aria-hidden="true"></i><span>Quay lại</span>
+                </button>
+                <div>
+                    <div class="toolbar-title">Lịch sử giao dịch</div>
+                    <div class="toolbar-sub">Theo dõi các thanh toán bạn đã thực hiện</div>
                 </div>
             </div>
 
-            <div class="table-container">
-                <div class="table-wrapper">
-                    <table class="transaction-table">
-                        <thead>
-                        <tr>
-                            <th class="col-id"><i class="fas fa-hashtag"></i> Mã giao dịch</th>
-                            <th class="col-date"><i class="fas fa-calendar-alt"></i> Thời gian</th>
-                            <th class="col-type"><i class="fas fa-tag"></i> Loại giao dịch</th>
-                            <th class="col-storage"><i class="fas fa-warehouse"></i> Kho lưu trữ</th>
-                            <th class="col-amount"><i class="fas fa-money-bill-wave"></i> Số tiền</th>
-                            <th class="col-action"><i class="fas fa-cogs"></i> Thao tác</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr th:each="transaction : ${transactions}">
-                            <td><span class="id-badge" th:text="'#' + ${transaction.id}"></span></td>
-                            <td>
-                                <div class="date-container">
-                                    <span class="date-main" th:text="${#temporals.format(transaction.transactionDate, 'dd/MM/yyyy')}"></span>
-                                    <span class="date-time" th:text="${#temporals.format(transaction.transactionDate, 'HH:mm')}"></span>
-                                </div>
-                            </td>
-                            <td>
-                                <span th:switch="${transaction.type.name()}">
-                                    <span th:case="'PAID'" class="type-badge type-payment">Thanh toán</span>
-                                    <span th:case="*" class="type-badge">Không xác định</span>
-                                </span>
-                            </td>
-                            <td>
-                                <div class="storage-container">
-                                    <span class="storage-name" th:text="${transaction.storage.storagename}"></span>
-                                    <span class="storage-code" th:text="'ID: ' + ${transaction.storage.storageid}"></span>
-                                </div>
-                            </td>
-                            <td>
-                                <span class="amount" th:text="${#numbers.formatDecimal(transaction.amount, 1, 2)} + ' VND'"></span>
-                            </td>
-                            <td>
-                                <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                                    <a th:if="${transaction.order != null}"
-                                       th:href="@{'/SWP/booking/detail'(orderId=${transaction.order.id})}"
-                                       class="btn btn-primary btn-sm">
-                                        <i class="fas fa-eye"></i> Xem đơn
-                                    </a>
-
-                                    <a th:if="${transaction.order != null}"
-                                       th:href="@{'/SWP/booking/contract'(orderId=${transaction.order.id})}"
-                                       class="btn btn-secondary btn-sm">
-                                        <i class="fas fa-file-contract"></i> Hợp đồng
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- Empty State -->
-                <div th:if="${transactions == null or transactions.isEmpty()}" class="empty-state">
-                    <div class="empty-icon"><i class="fas fa-receipt"></i></div>
-                    <h3>Chưa có giao dịch nào</h3>
-                    <p>Hệ thống chưa ghi nhận bất kỳ giao dịch nào của bạn.<br> Các giao dịch sẽ xuất hiện tại đây khi bạn thực hiện.</p>
-                    <a href="/SWP/storages" class="btn btn-primary"><i class="fas fa-plus"></i> Bắt đầu giao dịch</a>
-                </div>
-            </div>
+            <form method="get" action="/SWP/customers/my-transactions" class="controls">
+                <select name="sort" class="select" onchange="this.form.submit()">
+                    <option value="newest" th:selected="${sort == 'newest'}">Mới → Cũ</option>
+                    <option value="oldest" th:selected="${sort == 'oldest'}">Cũ → Mới</option>
+                </select>
+            </form>
         </div>
-    </div>
+
+        <!-- Table -->
+        <section class="card">
+            <div class="table-wrap">
+                <table class="transaction-table">
+                    <thead>
+                    <tr>
+                        <th><i class="fas fa-hashtag"></i> Mã giao dịch</th>
+                        <th><i class="fas fa-calendar-alt"></i> Thời gian</th>
+                        <th><i class="fas fa-tag"></i> Loại</th>
+                        <th><i class="fas fa-warehouse"></i> Kho</th>
+                        <th class="col-amount"><i class="fas fa-money-bill-wave"></i> Số tiền</th>
+                        <th><i class="fas fa-cogs"></i> Thao tác</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="t : ${transactions}">
+                        <td th:attr="data-label='Mã giao dịch'">
+                            <span class="id-badge" th:text="'#' + ${t.id}"></span>
+                        </td>
+                        <td th:attr="data-label='Thời gian'">
+                            <div class="date-container">
+                                <span class="date-main" th:text="${#temporals.format(t.transactionDate, 'dd/MM/yyyy')}"></span>
+                                <span class="date-time" th:text="${#temporals.format(t.transactionDate, 'HH:mm')}"></span>
+                            </div>
+                        </td>
+                        <td th:attr="data-label='Loại'">
+              <span th:switch="${t.type.name()}">
+                <span th:case="'PAID'" class="type-badge type-payment"><i class="fas fa-circle-check"></i> Thanh toán</span>
+                <span th:case="*" class="type-badge">Khác</span>
+              </span>
+                        </td>
+                        <td th:attr="data-label='Kho'">
+                            <div class="storage-container">
+                                <span class="storage-name" th:text="${t.storage.storagename}"></span>
+                                <span class="storage-code" th:text="'ID: ' + ${t.storage.storageid}"></span>
+                            </div>
+                        </td>
+                        <td th:attr="data-label='Số tiền'" class="col-amount">
+                            <span class="amount" th:text="${#numbers.formatDecimal(t.amount, 1, 2)} + ' VND'"></span>
+                        </td>
+                        <td th:attr="data-label='Thao tác'">
+                            <div class="row-actions">
+                                <a th:if="${t.order != null}"
+                                   th:href="@{'/SWP/booking/detail'(orderId=${t.order.id})}"
+                                   class="btn btn-primary btn-sm">
+                                    <i class="fa-solid fa-eye" aria-hidden="true"></i><span>Xem đơn</span>
+                                </a>
+                                <a th:if="${t.order != null}"
+                                   th:href="@{'/SWP/booking/contract'(orderId=${t.order.id})}"
+                                   class="btn btn-secondary btn-sm">
+                                    <i class="fa-solid fa-file-contract" aria-hidden="true"></i><span>Hợp đồng</span>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Empty state -->
+            <div th:if="${transactions == null or transactions.isEmpty()}" class="empty-state">
+                <div class="empty-icon"><i class="fas fa-receipt"></i></div>
+                <h3>Chưa có giao dịch nào</h3>
+                <p>Giao dịch của bạn sẽ xuất hiện tại đây sau khi thanh toán.</p>
+                <a href="/SWP/storages" class="btn btn-primary"><i class="fas fa-plus"></i> Bắt đầu giao dịch</a>
+            </div>
+        </section>
+    </main>
 
     <div th:replace="taskbar/customer-footer :: customerFooter"></div>
 </div>
+
 <script>
     function goBack(e){
         e.preventDefault();
         if (document.referrer && new URL(document.referrer).origin === location.origin) {
             history.back();
         } else {
-            // Fallback: adjust to your actual "My bookings" route
-            location.href = '/SWP/customers/my-orders';
+            location.href = '/SWP/customers/my-orders'; // fallback
         }
     }
 </script>
