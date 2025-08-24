@@ -1150,4 +1150,35 @@ public class BookingController {
 
         return "redirect:/SWP/customers/my-contracts";
     }
+
+    /**
+     * Danh sách đơn hàng đã hết hạn (JSON) cho customer đang đăng nhập
+     */
+    @GetMapping("/customers/expired-orders/data")
+    @ResponseBody
+    public List<Order> getExpiredOrdersForCustomer(HttpSession session) {
+        Customer customer = getLoggedInCustomer(session);
+        if (customer == null) {
+            // Giữ hành vi cũ: trả mảng rỗng khi chưa đăng nhập
+            return java.util.Collections.emptyList();
+        }
+        // Trả trực tiếp danh sách Order như trước
+        return orderService.findExpiredOrdersByCustomer(customer.getId());
+    }
+
+    /**
+     * Trang hiển thị danh sách đơn hết hạn cho customer (cần template customer-expired-orders.html)
+     */
+    @GetMapping("/customers/expired-orders")
+    public String viewExpiredOrdersForCustomer(HttpSession session, Model model, RedirectAttributes redirectAttributes) {
+        Customer customer = getLoggedInCustomer(session);
+        if (customer == null) {
+            redirectAttributes.addFlashAttribute("error", "Bạn cần đăng nhập");
+            return "redirect:/api/login";
+        }
+        List<Order> orders = orderService.findExpiredOrdersByCustomer(customer.getId());
+        model.addAttribute("orders", orders);
+        model.addAttribute("customer", customer);
+        return "customer-expired-orders"; // TODO: tạo template tương ứng
+    }
 }

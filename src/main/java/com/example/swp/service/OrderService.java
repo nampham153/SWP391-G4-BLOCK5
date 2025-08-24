@@ -59,4 +59,7 @@ public interface OrderService {
     
     List<Integer> findBookedZoneIds(int storageId, LocalDate startDate, LocalDate endDate);
 
+    // Đơn hàng đã hết hạn của một customer
+    List<Order> findExpiredOrdersByCustomer(int customerId);
+
 }

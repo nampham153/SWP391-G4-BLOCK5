@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Đơn hàng đã hết hạn</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    .container { max-width: 1200px; margin: 0 auto; padding: 24px; }
+    .page-header { display:flex; justify-content:space-between; align-items:center; margin-bottom: 16px; }
+    .actions { display:flex; gap: 8px; }
+    .btn { display:inline-flex; align-items:center; gap:8px; padding:10px 16px; border:none; border-radius:6px; text-decoration:none; cursor:pointer; font-weight:600; }
+    .btn-primary { background:#007bff; color:#fff; }
+    .btn-secondary { background:#6c757d; color:#fff; }
+    .badge { background:#6c757d; color:#fff; border-radius:999px; padding:2px 8px; font-size: 12px; }
+    table { width:100%; border-collapse: collapse; background: #fff; }
+    th, td { padding: 12px; border-bottom: 1px solid #eee; text-align:left; }
+    th { background:#f7f7f8; font-size: 14px; text-transform: uppercase; letter-spacing:.02em; }
+    .empty { text-align:center; padding: 48px 0; color:#666; }
+    .status { padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight:700; display:inline-block; }
+    .status-paid { background: rgba(40,167,69,.15); color:#2f7a3e; }
+    .status-approved { background: rgba(23,162,184,.15); color:#147888; }
+    .status-active { background: rgba(102,126,234,.15); color:#4456c9; }
+    .status-confirmed { background: rgba(0,0,0,.08); color:#333; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="page-header">
+    <div>
+      <h1 style="margin: 0;">Đơn hàng đã hết hạn</h1>
+      <div style="color:#666; margin-top: 4px;">Danh sách các đơn có ngày kết thúc trước hôm nay</div>
+    </div>
+    <div class="actions">
+      <a href="/SWP/my-bookings" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Đơn hàng của tôi</a>
+      <a href="/SWP/storages" class="btn btn-primary"><i class="fas fa-plus"></i> Đặt kho mới</a>
+    </div>
+  </div>
+
+  <div th:if="${orders == null or #lists.isEmpty(orders)}" class="empty">
+    <i class="fas fa-inbox" style="font-size:48px; color:#ddd;"></i>
+    <p style="margin-top:12px">Hiện không có đơn hàng nào đã hết hạn.</p>
+  </div>
+
+  <div th:if="${orders != null and !#lists.isEmpty(orders)}">
+    <div style="margin-bottom:12px; color:#444;">
+      Tổng số: <span class="badge" th:text="${#lists.size(orders)}"></span>
+    </div>
+    <table>
+      <thead>
+      <tr>
+        <th>#</th>
+        <th>Kho</th>
+        <th>Thời gian thuê</th>
+        <th>Diện tích</th>
+        <th>Tổng tiền</th>
+        <th>Trạng thái</th>
+        <th>Kết thúc</th>
+        <th>Hành động</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="o, idx : ${orders}">
+        <td th:text="${idx.index + 1}"></td>
+        <td th:text="${o.storage != null ? o.storage.storagename : 'N/A'}">Kho</td>
+        <td>
+          <span th:text="${#temporals.format(o.startDate, 'dd/MM/yyyy')}"></span>
+          -
+          <span th:text="${#temporals.format(o.endDate, 'dd/MM/yyyy')}"></span>
+        </td>
+        <td th:text="${o.rentalArea} + ' m²'"></td>
+        <td th:text="${#numbers.formatDecimal(o.totalAmount, 1, 'POINT', 2, 'COMMA')} + ' VNĐ'"></td>
+        <td>
+          <span class="status"
+                th:classappend="${o.status == 'PAID' ? ' status-paid' : (o.status == 'APPROVED' ? ' status-approved' : (o.status == 'ACTIVE' ? ' status-active' : (o.status == 'CONFIRMED' ? ' status-confirmed' : '')))}"
+                th:text="${o.status}">STATUS</span>
+        </td>
+        <td th:text="${#temporals.format(o.endDate, 'dd/MM/yyyy')}"></td>
+        <td>
+          <a th:href="@{'/SWP/booking/detail?orderId=' + ${o.id}}" class="btn btn-secondary" style="padding:6px 10px;">
+            <i class="fas fa-eye"></i> Xem
+          </a>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+</body>
+</html>

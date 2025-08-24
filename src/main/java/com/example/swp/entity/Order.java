@@ -90,6 +90,7 @@ public class Order {
 
 
         @OneToOne(mappedBy = "order", cascade = CascadeType.ALL)
+        @JsonIgnore
         private EContract eContract;
 
         public Order(int id) {

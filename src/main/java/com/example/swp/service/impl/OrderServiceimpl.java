@@ -350,6 +350,10 @@ public class OrderServiceimpl implements OrderService {
         return Math.max(0, totalArea - maxUsed);
     }
     @Override
+    public List<Order> findExpiredOrdersByCustomer(int customerId) {
+        return orderRepository.findExpiredOrdersByCustomer(customerId, LocalDate.now());
+    }
+    @Override
     public Optional<Order> findOrderByCustomerAndStorage(int customerId, int storageId) {
         return orderRepository.findByCustomer_IdAndStorage_Storageid(customerId, storageId);
     }
