@@ -66,12 +66,14 @@
             <div class="error" th:errors="*{sex}"></div>
         </div>
 
-        <!-- inside your <form th:object="${form}"> -->
-        <input type="hidden" th:field="*{roleName}" value="STAFF"/>
-
         <div class="field">
-            <label>Chức vụ</label>
-            <input type="text" value="STAFF" readonly class="readonly"/>
+            <label for="roleName">Chức vụ</label>
+            <select id="roleName" th:field="*{roleName}">
+                <option th:value="${T(com.example.swp.enums.RoleName).STAFF}">STAFF</option>
+                <option th:value="${T(com.example.swp.enums.RoleName).BLOCKED}">BLOCKED</option>
+                <!-- Don't render ADMIN at all -->
+            </select>
+            <div class="error" th:errors="*{roleName}"></div>
         </div>
 
         <div class="actions">

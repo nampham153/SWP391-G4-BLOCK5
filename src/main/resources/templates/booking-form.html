@@ -143,7 +143,7 @@
                                 <div class="info-label">DIỆN TÍCH TỔNG</div>
                                 <div class="info-value" th:text="${storage.area} + ' m²'">0 m²</div>
                             </div>
-                            
+
                             <div class="info-card">
                                 <div class="info-label">NGÀY BẮT ĐẦU</div>
                                 <div class="info-value" th:text="${#temporals.format(startDate, 'dd/MM/yyyy')}">Ngày bắt đầu</div>
@@ -174,6 +174,21 @@
                         </div>
                     </div>
 
+                    <!-- Unit selection (50 m²) -->
+                    <div class="form-section">
+                        <h3 class="section-title"><i class="fas fa-th"></i> Chọn diện tích theo ô 50 m²</h3>
+                        <div class="info-card" style="padding: 12px;">
+                            <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <div class="info-label">Kéo để chọn theo hình chữ nhật hoặc nhấp để cộng dồn</div>
+                                <div class="info-value" style="font-size: 14px;">
+                                    Đã chọn: <span id="bfUnitSelectedCount">0</span> ô (<span id="bfUnitSelectedArea">0</span> m²)
+                                </div>
+                            </div>
+                            <div id="bfUnitGrid" class="grid" style="display:grid; gap:8px;"
+                                 th:attr="data-preselected=${selectedUnitIndices},data-unavailable=${unavailableUnitIndices}"></div>
+                            <small class="form-text">Mỗi ô = 50 m². Khi chọn theo ô, hệ thống sẽ bỏ chọn Zone (nếu có).</small>
+                        </div>
+                    </div>
 
                     <!-- Customer Info -->
                     <div class="section-title" style="display: flex; justify-content: space-between; align-items: center;">
@@ -208,7 +223,7 @@
                                required
                                pattern="[0-9]{10,11}" />
                     </div>
-                    
+
 
                     <div class="submit-section">
                         <button type="submit" class="submit-btn">
@@ -320,7 +335,7 @@
     function updateRentalAreaFromGrid() {
         // Update rental area based on zone selection (no more grid selection)
         const rentalAreaInput = document.getElementById('rentalArea');
-        
+
         if (rentalAreaInput && area > 0) {
             rentalAreaInput.value = area;
         }
@@ -329,15 +344,15 @@
 
     function calculateTotal() {
         const rentalArea = parseFloat(document.getElementById('rentalArea').value) || 0;
-        
+
         // Tính số tháng thuê (chuẩn hóa về cuối tháng)
         const normalizedEndDate = new Date(endDate.getFullYear(), endDate.getMonth() + 1, 0);
-        const monthsDiff = (normalizedEndDate.getFullYear() - startDate.getFullYear()) * 12 + 
+        const monthsDiff = (normalizedEndDate.getFullYear() - startDate.getFullYear()) * 12 +
                           (normalizedEndDate.getMonth() - startDate.getMonth()) + 1;
         const monthsCount = Math.max(1, monthsDiff);
-        
+
         let originalTotal = 0;
-        
+
         // Áp dụng công thức mới: Đơn giá 1 zone/tháng × Số zone × Số tháng
         // Note: pricePerDay trong DB thực chất là giá/tháng
         if (zoneCount > 0) {
@@ -396,11 +411,11 @@
         if (rentalAreaInput && area > 0) {
             rentalAreaInput.value = area;
         }
-        
+
         document.querySelector('form').addEventListener('submit', function(e) {
             // Ensure hidden fields reflect current grid state before submit
             updateRentalAreaFromGrid();
-            
+
             if (!this.checkValidity()) {
                 e.preventDefault();
                 alert('Vui lòng kiểm tra lại thông tin nhập vào.');

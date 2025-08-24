@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thống kê doanh thu - QVL Storage</title>
+    <link rel="stylesheet" th:href="@{/css/revenue-statistics.css}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+<!-- Sidebars -->
+<div sec:authorize="hasAuthority('MANAGER')"
+     th:replace="~{taskbar/manager-taskbar :: managerTaskbar}"></div>
+<div sec:authorize="hasAuthority('STAFF')"
+     th:replace="~{taskbar/staff-taskbar :: staffTaskbar}"></div>
+
+<!-- Derive base: prefer controller-provided ${base}, else infer from URL -->
+<div th:with="b=${base != null ? base : (#strings.startsWith(#httpServletRequest.requestURI, '/admin') ? '/admin' : '/staff')}">
+
+<!-- Main Content -->
+<main class="main-content">
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <button class="sidebar-toggle">
+                <i class="fas fa-bars"></i>
+            </button>
+            <h1>Phân tích doanh thu</h1>
+        </div>
+
+        <div class="header-right">
+            <div class="date-range">
+                <i class="fas fa-calendar-alt"></i>
+                <span id="currentDate"></span>
+            </div>
+<!--            <button class="btn-secondary">-->
+<!--                <i class="fas fa-download"></i>-->
+<!--                Xuất báo cáo-->
+<!--            </button>-->
+        </div>
+    </header>
+
+    <!-- Page Content -->
+    <div class="page-content">
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="page-header-left">
+                <div class="revenue-avatar-large">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="revenue-title">
+                    <h2 class="page-title">Thống kê doanh thu tài chính</h2>
+                    <p class="revenue-subtitle">
+                        <span>Tổng quan doanh thu và trạng thái thanh toán các đơn hàng</span>
+                    </p>
+                </div>
+            </div>
+<!--            <div class="page-actions">-->
+<!--                <button class="btn-secondary">-->
+<!--                    <i class="fas fa-filter"></i>-->
+<!--                    Lọc theo ngày-->
+<!--                </button>-->
+<!--                <button class="btn-primary">-->
+<!--                    <i class="fas fa-chart-pie"></i>-->
+<!--                    Xem biểu đồ-->
+<!--                </button>-->
+<!--            </div>-->
+        </div>
+
+        <!-- Revenue Overview Cards -->
+        <div class="revenue-overview">
+            <div class="overview-header">
+                <h3>
+                    <i class="fas fa-money-bill-wave"></i>
+                    Tổng quan doanh thu
+                </h3>
+            </div>
+
+            <div class="stats-grid">
+                <!-- Total Revenue Card -->
+                <div class="stat-card total-revenue">
+                    <div class="stat-header">
+                        <div class="stat-icon">
+                            <i class="fas fa-coins"></i>
+                        </div>
+                        <div class="stat-trend positive">
+                            <i class="fas fa-arrow-up"></i>
+                            <span>+12.5%</span>
+                        </div>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-number" th:text="${#numbers.formatDecimal(totalRevenueAll, 0, 0, 'COMMA')} + ' VNĐ'">0 VNĐ</div>
+                        <div class="stat-label">Tổng doanh thu dự kiến</div>
+                        <div class="stat-description">Tất cả đơn hàng trừ đơn <strong>ĐÃ TỪ CHỐI</strong></div>
+                    </div>
+
+                    <!-- Total Revenue card -->
+                    <a th:href="@{${b} + '/orders'(statuses='PAID,APPROVED', sort='newest')}" class="stat-link-btn">
+                        Xem chi tiết <i class="fas fa-arrow-right"></i>
+                    </a>
+
+                </div>
+
+                <!-- Paid Revenue Card -->
+                <div class="stat-card paid-revenue">
+                    <div class="stat-header">
+                        <div class="stat-icon">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="stat-trend positive">
+                            <i class="fas fa-arrow-up"></i>
+                            <span>+8.3%</span>
+                        </div>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-number" th:text="${#numbers.formatDecimal(revenuePaid, 0, 0, 'COMMA')} + ' VNĐ'">0 VNĐ</div>
+                        <div class="stat-label">Doanh thu đã thanh toán</div>
+                        <div class="stat-description">Đã nhận thanh toán từ khách hàng (<strong>ĐÃ THANH TOÁN</strong>)</div>
+                    </div>
+                    <div class="stat-footer">
+                        <div class="payment-status">
+                            <div class="status-indicator paid">
+                                <i class="fas fa-circle"></i>
+                                <span>Đã thanh toán</span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Paid Revenue card -->
+                    <a th:href="@{${b} + '/orders'(status='PAID')}" class="stat-link-btn">
+                        Xem chi tiết <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+
+                <!-- Outstanding Revenue Card -->
+                <div class="stat-card outstanding-revenue">
+                    <div class="stat-header">
+                        <div class="stat-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="stat-trend neutral">
+                            <i class="fas fa-minus"></i>
+                            <span>0%</span>
+                        </div>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-number" th:text="${#numbers.formatDecimal(revenueApproved, 0, 0, 'COMMA')} + ' VNĐ'">0 VNĐ</div>
+                        <div class="stat-label">Doanh thu chờ thanh toán</div>
+                        <div class="stat-description">Khách hàng chưa thanh toán (<strong>ĐƯỢC DUYỆT</strong>)</div>
+                    </div>
+                    <div class="stat-footer">
+                        <div class="payment-status">
+                            <div class="status-indicator pending">
+                                <i class="fas fa-circle"></i>
+                                <span>Chưa thanh toán</span>
+                            </div>
+                        </div>
+                    </div>
+                    <a th:href="@{${b} + '/orders'(status='APPROVED')}" class="stat-link-btn">
+                        Xem chi tiết <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Revenue Breakdown -->
+        <div class="revenue-breakdown">
+            <div class="card">
+                <div class="card-header">
+                    <h3>
+                        <i class="fas fa-chart-bar"></i>
+                        Phân tích chi tiết doanh thu
+                    </h3>
+<!--                    <div class="card-actions">-->
+<!--                        <button class="btn-secondary">-->
+<!--                            <i class="fas fa-calendar"></i>-->
+<!--                            Tháng này-->
+<!--                        </button>-->
+<!--                        <button class="btn-secondary">-->
+<!--                            <i class="fas fa-download"></i>-->
+<!--                            Xuất dữ liệu-->
+<!--                        </button>-->
+<!--                    </div>-->
+                </div>
+
+                <div class="card-content">
+                    <div class="breakdown-grid">
+                        <div class="breakdown-item">
+                            <div class="breakdown-header">
+                                <h4>Phân bố trạng thái thanh toán</h4>
+                            </div>
+                            <div class="breakdown-chart">
+                                <div class="chart-bar">
+                                    <div class="bar-label">Đơn đã thanh toán</div>
+                                    <div class="bar-container">
+                                        <div class="bar-fill paid" th:style="'width:' + ${percentPaid} + '%;'"></div>
+                                        <span class="bar-value" th:text="${#numbers.formatDecimal(percentPaid,1,1)} + '%'">0%</span>
+                                    </div>
+                                </div>
+                                <div class="chart-bar">
+                                    <div class="bar-label">Đơn được duyệt</div>
+                                    <div class="bar-container">
+                                        <div class="bar-fill approved" th:style="'width:' + ${percentApproved} + '%;'"></div>
+                                        <span class="bar-value" th:text="${#numbers.formatDecimal(percentApproved,1,1)} + '%'">0%</span>
+                                    </div>
+                                </div>
+                                <div class="chart-bar">
+                                    <div class="bar-label">Đơn bị hủy</div>
+                                    <div class="bar-container">
+                                        <div class="bar-fill canceled" th:style="'width:' + ${percentRejected} + '%;'"></div>
+                                        <span class="bar-value" th:text="${#numbers.formatDecimal(percentRejected,1,1)} + '%'">0%</span>
+                                    </div>
+                                </div>
+                                <div class="chart-bar">
+                                    <div class="bar-label">Trạng thái khác</div>
+                                    <div class="bar-container">
+                                        <div class="bar-fill other" th:style="'width:' + ${percentOther} + '%;'"></div>
+                                        <span class="bar-value" th:text="${#numbers.formatDecimal(percentOther,1,1)} + '%'">0%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+<!--                        <div class="breakdown-item">-->
+<!--                            <div class="breakdown-header">-->
+<!--                                <h4>Nhận định doanh thu</h4>-->
+<!--                            </div>-->
+<!--                            <div class="insights-list">-->
+<!--                                <div class="insight-item">-->
+<!--                                    <div class="insight-icon success">-->
+<!--                                        <i class="fas fa-arrow-up"></i>-->
+<!--                                    </div>-->
+<!--                                    <div class="insight-content">-->
+<!--                                        <h5>Tăng trưởng doanh thu</h5>-->
+<!--                                        <p>Tăng 12.5% so với tháng trước</p>-->
+<!--                                    </div>-->
+<!--                                </div>-->
+<!--                                <div class="insight-item">-->
+<!--                                    <div class="insight-icon warning">-->
+<!--                                        <i class="fas fa-exclamation-triangle"></i>-->
+<!--                                    </div>-->
+<!--                                    <div class="insight-content">-->
+<!--                                        <h5>Khoản phải thu</h5>-->
+<!--                                        <p>Theo dõi các khoản khách chưa thanh toán để đảm bảo dòng tiền</p>-->
+<!--                                    </div>-->
+<!--                                </div>-->
+<!--                                <div class="insight-item">-->
+<!--                                    <div class="insight-icon info">-->
+<!--                                        <i class="fas fa-info-circle"></i>-->
+<!--                                    </div>-->
+<!--                                    <div class="insight-content">-->
+<!--                                        <h5>Hiệu quả thanh toán</h5>-->
+<!--                                        <p>Thời gian xử lý thanh toán trung bình: 2.3 ngày</p>-->
+<!--                                    </div>-->
+<!--                                </div>-->
+<!--                            </div>-->
+<!--                        </div>-->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+<!--        <div class="quick-actions">-->
+<!--            <div class="actions-header">-->
+<!--                <h3>-->
+<!--                    <i class="fas fa-bolt"></i>-->
+<!--                    Tác vụ nhanh-->
+<!--                </h3>-->
+<!--            </div>-->
+<!--            <div class="actions-grid">-->
+<!--                <a href="/SWP/orders" class="action-card primary">-->
+<!--                    <div class="action-icon">-->
+<!--                        <i class="fas fa-list-alt"></i>-->
+<!--                    </div>-->
+<!--                    <div class="action-content">-->
+<!--                        <h4>Xem chi tiết đơn hàng</h4>-->
+<!--                        <p>Xem danh sách đơn hàng và trạng thái thanh toán</p>-->
+<!--                    </div>-->
+<!--                    <div class="action-arrow">-->
+<!--                        <i class="fas fa-arrow-right"></i>-->
+<!--                    </div>-->
+<!--                </a>-->
+
+<!--                <a href="#" class="action-card secondary">-->
+<!--                    <div class="action-icon">-->
+<!--                        <i class="fas fa-file-invoice-dollar"></i>-->
+<!--                    </div>-->
+<!--                    <div class="action-content">-->
+<!--                        <h4>Tạo hóa đơn</h4>-->
+<!--                        <p>Tạo hóa đơn cho các đơn chưa thanh toán</p>-->
+<!--                    </div>-->
+<!--                    <div class="action-arrow">-->
+<!--                        <i class="fas fa-arrow-right"></i>-->
+<!--                    </div>-->
+<!--                </a>-->
+
+<!--                <a href="#" class="action-card accent">-->
+<!--                    <div class="action-icon">-->
+<!--                        <i class="fas fa-chart-pie"></i>-->
+<!--                    </div>-->
+<!--                    <div class="action-content">-->
+<!--                        <h4>Phân tích nâng cao</h4>-->
+<!--                        <p>Phân tích và dự báo doanh thu chi tiết</p>-->
+<!--                    </div>-->
+<!--                    <div class="action-arrow">-->
+<!--                        <i class="fas fa-arrow-right"></i>-->
+<!--                    </div>-->
+<!--                </a>-->
+
+<!--                <a href="#" class="action-card info">-->
+<!--                    <div class="action-icon">-->
+<!--                        <i class="fas fa-bell"></i>-->
+<!--                    </div>-->
+<!--                    <div class="action-content">-->
+<!--                        <h4>Nhắc thanh toán</h4>-->
+<!--                        <p>Gửi email nhắc nhở thanh toán tự động</p>-->
+<!--                    </div>-->
+<!--                    <div class="action-arrow">-->
+<!--                        <i class="fas fa-arrow-right"></i>-->
+<!--                    </div>-->
+<!--                </a>-->
+<!--            </div>-->
+        </div>
+
+
+
+</main>
+
+<script>
+    // Sidebar toggle for mobile
+    document.querySelector('.sidebar-toggle').addEventListener('click', function() {
+        document.querySelector('.sidebar').classList.toggle('open');
+    });
+
+    // Set current date
+    document.getElementById('currentDate').textContent = new Date().toLocaleDateString('vi-VN', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
+
+
+    // Animate stat cards on load
+    function animateStatCards() {
+        const statCards = document.querySelectorAll('.stat-card');
+        statCards.forEach((card, index) => {
+            setTimeout(() => {
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+            }, index * 200);
+        });
+    }
+
+    // Auto-refresh data every 30 seconds
+    function autoRefresh() {
+        setInterval(() => {
+            // In a real application, this would fetch new data
+            console.log('Đang làm mới dữ liệu doanh thu...');
+
+            // Add refresh animation
+            const refreshBtn = document.querySelector('.fa-sync-alt');
+            if(refreshBtn) {
+                refreshBtn.style.animation = 'spin 1s linear';
+                setTimeout(() => {
+                    refreshBtn.style.animation = '';
+                }, 1000);
+            }
+        }, 30000);
+    }
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        animateStatCards();
+        autoRefresh();
+    });
+
+    // Add spin animation for refresh button
+    const style = document.createElement('style');
+    style.textContent = `
+            @keyframes spin {
+                from { transform: rotate(0deg); }
+                to { transform: rotate(360deg); }
+            }
+        `;
+    document.head.appendChild(style);
+</script>
+
+</body>
+
+</html>

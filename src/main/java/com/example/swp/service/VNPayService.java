@@ -9,11 +9,11 @@ import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 
 public interface VNPayService {
-    public String createVNPayUrl(HttpServletRequest req, long amount, int orderId) throws UnsupportedEncodingException;
+    String createVNPayUrl(HttpServletRequest req, long amount, int orderId);
 
 //    public String createVnpayUrl(String orderId, double amount, String returnUrl);
 
-    public static String hmacSHA512(String key, String data) {
+     static String hmacSHA512(String key, String data) {
         try {
             Mac hmac512 = Mac.getInstance("HmacSHA512");
             SecretKeySpec secretKeySpec = new SecretKeySpec(key.getBytes(), "HmacSHA512");

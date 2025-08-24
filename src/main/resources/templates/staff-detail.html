@@ -78,22 +78,30 @@
         <h2 class="section-title">
             <i class="fas fa-user-shield"></i> Hành động
         </h2>
-        <div>
+        <div class="action-row">
+            <!-- Lock/Unlock -->
             <form th:action="@{'/admin/staffs/' + ${staff.staffid} + '/toggle-block'}" method="post"
                   th:onsubmit="return confirm('Bạn có chắc chắn muốn ' + ( (${#strings.toUpperCase(staff.roleName)} == 'BLOCKED') ? 'mở khóa' : 'khóa') + ' tài khoản nhân viên này?')">
                 <input type="hidden" name="_csrf" th:value="${_csrf?.token}"/>
-                <button type="submit" class="btn-action btn-danger"
-                        th:text="${#strings.toUpperCase(staff.roleName)} == 'BLOCKED' ? 'Mở khóa tài khoản' : 'Khóa tài khoản'">
-                    Khóa tài khoản
-                </button>
                 <input type="hidden" name="from" value="detail">
+                <button type="submit" class="btn-action btn-warning">
+                    <i class="fas"
+                       th:classappend="${#strings.toUpperCase(staff.roleName)} == 'BLOCKED' ? ' fa-lock-open' : ' fa-lock'"></i>
+                    <span th:text="${#strings.toUpperCase(staff.roleName)} == 'BLOCKED' ? 'Mở khóa tài khoản' : 'Khóa tài khoản'">
+        Khóa tài khoản
+      </span>
+                </button>
             </form>
 
+            <!-- Delete -->
             <form th:action="@{'/admin/staffs/' + ${staff.staffid} + '/delete'}"
                   method="post"
                   onsubmit="return confirm('Xoá nhân viên này? Hành động không thể hoàn tác!');">
                 <input type="hidden" name="_csrf" th:value="${_csrf?.token}"/>
-                <button type="submit" class="btn" style="background:#dc2626;">Xoá</button>
+                <button type="submit" class="btn-action btn-danger">
+                    <i class="fas fa-trash"></i>
+                    <span>Xoá nhân viên</span>
+                </button>
             </form>
         </div>
     </section>

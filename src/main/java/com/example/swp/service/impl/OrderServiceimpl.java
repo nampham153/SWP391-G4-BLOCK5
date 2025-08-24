@@ -156,12 +156,18 @@ public class OrderServiceimpl implements OrderService {
 
     @Override
     public double getTotalRevenueAll() {
-        return orderRepository.findAll()
-                .stream()
-                .filter(order -> !"REJECTED".equalsIgnoreCase(order.getStatus()))
+        return orderRepository.findAll().stream()
+                .filter(o -> {
+                    String s = o.getStatus();
+                    return s != null && (
+                            "PAID".equalsIgnoreCase(s) ||
+                                    "APPROVED".equalsIgnoreCase(s)
+                    );
+                })
                 .mapToDouble(Order::getTotalAmount)
                 .sum();
     }
+
 
     @Override
     public double getRevenuePaid() {
@@ -199,52 +205,44 @@ public class OrderServiceimpl implements OrderService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy Order với ID: " + orderId));
 
-        long overlap = orderRepository.countOverlapOrders(
-                order.getStorage().getStorageid(),
-                order.getStartDate(),
-                order.getEndDate()
-        );
+        // Idempotent: if already PAID, do nothing
+        if ("PAID".equalsIgnoreCase(order.getStatus())) return;
 
-        if (overlap > 1) {
-            throw new RuntimeException("Kho đã có người khác đặt trong khoảng thời gian này. Không thể thanh toán đơn hàng này.");
+        if (!"APPROVED".equalsIgnoreCase(order.getStatus())) {
+            throw new IllegalStateException("Trạng thái không hợp lệ để thanh toán: " + order.getStatus());
         }
 
-        orderRepository.updateOrderStatusToPaid(orderId);
-        Storage storage = order.getStorage();
-        // Trừ diện tích đã thuê khỏi tổng diện tích kho (không để âm)
-        double rentedArea = order.getRentalArea() > 0 ? order.getRentalArea() : 0.0;
-        double newArea = Math.max(0.0, storage.getArea() - rentedArea);
-        storage.setArea(newArea);
-        // Nếu diện tích còn lại = 0 thì đánh dấu kho đã thuê hết
-        if (newArea == 0.0) {
-            storage.setStatus(false); // đã thuê hết
-        } else {
-            storage.setStatus(true);  // vẫn còn trống
+        // Flip status
+        order.setStatus("PAID");
+        orderRepository.save(order);
+
+        // Award points ONCE
+        Customer customer = order.getCustomer();
+        if (customer != null) {
+            customer.setPoints(customer.getPoints() + 5);
+            customerRepository.save(customer);
         }
-        storageReponsitory.save(storage); // lưu lại thay đổi
 
-        // Tạo StorageTransaction khi đơn hàng được đánh dấu là PAID
-        StorageTransaction transaction = new StorageTransaction();
-        transaction.setType(TransactionType.PAID);
-        transaction.setTransactionDate(LocalDateTime.now()); // sửa thành LocalDateTime.now()
-        transaction.setAmount(order.getTotalAmount());
-        transaction.setStorage(order.getStorage());
-        transaction.setCustomer(order.getCustomer());
-        transaction.setOrder(order); // Liên kết đến order đầy đủ hơn
+        // Record transaction
+        StorageTransaction tx = new StorageTransaction();
+        tx.setType(TransactionType.PAID);
+        tx.setTransactionDate(LocalDateTime.now());
+        tx.setAmount(order.getTotalAmount());
+        tx.setStorage(order.getStorage());
+        tx.setCustomer(order.getCustomer());
+        tx.setOrder(order);
+        storageTransactionService.save(tx);
 
-        storageTransactionService.save(transaction);
-
-        // ---------- GHI LOG HOẠT ĐỘNG ----------
+        // Log
         activityLogService.logActivity(
                 "Thanh toán đơn hàng",
                 "Khách hàng " + order.getCustomer().getFullname() + " đã thanh toán đơn hàng #" + order.getId(),
-                order.getCustomer(),
-                order,
-                transaction,
-                null, null, null
+                order.getCustomer(), order, tx, null, null, null
         );
+
+        // Optional: refresh computed status (doesn't change total area)
         storageService.updateStatusBasedOnAvailability(
-                storage.getStorageid(),
+                order.getStorage().getStorageid(),
                 order.getStartDate(),
                 order.getEndDate()
         );

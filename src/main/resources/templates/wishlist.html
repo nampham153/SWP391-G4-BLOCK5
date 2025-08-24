@@ -443,6 +443,60 @@
             }
         }
         /*]]>*/
+        /* Back / footer actions */
+        .footer-actions{
+            display:flex;
+            justify-content:center;
+            margin: 24px 0 8px;
+        }
+
+        /* Secondary button (needed on this page) */
+        .btn-secondary{
+            background: var(--gray-700);
+            color: #fff;
+            border: none;
+        }
+        .btn-secondary:hover{
+            background: var(--gray-800);
+            color:#fff;
+            transform: translateY(-2px);
+        }
+
+        /* Make actions row breathe a bit */
+        .card-actions{
+            display:flex;
+            gap: .5rem;
+            justify-content: space-between; /* detail on left, delete on right */
+            align-items:center;
+            flex-wrap:wrap;
+        }
+        /* Back / footer actions */
+        .footer-actions{
+            display:flex;
+            justify-content:center;
+            margin: 24px 0 8px;
+        }
+
+        /* Secondary button (needed on this page) */
+        .btn-secondary{
+            background: var(--gray-700);
+            color: #fff;
+            border: none;
+        }
+        .btn-secondary:hover{
+            background: var(--gray-800);
+            color:#fff;
+            transform: translateY(-2px);
+        }
+
+        /* Make actions row breathe a bit */
+        .card-actions{
+            display:flex;
+            gap: .5rem;
+            justify-content: space-between; /* detail on left, delete on right */
+            align-items:center;
+            flex-wrap:wrap;
+        }
     </style>
 </head>
 <body>
@@ -461,7 +515,13 @@
         </div>
     </div>
 </div>
-
+<div class="footer-actions">
+    <a href="/SWP/booking/my"
+       class="btn btn-secondary"
+       onclick="if (history.length > 1) { history.back(); return false; }">
+        ← Quay lại đơn hàng của tôi
+    </a>
+</div>
 <!-- Toast Notification -->
 <div id="toast" class="toast"></div>
 
@@ -531,28 +591,34 @@
         });
 
         return `
-            <div class="wishlist-card" data-storage-id="${storage.storageid}">
-                <div class="storage-header">
-                    <div class="storage-name">${storage.storagename || 'Tên kho không xác định'}</div>
-                    <div class="${storage.status ? 'storage-status status-available' : 'storage-status status-rented'}">
-                        ${storage.status ? '✅ Còn trống' : '❌ Đang thuê'}
-                    </div>
-                </div>
-                <div class="storage-details">
-                    <div class="storage-address">${storage.city || 'Địa chỉ chưa cập nhật'}</div>
-                    ${storage.pricePerDay ?
-            `<div class="storage-price">${storage.pricePerDay.toLocaleString('vi-VN')} VNĐ/ngày</div>` :
-            '<div class="storage-price">Giá liên hệ</div>'
-        }
-                    <div class="wishlist-date">Đã thêm: ${addedDate}</div>
-                </div>
-                <div class="card-actions">
-                    <a href="/SWP/storages/${storage.storageid}" class="btn btn-secondary">
-                        Chi tiết
-                    </a>
+        <div class="wishlist-card" data-storage-id="${storage.storageid}">
+            <div class="storage-header">
+                <div class="storage-name">${storage.storagename || 'Tên kho không xác định'}</div>
+                <div class="${storage.status ? 'storage-status status-available' : 'storage-status status-rented'}">
+                    ${storage.status ? '✅ Còn trống' : '❌ Đang thuê'}
                 </div>
             </div>
-        `;
+            <div class="storage-details">
+                <div class="storage-address">${storage.city || 'Địa chỉ chưa cập nhật'}</div>
+                ${storage.pricePerDay
+            ? `<div class="storage-price">${storage.pricePerDay.toLocaleString('vi-VN')} VNĐ/ngày</div>`
+            : '<div class="storage-price">Giá liên hệ</div>'
+        }
+                <div class="wishlist-date">Đã thêm: ${addedDate}</div>
+            </div>
+            <div class="card-actions">
+                <a href="/SWP/storages/${storage.storageid}" class="btn btn-primary">
+                    Chi tiết
+                </a>
+
+                <button type="button"
+                        class="btn btn-danger"
+                        onclick="removeFromWishlist(${storage.storageid})">
+                    Xóa khỏi wishlist
+                </button>
+            </div>
+        </div>
+    `;
     }
 
     function showEmptyState(message = '💝 Wishlist của bạn đang trống', isError = false, redirectUrl = null) {
