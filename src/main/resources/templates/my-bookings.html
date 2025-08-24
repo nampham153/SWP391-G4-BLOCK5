@@ -450,6 +450,23 @@
       // Fallback
       try{ return new Date(iso).toLocaleDateString('vi-VN'); }catch(e){ return iso; }
     }
+    // Chuẩn hóa về ngày cuối tháng theo kiểu YYYY-MM-DD
+    function endOfMonthIso(iso){
+      if(!iso) return '';
+      const parts = iso.split('T')[0].split('-');
+      if(parts.length < 2) return iso;
+      const y = Number(parts[0]);
+      const m = Number(parts[1]);
+      if(!y || !m) return iso;
+      const lastDay = new Date(y, m, 0).getDate();
+      const mm = String(m).padStart(2,'0');
+      const dd = String(lastDay).padStart(2,'0');
+      return `${parts[0]}-${mm}-${dd}`;
+    }
+    function fmtEndOfMonth(iso){
+      const eom = endOfMonthIso(iso);
+      return fmtDate(eom || iso);
+    }
     function statusClass(st){
       const m = {
         'PENDING':'status-pending',
@@ -480,7 +497,7 @@
             </div>
             <div class="info-item">
               <div class="info-label"><i class="fas fa-calendar-alt"></i> Thời gian thuê</div>
-              <div class="info-value">${fmtDate(o.startDate)} - ${fmtDate(o.endDate)}</div>
+              <div class="info-value">${fmtDate(o.startDate)} - ${fmtEndOfMonth(o.endDate)}</div>
             </div>
             <div class="info-item">
               <div class="info-label"><i class="fas fa-expand-arrows-alt"></i> Diện tích</div>
@@ -492,7 +509,7 @@
             </div>
             <div class="info-item">
               <div class="info-label"><i class="fas fa-calendar-check"></i> Ngày kết thúc</div>
-              <div class="info-value">${fmtDate(o.endDate)}</div>
+              <div class="info-value">${fmtEndOfMonth(o.endDate)}</div>
             </div>
           </div>
           <div class="order-actions" style="display:flex; gap:8px; flex-wrap:wrap;">

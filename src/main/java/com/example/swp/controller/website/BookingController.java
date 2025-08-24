@@ -734,6 +734,16 @@ public class BookingController {
         // Thêm attributes vào model
         model.addAttribute("order", order);
         model.addAttribute("customer", customer);
+        // Đồng bộ hiển thị ngày với trang storage detail: chuẩn hóa endDate về ngày cuối tháng
+        try {
+            java.time.LocalDate e = order.getEndDate();
+            if (e != null) {
+                java.time.LocalDate adjustedEnd = e.withDayOfMonth(e.lengthOfMonth());
+                model.addAttribute("adjustedEndDate", adjustedEnd);
+            }
+        } catch (Exception ex) {
+            // noop
+        }
 
         // Lấy danh sách tất cả zone đã chọn từ database hoặc session
         List<Zone> selectedZones = new ArrayList<>();
