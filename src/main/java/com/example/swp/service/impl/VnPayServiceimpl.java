@@ -19,58 +19,54 @@ import java.util.*;
 @RequiredArgsConstructor
 public class VnPayServiceimpl implements VNPayService {
     private final VNPayConfig vnPayConfig;
-    private final String vnp_TmnCode = "V12NTJPS";
-    private final String vnp_HashSecret = "U6QYGRTSYARF6YEHBNLKAXKNADGIUSVN";
-    private final String vnp_PayUrl = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
-
-    public String createVNPayUrl(HttpServletRequest req, long amount, int orderId) throws UnsupportedEncodingException {
+    @Override
+    public String createVNPayUrl(HttpServletRequest req, long amount, int orderId) {
         String vnp_Version = "2.1.0";
         String vnp_Command = "pay";
-        String orderType = "other";
-        String vnp_TxnRef = String.valueOf(System.currentTimeMillis());
-        String vnp_IpAddr = req.getRemoteAddr();
-        String vnp_TmnCode = vnPayConfig.getTmnCode();
+        String orderType   = "other";
 
         Map<String, String> vnp_Params = new HashMap<>();
-        vnp_Params.put("vnp_Version", vnp_Version);
-        vnp_Params.put("vnp_Command", vnp_Command);
-        vnp_Params.put("vnp_TmnCode", vnp_TmnCode);
-        vnp_Params.put("vnp_Amount", String.valueOf(amount * 100));
+        vnp_Params.put("vnp_Version",  vnp_Version);
+        vnp_Params.put("vnp_Command",  vnp_Command);
+        vnp_Params.put("vnp_TmnCode",  vnPayConfig.getTmnCode());
+        vnp_Params.put("vnp_Amount",   String.valueOf(amount * 100)); // cents
         vnp_Params.put("vnp_CurrCode", "VND");
-        vnp_Params.put("vnp_TxnRef", String.valueOf(orderId));
-        vnp_Params.put("vnp_OrderInfo", "Thanh toan don hang:" + orderId);
-        vnp_Params.put("vnp_OrderType", orderType);
-        vnp_Params.put("vnp_Locale", "vn");
-        vnp_Params.put("vnp_ReturnUrl", vnPayConfig.getReturnUrl());
-        vnp_Params.put("vnp_IpAddr", vnp_IpAddr);
+        vnp_Params.put("vnp_TxnRef",   String.valueOf(orderId));
+        vnp_Params.put("vnp_OrderInfo","Thanh toan don hang:" + orderId);
+        vnp_Params.put("vnp_OrderType",orderType);
+        vnp_Params.put("vnp_Locale",   "vn");
+        vnp_Params.put("vnp_ReturnUrl",vnPayConfig.getReturnUrl());
+        vnp_Params.put("vnp_IpAddr",   req.getRemoteAddr());
 
         Calendar cld = Calendar.getInstance(TimeZone.getTimeZone("Etc/GMT+7"));
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
-        String vnp_CreateDate = formatter.format(cld.getTime());
+        String vnp_CreateDate = new java.text.SimpleDateFormat("yyyyMMddHHmmss").format(cld.getTime());
         vnp_Params.put("vnp_CreateDate", vnp_CreateDate);
 
         List<String> fieldNames = new ArrayList<>(vnp_Params.keySet());
         Collections.sort(fieldNames);
-        StringBuilder hashData = new StringBuilder();
-        StringBuilder query = new StringBuilder();
 
-        for (String fieldName : fieldNames) {
+        StringBuilder hashData = new StringBuilder();
+        StringBuilder query    = new StringBuilder();
+
+        for (int i = 0; i < fieldNames.size(); i++) {
+            String fieldName = fieldNames.get(i);
             String value = vnp_Params.get(fieldName);
-            if ((value != null) && (value.length() > 0)) {
-                hashData.append(fieldName).append('=').append(URLEncoder.encode(value, StandardCharsets.US_ASCII.toString()));
-                query.append(fieldName).append('=').append(URLEncoder.encode(value, StandardCharsets.US_ASCII.toString()));
-                if (!fieldName.equals(fieldNames.get(fieldNames.size() - 1))) {
+            if (value != null && !value.isEmpty()) {
+                String enc = java.net.URLEncoder.encode(value, java.nio.charset.StandardCharsets.US_ASCII);
+                hashData.append(fieldName).append('=').append(enc);
+                query.append(fieldName).append('=').append(enc);
+                if (i < fieldNames.size() - 1) {
                     hashData.append('&');
                     query.append('&');
                 }
             }
         }
 
-
-        String secureHash = hmacSHA512(vnPayConfig.getHashSecret(), hashData.toString());
+        String secureHash = VNPayService.hmacSHA512(vnPayConfig.getHashSecret(), hashData.toString());
         query.append("&vnp_SecureHash=").append(secureHash);
-        return vnPayConfig.getPayUrl() + "?" + query.toString();
+        return vnPayConfig.getPayUrl() + "?" + query;
     }
+
 
 //    public String createVnpayUrl(String orderId, double amount, String returnUrl) {
 //        String vnp_Version = "2.1.0";
