@@ -1,37 +1,35 @@
 package com.example.swp.entity;
 
 import jakarta.persistence.*;
+import lombok.*;
 
 import java.time.LocalDate;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
-
-@Setter
-@Getter
-@NoArgsConstructor
-@AllArgsConstructor
 @Entity
+@Table(name = "storage_item")
+@Data @NoArgsConstructor @AllArgsConstructor @Builder
 public class StorageItem {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    private Integer id;
 
-    @Column(columnDefinition = "NVARCHAR(255)")
+    @Column(name = "storage_id")
+    private Integer storageId;
+
+    @Column(name = "zone_id")
+    private Integer zoneId;
+
+    @Column(name = "order_id")
+    private Integer orderId;
+
+    @Column(name = "item_name")
     private String itemName;
 
-    private int quantity;
-    private double volumePerUnit;
+    @Column(name = "volume_per_unit")
+    private Double volumePerUnit;
 
+    private Integer quantity;
+
+    @Column(name = "date_stored")
     private LocalDate dateStored;
-
-    @Column(columnDefinition = "NVARCHAR(255)")
-    private String note;
-
-    @ManyToOne
-    @JoinColumn(name = "order_id")
-    private Order order;
 }
-

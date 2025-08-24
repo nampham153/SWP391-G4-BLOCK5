@@ -121,6 +121,16 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
         ORDER BY o.endDate DESC
     """)
     List<Order> findExpiredOrdersByCustomer(@Param("customerId") int customerId, @Param("today") LocalDate today);
+    @Query("SELECT o FROM Order o " +
+            "WHERE o.customer.id = :customerId " +
+            "AND o.status = 'PAID' " +
+            "AND (o.endDate IS NULL OR o.endDate >= :today)")
+    List<Order> findActivePaidOrders(@Param("customerId") Integer customerId,
+                                     @Param("today") LocalDate today);
+
+
+    @Query("SELECT o FROM Order o WHERE o.id = :id AND o.customer.id = :customerId")
+    Optional<Order> findByIdAndCustomerId(@Param("id") Integer id, @Param("customerId") Integer customerId);
 
 }
 
