@@ -287,3 +287,38 @@ body{
     transition: background .2s ease;
 }
 .btn-danger:hover { background: #c82333; }
+/* Actions row */
+.action-row{
+    display:flex;
+    gap:12px;
+    align-items:center;
+    flex-wrap:wrap;
+    margin-top:8px;
+}
+.action-row form{ margin:0; }
+
+/* Unified button look */
+.btn-action{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    padding:10px 16px;
+    border-radius:10px;
+    border:1px solid transparent;
+    font-weight:600;
+    cursor:pointer;
+    min-width:200px; /* makes both buttons equal in size */
+}
+.btn-action:focus{ outline:2px solid #94a3b8; outline-offset:2px; }
+
+/* Variants */
+.btn-warning{ background:#f59e0b; color:#fff; }
+.btn-danger{ background:#dc2626; color:#fff; }
+
+.btn-warning:hover,
+.btn-danger:hover{ filter:brightness(0.95); }
+
+@media (max-width: 480px){
+    .btn-action{ width:100%; min-width:0; }
+}
