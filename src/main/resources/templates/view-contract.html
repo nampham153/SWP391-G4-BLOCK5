@@ -422,8 +422,8 @@
         <div class="info-item">
           <div class="info-label">Thời gian thuê</div>
           <div class="info-value">
-            <span th:text="${order.startDate}">01/01/2024</span> →
-            <span th:text="${order.endDate}">31/12/2024</span>
+            <span th:text="${#temporals.format(order.startDate, 'dd/MM/yyyy')}">01/01/2024</span> →
+            <span th:text="${adjustedEndDate != null} ? ${#temporals.format(adjustedEndDate, 'dd/MM/yyyy')} : ${#temporals.format(order.endDate, 'dd/MM/yyyy')}">31/12/2024</span>
           </div>
         </div>
 

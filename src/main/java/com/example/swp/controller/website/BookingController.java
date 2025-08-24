@@ -994,6 +994,16 @@ public class BookingController {
         model.addAttribute("order", order);
         model.addAttribute("customer", customer);
         model.addAttribute("contract", contract);
+        // Đồng bộ/validate ngày: chuẩn hóa endDate về ngày cuối tháng để hiển thị nhất quán
+        try {
+            java.time.LocalDate e = order.getEndDate();
+            if (e != null) {
+                java.time.LocalDate adjustedEnd = e.withDayOfMonth(e.lengthOfMonth());
+                model.addAttribute("adjustedEndDate", adjustedEnd);
+            }
+        } catch (Exception ex) {
+            // noop
+        }
 
         return "view-contract";
     }
@@ -1028,6 +1038,21 @@ public class BookingController {
                 return "redirect:/SWP/customers/my-bookings";
             }
 
+            // Validate ngày của đơn trước khi ký
+            java.time.LocalDate today = java.time.LocalDate.now();
+            java.time.LocalDate start = contract.getOrder().getStartDate();
+            java.time.LocalDate end = contract.getOrder().getEndDate();
+
+            if (start != null && end != null && end.isBefore(start)) {
+                redirectAttributes.addFlashAttribute("error", "Ngày kết thúc nhỏ hơn ngày bắt đầu. Vui lòng liên hệ hỗ trợ.");
+                return "redirect:/SWP/booking/contract?orderId=" + contract.getOrder().getId();
+            }
+
+            if (end != null && end.isBefore(today)) {
+                redirectAttributes.addFlashAttribute("error", "Đơn đã hết hạn, không thể ký hợp đồng. Vui lòng đặt lại.");
+                return "redirect:/SWP/customers/my-bookings";
+            }
+
             // Ký hợp đồng
             EContract signedContract = eContractService.signContract(id);
             
@@ -1054,12 +1079,22 @@ public class BookingController {
 
         // Lấy danh sách hợp đồng của khách hàng
         List<EContract> allContracts = eContractService.findByCustomerId(customer.getId());
-        
+
         // Chỉ hiển thị hợp đồng từ các đơn hàng đã thanh toán (PAID) hoặc đã được duyệt (APPROVED)
+        // Và CHƯA hết hạn (order.endDate >= today)
+        java.time.LocalDate today = java.time.LocalDate.now();
         List<EContract> contracts = allContracts.stream()
                 .filter(contract -> {
                     String orderStatus = contract.getOrder().getStatus();
                     return "PAID".equals(orderStatus) || "APPROVED".equals(orderStatus);
+                })
+                .filter(contract -> {
+                    try {
+                        java.time.LocalDate end = contract.getOrder() != null ? contract.getOrder().getEndDate() : null;
+                        return end == null || !end.isBefore(today);
+                    } catch (Exception ex) {
+                        return true; // nếu lỗi đọc ngày, không loại bỏ để tránh mất dữ liệu ngoài ý muốn
+                    }
                 })
                 .collect(java.util.stream.Collectors.toList());
         
