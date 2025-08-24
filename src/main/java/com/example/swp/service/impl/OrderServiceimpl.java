@@ -152,12 +152,18 @@ public class OrderServiceimpl implements OrderService {
 
     @Override
     public double getTotalRevenueAll() {
-        return orderRepository.findAll()
-                .stream()
-                .filter(order -> !"REJECTED".equalsIgnoreCase(order.getStatus()))
+        return orderRepository.findAll().stream()
+                .filter(o -> {
+                    String s = o.getStatus();
+                    return s != null && (
+                            "PAID".equalsIgnoreCase(s) ||
+                                    "APPROVED".equalsIgnoreCase(s)
+                    );
+                })
                 .mapToDouble(Order::getTotalAmount)
                 .sum();
     }
+
 
     @Override
     public double getRevenuePaid() {

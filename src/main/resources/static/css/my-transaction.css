@@ -571,3 +571,18 @@ body {
     justify-content: flex-end;
     gap: 12px;
 }
+.hero-section { padding: 16px 0; }
+.hero-content h1 { font-size: 1.6rem; margin: 0 0 6px; }
+.hero-content p { margin: 0; color: #64748b; }
+
+.container { max-width: 1200px; }
+.content-section { padding: 16px; }
+
+.table-container { margin-top: 10px; }
+.table-wrapper { overflow-x: auto; }
+
+.transaction-table th, .transaction-table td { padding: 10px 12px; }
+.col-action { width: 220px; }
+
+.btn-sm { padding: 6px 10px; font-size: 13px; border-radius: 6px; }
+.filter-select { padding: 8px 10px; border-radius: 8px; border: 1px solid #e5e7eb; }

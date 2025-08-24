@@ -128,7 +128,7 @@
                                 <div class="info-label">DIỆN TÍCH TỔNG</div>
                                 <div class="info-value" th:text="${storage.area} + ' m²'">0 m²</div>
                             </div>
-                            
+
                             <div class="info-card">
                                 <div class="info-label">NGÀY BẮT ĐẦU</div>
                                 <div class="info-value" th:text="${#temporals.format(startDate, 'dd/MM/yyyy')}">Ngày bắt đầu</div>
@@ -208,7 +208,7 @@
                                required
                                pattern="[0-9]{10,11}" />
                     </div>
-                    
+
 
                     <div class="submit-section">
                         <button type="submit" class="submit-btn">
@@ -307,7 +307,7 @@
         const rentalAreaInput = document.getElementById('rentalArea');
         const grid = document.getElementById('bfUnitGrid');
         const indicesInput = document.getElementById('selectedUnitIndices');
-        
+
         if (grid) {
             const selectedTiles = grid.querySelectorAll('.unit-tile.selected');
             const selectedArea = selectedTiles.length * 50; // Each tile = 50m²
@@ -316,7 +316,7 @@
                 const indices = Array.from(selectedTiles).map(t => t.dataset.index).join(',');
                 indicesInput.value = indices;
             }
-            
+
             if (selectedArea > 0) {
                 rentalAreaInput.value = selectedArea;
             } else if (area > 0) {
@@ -391,7 +391,7 @@
                 alert('Vui lòng kiểm tra lại thông tin nhập vào.');
             }
         });
-        
+
         // Build 50 m² grid and reflect preselected tiles from storage detail
         try {
             const UNIT_SIZE = 50;
@@ -403,7 +403,7 @@
             const preIndices = new Set(preIndicesStr.split(',').map(s => s.trim()).filter(Boolean).map(n => parseInt(n, 10)).filter(n => !isNaN(n)));
             const unavailableStr = grid ? (grid.getAttribute('data-unavailable') || '') : '';
             const unavailable = new Set(unavailableStr.split(',').map(s => s.trim()).filter(Boolean).map(n => parseInt(n, 10)).filter(n => !isNaN(n)));
-            
+
             console.log('Grid debug:', {
                 storageArea,
                 totalUnits,
@@ -412,7 +412,7 @@
                 preIndicesStr,
                 preIndicesSize: preIndices.size
             });
-            
+
             if (grid) {
                 if (totalUnits > 0) {
                     const cols = Math.max(1, Math.ceil(Math.sqrt(totalUnits)));
@@ -446,7 +446,7 @@
                     // Show message when no units available
                     grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 20px; color: #666;">Không có ô 50 m² khả dụng cho kho này</div>';
                 }
-                
+
                 // Update header counts according to preselection
                 const count = preIndices.size;
                 const areaSel = count * UNIT_SIZE;
@@ -454,7 +454,7 @@
                 const areaEl = document.getElementById('bfUnitSelectedArea');
                 if (cntEl) cntEl.textContent = String(count);
                 if (areaEl) areaEl.textContent = String(areaSel);
-                
+
                 // Disable interactions when preSelectedArea is set (selection came from previous page)
                 if (preSelectedArea != null) {
                     grid.style.pointerEvents = 'none';
@@ -465,7 +465,7 @@
         } catch (err) {
             console.warn('Unit grid init failed:', err);
         }
-        
+
         // Set initial rental area and calculate total
         updateRentalAreaFromGrid();
     });
