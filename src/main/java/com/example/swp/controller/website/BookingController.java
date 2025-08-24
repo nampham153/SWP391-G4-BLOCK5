@@ -866,10 +866,13 @@ public class BookingController {
             return "redirect:/api/login";
         }
 
-        // Lấy danh sách đơn hàng của khách hàng (loại trừ đơn hàng đã hủy)
+        // Lấy danh sách đơn hàng của khách hàng
+        // Loại trừ: đơn đã hủy và đơn đã hết hạn (endDate trước hôm nay)
         List<Order> allOrders = orderService.findOrdersByCustomer(customer);
+        LocalDate today = LocalDate.now();
         List<Order> orders = allOrders.stream()
                 .filter(order -> !"CANCELLED".equals(order.getStatus()))
+                .filter(order -> order.getEndDate() == null || !order.getEndDate().isBefore(today))
                 .collect(java.util.stream.Collectors.toList());
         
         // Tính tổng giá trị đơn hàng (chỉ tính đơn hàng không bị hủy)

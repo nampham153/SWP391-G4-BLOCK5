@@ -430,26 +430,17 @@ public class OrderServiceimpl implements OrderService {
     }
     
     /**
-     * Kiểm tra xem có overlap theo tháng không
-     * Vì thuê theo tháng, nên cần kiểm tra xem có tháng nào trùng nhau không
+     * Kiểm tra overlap theo ngày (day-level):
+     * Có overlap khi: !(orderEnd < queryStart || orderStart > queryEnd)
+     * Điều này đảm bảo zone được giải phóng ngay sau khi đơn hết hạn.
      */
     private boolean hasMonthOverlap(LocalDate orderStart, LocalDate orderEnd, LocalDate queryStart, LocalDate queryEnd) {
-        // Chuẩn hóa về đầu tháng và cuối tháng
-        LocalDate orderStartMonth = LocalDate.of(orderStart.getYear(), orderStart.getMonth(), 1);
-        LocalDate orderEndMonth = LocalDate.of(orderEnd.getYear(), orderEnd.getMonth(), 1).plusMonths(1).minusDays(1);
-        
-        LocalDate queryStartMonth = LocalDate.of(queryStart.getYear(), queryStart.getMonth(), 1);
-        LocalDate queryEndMonth = LocalDate.of(queryEnd.getYear(), queryEnd.getMonth(), 1).plusMonths(1).minusDays(1);
-        
-        // Kiểm tra overlap theo tháng
-        boolean hasOverlap = !orderEndMonth.isBefore(queryStartMonth) && !orderStartMonth.isAfter(queryEndMonth);
-        
+        boolean hasOverlap = !orderEnd.isBefore(queryStart) && !orderStart.isAfter(queryEnd);
         // Debug log
-        System.out.println("[DEBUG] Month overlap check:");
-        System.out.println("  Order: " + orderStart + " to " + orderEnd + " -> " + orderStartMonth + " to " + orderEndMonth);
-        System.out.println("  Query: " + queryStart + " to " + queryEnd + " -> " + queryStartMonth + " to " + queryEndMonth);
+        System.out.println("[DEBUG] Day overlap check:");
+        System.out.println("  Order: " + orderStart + " to " + orderEnd);
+        System.out.println("  Query: " + queryStart + " to " + queryEnd);
         System.out.println("  Has overlap: " + hasOverlap);
-        
         return hasOverlap;
     }
 

@@ -465,6 +465,8 @@
       const storName = o.storage && o.storage.storagename ? o.storage.storagename : 'N/A';
       const card = document.createElement('div');
       card.className = 'order-card';
+      const storageId = o.storage && (o.storage.storageid || o.storage.id);
+      const rebookHref = storageId ? `/SWP/storages/${storageId}` : '/SWP/storages';
       card.innerHTML = `
         <div class="order-header">
           <div class="order-id"><span>Đơn hàng</span></div>
@@ -493,8 +495,11 @@
               <div class="info-value">${fmtDate(o.endDate)}</div>
             </div>
           </div>
-          <div class="order-actions">
-            <a href="/SWP/booking/detail?orderId=${o.id}" class="btn btn-primary">
+          <div class="order-actions" style="display:flex; gap:8px; flex-wrap:wrap;">
+            <a href="${rebookHref}" class="btn btn-success">
+              <i class="fas fa-rotate-right"></i> Đặt lại
+            </a>
+            <a href="/SWP/booking/detail?orderId=${o.id}" class="btn btn-secondary">
               <i class="fas fa-eye"></i> Xem chi tiết
             </a>
           </div>
