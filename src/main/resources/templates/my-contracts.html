@@ -181,6 +181,37 @@
             margin: 0;
             opacity: 0.9;
         }
+
+        /* Tabs filter */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin: 10px 0 20px 0;
+            flex-wrap: wrap;
+        }
+        .tab-btn {
+            padding: 8px 14px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            cursor: pointer;
+            background: #fff;
+            color: #333;
+        }
+        .tab-btn.active {
+            background: #2c3e50;
+            color: #fff;
+            border-color: #2c3e50;
+        }
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            margin-left: 8px;
+        }
+        .badge-expired { background: rgba(220, 53, 69, 0.15); color: #dc3545; }
+        .badge-active { background: rgba(40, 167, 69, 0.15); color: #28a745; }
+        .muted { color: #777; }
     </style>
 </head>
 <body>
@@ -216,24 +247,28 @@
             </div>
 
             <div class="contracts-container">
+                <!-- Tabs filter -->
+                <div class="tabs" id="contracts-tabs">
+                    <button class="tab-btn" data-filter="all">Tất cả <span class="badge" id="count-all">0</span></button>
+                    <button class="tab-btn" data-filter="active">Còn hiệu lực <span class="badge" id="count-active">0</span></button>
+                    <button class="tab-btn" data-filter="expired">Đã hết hạn <span class="badge" id="count-expired">0</span></button>
+                </div>
+
                 <!-- Thống kê hợp đồng -->
                 <div th:if="${contracts != null and !contracts.empty}" class="summary-stats">
                     <div class="stat-item">
-                        <h3 th:text="${contracts.size()}">0</h3>
+                        <h3 th:text="${contracts.size()}" id="stat-total">0</h3>
                         <p>Tổng hợp đồng</p>
                     </div>
                     <div class="stat-item">
-                        <h3 th:text="${signedCount}">0</h3>
+                        <h3 th:text="${signedCount}" id="stat-signed">0</h3>
                         <p>Đã ký</p>
                     </div>
-<!--                    <div class="stat-item">-->
-<!--                        <h3 th:text="${pendingCount}">0</h3>-->
-<!--                        <p>Chờ ký</p>-->
-<!--                    </div>-->
+                    <!-- Có thể bật lại nếu cần hiển thị chờ ký -->
                 </div>
 
                 <!-- Hiển thị khi có hợp đồng -->
-                <div th:if="${contracts != null and !contracts.empty}">
+                <div th:if="${contracts != null and !contracts.empty}" id="server-contracts">
                     <div th:each="contract : ${contracts}" class="contract-card">
                         <div class="contract-header">
                             <div class="contract-code">
@@ -310,6 +345,9 @@
                     </div>
                 </div>
 
+                <!-- Dynamic list container (AJAX) -->
+                <div id="dynamic-contracts" style="display:none;"></div>
+
                 <!-- Hiển thị khi không có hợp đồng -->
                 <div th:if="${contracts == null or contracts.empty}" class="empty-state">
                     <i class="fas fa-file-contract"></i>
@@ -327,5 +365,128 @@
     <!-- Footer -->
     <div th:replace="taskbar/customer-footer :: customerFooter"></div>
 </div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const tabs = document.querySelectorAll('#contracts-tabs .tab-btn');
+    const dynamicContainer = document.getElementById('dynamic-contracts');
+    const serverContainer = document.getElementById('server-contracts');
+    const countAll = document.getElementById('count-all');
+    const countActive = document.getElementById('count-active');
+    const countExpired = document.getElementById('count-expired');
+    const statTotal = document.getElementById('stat-total');
+    const statSigned = document.getElementById('stat-signed');
+
+    function getParam(name) {
+        const url = new URL(window.location.href);
+        return url.searchParams.get(name);
+    }
+
+    function setActiveTab(filter) {
+        tabs.forEach(t => t.classList.toggle('active', t.dataset.filter === filter));
+    }
+
+    function formatMoney(n) {
+        try { return new Intl.NumberFormat('vi-VN').format(n) + ' VNĐ'; } catch(e) { return n + ' VNĐ'; }
+    }
+
+    function formatDate(d) {
+        if (!d) return '';
+        try { return new Date(d).toLocaleDateString('vi-VN'); } catch(e) { return d; }
+    }
+
+    function renderContracts(list) {
+        // Stats & counters
+        const total = list.length;
+        const signed = list.filter(c => c.status === 'SIGNED').length;
+        const active = list.filter(c => !c.isExpired).length;
+        const expired = list.filter(c => c.isExpired).length;
+        if (countAll) countAll.textContent = total;
+        if (countActive) countActive.textContent = active;
+        if (countExpired) countExpired.textContent = expired;
+        if (statTotal) statTotal.textContent = total;
+        if (statSigned) statSigned.textContent = signed;
+
+        if (list.length === 0) {
+            dynamicContainer.innerHTML = '<div class="empty-state"><i class="fas fa-file-contract"></i><h3>Không có hợp đồng nào</h3><p class="muted">Hãy thử chọn bộ lọc khác hoặc đặt kho mới.</p><a href="/SWP/storages" class="btn btn-primary" style="margin-top: 20px;"><i class="fas fa-warehouse"></i> Khám phá kho</a></div>';
+            return;
+        }
+
+        dynamicContainer.innerHTML = list.map(c => {
+            const isExpired = !!c.isExpired;
+            const statusChip = c.status === 'SIGNED'
+                ? '<span class="status-signed"><i class="fas fa-check-circle"></i> Đã ký</span>'
+                : '<span class="status-pending"><i class="fas fa-clock"></i> Chờ ký</span>';
+            const expiredChip = isExpired ? '<span class="badge badge-expired">Đã hết hạn</span>' : '<span class="badge badge-active">Còn hiệu lực</span>';
+            const orderId = c.order && c.order.id ? c.order.id : '';
+            const signedAt = c.signedAt ? formatDate(c.signedAt) : '';
+            const money = c.totalAmount != null ? formatMoney(c.totalAmount) : '';
+            const storageName = c.storageName || '';
+            const rentalArea = c.rentalArea != null ? (c.rentalArea + ' m²') : '';
+            return `
+                <div class="contract-card">
+                  <div class="contract-header">
+                    <div class="contract-code">
+                      Hợp đồng: ${c.contractCode || ''} ${expiredChip}
+                    </div>
+                    <div class="contract-status">${statusChip}</div>
+                  </div>
+                  <div class="contract-body">
+                    <div class="contract-info">
+                      <div class="info-item">
+                        <div class="info-label"><i class="fas fa-warehouse"></i> Tên kho</div>
+                        <div class="info-value">${storageName}</div>
+                      </div>
+                      <div class="info-item">
+                        <div class="info-label"><i class="fas fa-expand-arrows-alt"></i> Diện tích thuê</div>
+                        <div class="info-value">${rentalArea}</div>
+                      </div>
+                      <div class="info-item">
+                        <div class="info-label"><i class="fas fa-money-bill-wave"></i> Tổng tiền</div>
+                        <div class="info-value amount-highlight">${money}</div>
+                      </div>
+                      <div class="info-item">
+                        <div class="info-label"><i class="fas fa-calendar-check"></i> Ngày ký</div>
+                        <div class="info-value">${signedAt || '<span class="muted">Chưa ký</span>'}</div>
+                      </div>
+                    </div>
+                    <div class="contract-actions">
+                      ${orderId ? `<a href="/SWP/booking/contract?orderId=${orderId}" class="btn btn-primary"><i class=\"fas fa-eye\"></i> Xem hợp đồng</a>` : ''}
+                      ${c.status === 'PENDING' && orderId ? `<a href="/SWP/booking/contract?orderId=${orderId}" class="btn btn-success"><i class=\"fas fa-pen\"></i> Ký hợp đồng</a>` : ''}
+                      ${isExpired ? `<a href="/SWP/storages" class="btn btn-secondary"><i class=\"fas fa-redo\"></i> Đặt lại</a>` : ''}
+                    </div>
+                  </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    async function loadContracts(filter) {
+        setActiveTab(filter);
+        try {
+            const res = await fetch(`/SWP/customers/contracts/data?filter=${encodeURIComponent(filter)}`, { credentials: 'same-origin' });
+            const data = await res.json();
+            // Prefer dynamic rendering if API works
+            if (serverContainer) serverContainer.style.display = 'none';
+            dynamicContainer.style.display = '';
+            renderContracts(Array.isArray(data) ? data : []);
+        } catch (e) {
+            // Fallback to server-rendered content
+            if (serverContainer) serverContainer.style.display = '';
+            dynamicContainer.style.display = 'none';
+        }
+    }
+
+    const initial = (getParam('filter') || 'all').toLowerCase();
+    loadContracts(['all','active','expired'].includes(initial) ? initial : 'all');
+
+    tabs.forEach(btn => btn.addEventListener('click', () => {
+        const f = btn.dataset.filter;
+        const url = new URL(window.location.href);
+        url.searchParams.set('filter', f);
+        window.history.replaceState({}, '', url);
+        loadContracts(f);
+    }));
+});
+</script>
 </body>
 </html>

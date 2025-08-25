@@ -465,11 +465,9 @@
         </form>
 
       </div>
-
-      <div th:if="${contract.status.name() == 'SIGNED'}" class="signed-status">
+      <div th:if="${contract.status.name() == 'SIGNED' and !isExpired}" class="signed-status">
         <p>✅ Hợp đồng đã được ký thành công!</p>
       </div>
-
 
     </div>
   </div>

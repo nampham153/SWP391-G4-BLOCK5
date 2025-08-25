@@ -1005,6 +1005,16 @@ public class BookingController {
             // noop
         }
 
+        // Trạng thái hết hạn: endDate < hôm nay
+        try {
+            java.time.LocalDate today = java.time.LocalDate.now();
+            java.time.LocalDate end = order.getEndDate();
+            boolean isExpired = (end != null) && end.isBefore(today);
+            model.addAttribute("isExpired", isExpired);
+        } catch (Exception ignore) {
+            model.addAttribute("isExpired", false);
+        }
+
         return "view-contract";
     }
 
@@ -1121,6 +1131,104 @@ public class BookingController {
         model.addAttribute("pendingCancellationCount", pendingCancellationCount);
 
         return "my-contracts";
+    }
+
+    /**
+     * API JSON: Danh sách hợp đồng theo filter (all|active|expired)
+     * - active: order.endDate == null hoặc endDate >= today, và order.status in (APPROVED, PAID)
+     * - expired: order.endDate != null và endDate < today, và order.status in (APPROVED, PAID)
+     * - all: không lọc theo ngày, nhưng vẫn giữ điều kiện order.status in (APPROVED, PAID)
+     */
+    @GetMapping("/customers/contracts/data")
+    @ResponseBody
+    public java.util.List<java.util.Map<String, Object>> getContractsData(
+            @RequestParam(name = "filter", defaultValue = "all") String filter,
+            HttpSession session) {
+
+        Customer customer = getLoggedInCustomer(session);
+        if (customer == null) {
+            return java.util.Collections.emptyList();
+        }
+
+        java.time.LocalDate today = java.time.LocalDate.now();
+        java.util.List<com.example.swp.entity.EContract> allContracts = eContractService.findByCustomerId(customer.getId());
+
+        java.util.function.Predicate<com.example.swp.entity.EContract> approvedOrPaid = c -> {
+            try {
+                String st = c.getOrder() != null ? c.getOrder().getStatus() : null;
+                return "PAID".equals(st) || "APPROVED".equals(st);
+            } catch (Exception ex) {
+                return false;
+            }
+        };
+
+        java.util.function.Predicate<com.example.swp.entity.EContract> activePred = c -> {
+            try {
+                java.time.LocalDate end = c.getOrder() != null ? c.getOrder().getEndDate() : null;
+                return end == null || !end.isBefore(today);
+            } catch (Exception ex) {
+                return true;
+            }
+        };
+
+        java.util.function.Predicate<com.example.swp.entity.EContract> expiredPred = c -> {
+            try {
+                java.time.LocalDate end = c.getOrder() != null ? c.getOrder().getEndDate() : null;
+                return end != null && end.isBefore(today);
+            } catch (Exception ex) {
+                return false;
+            }
+        };
+
+        java.util.stream.Stream<com.example.swp.entity.EContract> stream = allContracts.stream()
+                .filter(approvedOrPaid);
+
+        switch (filter.toLowerCase()) {
+            case "active":
+                stream = stream.filter(activePred);
+                break;
+            case "expired":
+                stream = stream.filter(expiredPred);
+                break;
+            case "all":
+            default:
+                // no extra filter
+                break;
+        }
+
+        java.util.List<com.example.swp.entity.EContract> filtered = stream
+                .collect(java.util.stream.Collectors.toList());
+
+        java.util.List<java.util.Map<String, Object>> result = new java.util.ArrayList<>();
+        for (com.example.swp.entity.EContract c : filtered) {
+            java.util.Map<String, Object> m = new java.util.HashMap<>();
+            m.put("id", c.getId());
+            m.put("contractCode", c.getContractCode());
+            m.put("status", c.getStatus() != null ? c.getStatus().name() : null);
+            m.put("createdAt", c.getCreatedAt());
+            m.put("signedAt", c.getSignedAt());
+            m.put("pricePerDay", c.getPricePerDay());
+            m.put("rentalArea", c.getRentalArea());
+            m.put("totalAmount", c.getTotalAmount());
+            m.put("storageName", c.getStorageName());
+
+            java.util.Map<String, Object> orderMap = new java.util.HashMap<>();
+            if (c.getOrder() != null) {
+                orderMap.put("id", c.getOrder().getId());
+                orderMap.put("startDate", c.getOrder().getStartDate());
+                orderMap.put("endDate", c.getOrder().getEndDate());
+                orderMap.put("status", c.getOrder().getStatus());
+            }
+            m.put("order", orderMap);
+
+            java.time.LocalDate end = c.getOrder() != null ? c.getOrder().getEndDate() : null;
+            boolean isExpired = (end != null && end.isBefore(today));
+            m.put("isExpired", isExpired);
+
+            result.add(m);
+        }
+
+        return result;
     }
 
     /**
