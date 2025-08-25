@@ -1136,16 +1136,7 @@
                          Secure storage facility with 24/7 access and climate control.
                      </div>
                  </div>
-                 <div class="detail-field">
-                     <label class="detail-label">Giá/ô 50m²</label>
-                     <div class="detail-value" th:text="${#numbers.formatDecimal(storage.pricePerDay / 50, 0, 0) + ' VNĐ'}">
-                         0 VNĐ
-                     </div>
-                     <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 5px;">
-                         <i class="fas fa-info-circle"></i> 
-                         Khách hàng sẽ trả giá này cho mỗi ô 50m² khi đặt kho
-                     </div>
-                 </div>
+
 
                 <!-- 50m² Grid Section -->
                 <div class="detail-field">
@@ -1176,10 +1167,7 @@
                         <!-- Grid sẽ được tạo bằng JavaScript -->
                     </div>
                     
-                    <div style="font-size: 0.8rem; color: var(--text-secondary); text-align: center; padding: 10px; background: rgba(30, 58, 138, 0.05); border-radius: 6px;">
-                        <i class="fas fa-lightbulb"></i> 
-                        <strong>Lưu ý:</strong> Grid này hiển thị cách khách hàng chọn diện tích khi đặt kho. Mỗi ô đại diện cho 50m² có thể thuê.
-                    </div>
+
                 </div>
 
                 <div class="detail-actions">
@@ -1700,6 +1688,89 @@
              }
          }
      }
+    
+    // Zone Status Toggle Function
+    function toggleZoneStatus(zoneId, currentStatus) {
+        const newStatus = currentStatus === 'available' ? 'maintenance' : 'available';
+        const button = document.querySelector(`[data-zone-id="${zoneId}"]`);
+        
+        if (!button) return;
+        
+        // Show loading state
+        const originalText = button.textContent;
+        button.textContent = 'Đang cập nhật...';
+        button.disabled = true;
+        
+        // Send request to update zone status
+        fetch(`/admin/api/zones/${zoneId}/status`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                status: newStatus
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update button appearance
+                button.setAttribute('data-current-status', newStatus);
+                button.onclick = () => toggleZoneStatus(zoneId, newStatus);
+                
+                // Update button class and text
+                button.className = `zone-status-toggle zone-status status-${newStatus}`;
+                button.textContent = newStatus === 'available' ? 'Còn trống' : 'Bảo trì';
+                button.disabled = false;
+                
+                // Show success notification
+                showNotification('Cập nhật trạng thái zone thành công!', 'success');
+            } else {
+                // Restore original state on error
+                button.textContent = originalText;
+                button.disabled = false;
+                showNotification('Lỗi: ' + (data.message || 'Không thể cập nhật trạng thái'), 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error updating zone status:', error);
+            // Restore original state on error
+            button.textContent = originalText;
+            button.disabled = false;
+            showNotification('Lỗi kết nối. Vui lòng thử lại!', 'error');
+        });
+    }
+    
+    // Show notification function
+    function showNotification(message, type = 'success') {
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: ${type === 'success' ? 'var(--success-color)' : 'var(--danger-color)'};
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+            font-size: 0.9rem;
+            max-width: 300px;
+        `;
+        notification.innerHTML = `
+            <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'}"></i>
+            ${message}
+        `;
+        
+        document.body.appendChild(notification);
+        
+        // Auto remove after 3 seconds
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 3000);
+    }
 </script>
 </body>
 </html>

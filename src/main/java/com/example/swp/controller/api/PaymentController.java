@@ -1,21 +1,21 @@
 package com.example.swp.controller.api;
 
-import com.example.swp.entity.Order;
-import com.example.swp.service.OrderService;
-import com.example.swp.service.impl.OrderServiceimpl;
-import com.example.swp.service.impl.VnPayServiceimpl;
-import jakarta.servlet.http.HttpServletRequest;
-import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
+import java.util.Map;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Map;
+import com.example.swp.entity.Order;
+import com.example.swp.service.OrderService;
+import com.example.swp.service.impl.OrderServiceimpl;
+import com.example.swp.service.impl.VnPayServiceimpl;
+
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 
 @Controller
 @RequiredArgsConstructor
@@ -27,7 +27,7 @@ public class PaymentController {
 
     @GetMapping("/create-payment")
     public ResponseEntity<?> createPayment(HttpServletRequest request,
-                                           @RequestParam("orderId") int orderId) {
+            @RequestParam("orderId") int orderId) {
         try {
             Order order = orderServiceimpl.getOrderById(orderId)
                     .orElseThrow(() -> new IllegalArgumentException("Order không tồn tại"));
@@ -53,15 +53,18 @@ public class PaymentController {
 
     @GetMapping("/payment-return")
     public String handleVnPayReturn(@RequestParam Map<String, String> params, Model model) {
-        String code     = params.getOrDefault("vnp_ResponseCode", "");
-        String txnRef   = params.getOrDefault("vnp_TxnRef", "");
-        String transNo  = params.getOrDefault("vnp_TransactionNo", "");
-        String orderInfo= params.getOrDefault("vnp_OrderInfo", "");
-        String rawAmt   = params.getOrDefault("vnp_Amount", "0");
+        String code = params.getOrDefault("vnp_ResponseCode", "");
+        String txnRef = params.getOrDefault("vnp_TxnRef", "");
+        String transNo = params.getOrDefault("vnp_TransactionNo", "");
+        String orderInfo = params.getOrDefault("vnp_OrderInfo", "");
+        String rawAmt = params.getOrDefault("vnp_Amount", "0");
 
         // VNPay sends amount in "xu" => divide by 100 to show VND
         long amountVnd = 0L;
-        try { amountVnd = Long.parseLong(rawAmt) / 100L; } catch (NumberFormatException ignored) {}
+        try {
+            amountVnd = Long.parseLong(rawAmt) / 100L;
+        } catch (NumberFormatException ignored) {
+        }
 
         boolean success = "00".equals(code);
 
@@ -86,4 +89,3 @@ public class PaymentController {
         return "payment-return";
     }
 }
-

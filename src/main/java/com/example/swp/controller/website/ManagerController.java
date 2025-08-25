@@ -20,8 +20,10 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -166,12 +168,20 @@ public class ManagerController {
 
         // Tạo Map để chứa số lượng ô 50m² cho mỗi storage
         Map<Integer, Integer> gridCountMap = new HashMap<>();
+        // Tạo Map để chứa số lượng zones thực tế cho mỗi storage
+        Map<Integer, Integer> zoneCountMap = new HashMap<>();
+        
         for (Storage storage : storages) {
             // Tính số ô 50m² dựa trên diện tích kho
             int gridCount = (int) Math.floor(storage.getArea() / 50.0);
             gridCountMap.put(storage.getStorageid(), gridCount);
+            
+            // Lấy số zones thực tế từ database
+            int actualZoneCount = zoneService.countZonesByStorageId(storage.getStorageid());
+            zoneCountMap.put(storage.getStorageid(), actualZoneCount);
         }
         model.addAttribute("gridCountMap", gridCountMap);
+        model.addAttribute("zoneCountMap", zoneCountMap);
 
         return "manager-all-storage"; // Tên file HTML tương ứng
     }
@@ -209,6 +219,18 @@ public class ManagerController {
             @RequestParam(value = "image", required = false) MultipartFile file,
             @Valid RedirectAttributes redirectAttributes) {
         try {
+            // Validate storage name length
+            if (storageRequest.getStoragename() != null && storageRequest.getStoragename().length() > 100) {
+                redirectAttributes.addFlashAttribute("message", "Tên kho không được vượt quá 100 ký tự.");
+                return "redirect:/admin/addstorage";
+            }
+            
+            // Validate area divisibility by 50
+            if (storageRequest.getArea() % 50 != 0) {
+                redirectAttributes.addFlashAttribute("message", "Diện tích kho phải chia hết cho 50m².");
+                return "redirect:/admin/addstorage";
+            }
+            
             // Upload ảnh
             if (file != null && !file.isEmpty()) {
                 String imageUrl = cloudinaryService.uploadImage(file);
@@ -476,10 +498,6 @@ public class ManagerController {
         return "manager-inbox";
     }
 
-    @GetMapping("/social-chat")
-    public String socialChat() {
-        return "social-chat";
-    }
 
     @GetMapping("/storages/{id}/add-zone")
     public String showAddZoneForm(@PathVariable int id, Model model, HttpSession session) {
@@ -717,6 +735,57 @@ public class ManagerController {
         }
 
         return "redirect:/admin/manager-dashboard/storages/" + storageId;
+    }
+
+    /**
+     * API endpoint để cập nhật trạng thái zone
+     */
+    @PostMapping("/api/zones/{zoneId}/status")
+    @ResponseBody
+    public Map<String, Object> updateZoneStatus(@PathVariable int zoneId, @RequestBody Map<String, String> request) {
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            String newStatus = request.get("status");
+            
+            // Validate status
+            if (!"available".equals(newStatus) && !"maintenance".equals(newStatus)) {
+                response.put("success", false);
+                response.put("message", "Trạng thái không hợp lệ. Chỉ có thể chuyển đổi giữa 'available' và 'maintenance'");
+                return response;
+            }
+            
+            Optional<Zone> optionalZone = zoneService.getZoneById(zoneId);
+            if (optionalZone.isEmpty()) {
+                response.put("success", false);
+                response.put("message", "Không tìm thấy zone với ID: " + zoneId);
+                return response;
+            }
+            
+            Zone zone = optionalZone.get();
+            
+            // Không cho phép thay đổi trạng thái nếu zone đang được thuê
+            if ("occupied".equals(zone.getStatus())) {
+                response.put("success", false);
+                response.put("message", "Không thể thay đổi trạng thái zone đang được thuê");
+                return response;
+            }
+            
+            // Cập nhật trạng thái
+            zone.setStatus(newStatus);
+            zoneService.updateZone(zone);
+            
+            response.put("success", true);
+            response.put("message", "Cập nhật trạng thái zone thành công");
+            response.put("newStatus", newStatus);
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.put("success", false);
+            response.put("message", "Lỗi server: " + e.getMessage());
+        }
+        
+        return response;
     }
 
     /**

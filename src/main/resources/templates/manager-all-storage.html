@@ -12,6 +12,36 @@
         /* Align icon-text spacing like manager dashboard */
         .sidebar .menu-item a { gap: 0 !important; }
         .sidebar .menu-item i { margin-right: 12px !important; }
+        
+        /* Fixed width and text truncation for storage name column - max ~20 characters */
+        .storage-name-cell {
+            max-width: 140px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            position: relative;
+            padding-left: 8px;
+        }
+        
+        /* Optional: Add tooltip on hover to show full name */
+        .storage-name-cell:hover {
+            cursor: help;
+        }
+        
+        /* Ensure table layout is fixed for consistent column widths */
+        .data-table {
+            table-layout: fixed;
+        }
+        
+        /* Set specific widths for other columns to maintain layout */
+        .data-table th:nth-child(1) { width: 50px; }   /* ID */
+        .data-table th:nth-child(2) { width: 100px; }  /* Image */
+        .data-table th:nth-child(3) { width: 140px; }  /* Storage Name */
+        .data-table th:nth-child(4) { width: 90px; }   /* Area */
+        .data-table th:nth-child(5) { width: 110px; }  /* Price */
+        .data-table th:nth-child(6) { width: 130px; }  /* Zones */
+        .data-table th:nth-child(7) { width: 90px; }   /* Status */
+        .data-table th:nth-child(8) { width: 100px; }  /* Actions */
     </style>
 </head>
 <body>
@@ -39,12 +69,10 @@
                         Quay Lại Dashboard
                     </a>
                 </button>
-                <button class="btn-primary">
-                    <a href="/admin/addstorage" style="color: white; text-decoration: none;">
-                        <i class="fas fa-plus"></i>
-                        Thêm Kho Mới
-                    </a>
-                </button>
+                <a href="/admin/addstorage" class="btn-primary" style="color: white; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-plus"></i>
+                    Thêm Kho Mới
+                </a>
             </div>
         </div>
 
@@ -70,9 +98,9 @@
                 <label for="priceFilter">Giá cả:</label>
                 <select id="priceFilter" class="filter-select">
                     <option value="">Theo giá</option>
-                    <option value="low">Dưới 150.000</option>
-                    <option value="medium">150.000 - 300.000</option>
-                    <option value="high">Hơn 300.000</option>
+                    <option value="low">Dưới 100.000 VNĐ</option>
+                    <option value="medium">100.000 - 1.000.000 VNĐ</option>
+                    <option value="high">Hơn 1.000.000 VNĐ</option>
                 </select>
             </div>
             <button class="btn-primary" type="button" onclick="applyFilters()">
@@ -91,6 +119,8 @@
                     <option value="priceDesc">Giá giảm dần</option>
                     <option value="areaAsc">Diện tích tăng dần</option>
                     <option value="areaDesc">Diện tích giảm dần</option>
+                    <option value="zoneAsc">Số zones tăng dần</option>
+                    <option value="zoneDesc">Số zones giảm dần</option>
                 </select>
             </div>
         </div>
@@ -120,13 +150,16 @@
                     <tr th:each="storage : ${storages}">
                     <td th:text="${storage.storageid}"></td>
                         <td><img th:src="${storage.imUrl} ?: '/images/default-storage.jpg'" class="storage-image" /></td>
-                        <td th:text="${storage.storagename}"></td>
+                        <td class="storage-name-cell" th:text="${storage.storagename}"></td>
                         <td th:text="${storage.area + ' m²'}"></td>
                         <td th:text="${#numbers.formatDecimal(storage.pricePerDay / 50, 0, 0) + ' VNĐ'}"></td>
                         <td>
-                            <span th:text="${gridCountMap[storage.storageid] ?: 0}"></span>
+                            <span class="zone-count" th:text="${zoneCountMap[storage.storageid] ?: 0}"></span>
+                            <span style="color: #64748b; font-size: 0.85em;">
+                                / <span class="grid-count" th:text="${gridCountMap[storage.storageid] ?: 0}"></span>
+                            </span>
                             <i class="fas fa-info-circle" style="color: #3b82f6; margin-left: 5px; cursor: help;" 
-                               title="Số ô 50m² có thể cho thuê trong kho này"></i>
+                               title="Số zones thực tế / Số ô 50m² lý thuyết có thể tạo"></i>
                         </td>
                         <td>
                     <span th:class="${storage.status} ? 'status-badge active' : 'status-badge warning'"
@@ -164,7 +197,7 @@
             <!-- Table Note -->
             <div style="margin-top: 15px; padding: 10px; background: #f8fafc; border-radius: 8px; border-left: 4px solid #3b82f6; font-size: 0.9rem; color: #64748b;">
                 <i class="fas fa-info-circle" style="color: #3b82f6; margin-right: 8px;"></i>
-                <strong>Lưu ý:</strong> Cột "Số khu cho thuê" hiển thị số lượng ô 50m² có thể cho thuê trong mỗi kho. Khách hàng có thể chọn thuê theo từng ô 50m² hoặc theo Zone.
+                <strong>Lưu ý:</strong> Cột "Số khu cho thuê" hiển thị số zones thực tế đã tạo / số ô 50m² lý thuyết có thể tạo. Khách hàng có thể chọn thuê theo từng zone đã được tạo. Sử dụng bộ lọc và sắp xếp để tìm kho phù hợp theo Zone.
             </div>
 
             <!-- Pagination -->
@@ -206,21 +239,26 @@
 
         rows.forEach(row => {
             const statusText = row.querySelector('.status-badge')?.textContent.trim().toLowerCase() || '';
-            const areaValue = parseFloat(row.children[3].textContent.replace(/[^\d.]/g, '')) || 0;
-            const priceValue = parseFloat(row.children[4].textContent.replace(/[^\d.]/g, '')) || 0;
+            const areaText = row.children[3]?.textContent || '';
+            const areaValue = parseFloat(areaText.replace(/[^\d.]/g, '')) || 0;
+            const priceText = row.children[4]?.textContent || '';
+            const priceValue = parseFloat(priceText.replace(/[^\d.,]/g, '').replace(/,/g, '')) || 0;
 
             let show = true;
 
+            // Status filtering
             if (status === 'available' && !statusText.includes('còn trống')) show = false;
             if (status === 'occupied' && !statusText.includes('đã thuê')) show = false;
 
+            // Area filtering
             if (area === 'small' && !(areaValue < 200)) show = false;
             if (area === 'medium' && !(areaValue >= 200 && areaValue <= 800)) show = false;
             if (area === 'large' && !(areaValue > 800)) show = false;
 
-            if (price === 'low' && !(priceValue < 150000)) show = false;
-            if (price === 'medium' && !(priceValue >= 150000 && priceValue <= 300000)) show = false;
-            if (price === 'high' && !(priceValue > 300000)) show = false;
+            // Price filtering - updated to handle VNĐ format correctly
+            if (price === 'low' && !(priceValue < 100000)) show = false;  // Under 100,000 VNĐ
+            if (price === 'medium' && !(priceValue >= 100000 && priceValue <= 1000000)) show = false;  // 100,000-1,000,000 VNĐ
+            if (price === 'high' && !(priceValue > 1000000)) show = false;  // Over 1,000,000 VNĐ
 
             row.style.display = show ? '' : 'none';
             row.dataset.filtered = show ? 'true' : 'false';
@@ -231,16 +269,20 @@
         // Sắp xếp
         if (sort) {
             visibleRows.sort((a, b) => {
-                const areaA = parseFloat(a.children[3].textContent.replace(/[^\d.]/g, '')) || 0;
-                const areaB = parseFloat(b.children[3].textContent.replace(/[^\d.]/g, '')) || 0;
-                const priceA = parseFloat(a.children[4].textContent.replace(/[^\d.]/g, '')) || 0;
-                const priceB = parseFloat(b.children[4].textContent.replace(/[^\d.]/g, '')) || 0;
+                const areaA = parseFloat(a.children[3]?.textContent.replace(/[^\d.]/g, '')) || 0;
+                const areaB = parseFloat(b.children[3]?.textContent.replace(/[^\d.]/g, '')) || 0;
+                const priceA = parseFloat(a.children[4]?.textContent.replace(/[^\d.,]/g, '').replace(/,/g, '')) || 0;
+                const priceB = parseFloat(b.children[4]?.textContent.replace(/[^\d.,]/g, '').replace(/,/g, '')) || 0;
+                const zoneCountA = parseInt(a.children[5]?.querySelector('.zone-count')?.textContent) || 0;
+                const zoneCountB = parseInt(b.children[5]?.querySelector('.zone-count')?.textContent) || 0;
 
                 switch (sort) {
                     case 'priceAsc': return priceA - priceB;
                     case 'priceDesc': return priceB - priceA;
                     case 'areaAsc': return areaA - areaB;
                     case 'areaDesc': return areaB - areaA;
+                    case 'zoneAsc': return zoneCountA - zoneCountB;
+                    case 'zoneDesc': return zoneCountB - zoneCountA;
                     default: return 0;
                 }
             });
