@@ -5,113 +5,441 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chi tiết Issue</title>
     <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            min-height: 100vh;
-            padding: 20px;
+        :root {
+            --primary-color: #2c3e50;
+            --primary-hover: #34495e;
+            --success-color: #34c759;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --gray-50: #f8fafc;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --gray-900: #111827;
+            --border-radius: 8px;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
         }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html, body { 
+            overflow-x: hidden; 
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8fafc;
+            min-height: 100vh;
+            line-height: 1.6;
+            color: var(--gray-800);
+        }
+
         .container {
-            max-width: 650px;
-            margin: 40px auto;
-            background: #fff;
-            border-radius: 18px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.08);
-            padding: 40px 32px 32px 32px;
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2rem;
             position: relative;
         }
+
         .back-btn {
-            position: absolute;
-            top: 18px;
-            left: 24px;
-            background: #f3f4f6;
-            color: #667eea;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 40px;
+            background: #ffffff;
+            color: var(--primary-color);
+            padding: 0.75rem 1.5rem;
+            border: 1px solid var(--gray-200);
+            border-radius: 50px;
+            font-size: 0.95rem;
             font-weight: 600;
             text-decoration: none;
-            transition: background 0.25s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s ease;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--shadow-sm);
         }
+
         .back-btn:hover {
-            background: #e0e7ef;
-            color: #5a67d8;
+            background: var(--primary-color);
+            color: #ffffff;
+            border-color: var(--primary-color);
+            transform: translateY(-1px);
+            text-decoration: none;
+            box-shadow: var(--shadow-md);
         }
+
         h1 {
-            margin-top: 0;
-            font-size: 2.2rem;
-            font-weight: bold;
-            color: #2d3748;
+            margin: 0 0 2rem 0;
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--gray-900);
             text-align: center;
-            margin-bottom: 18px;
         }
+
         .info-list {
-            margin: 32px 0 0 0;
+            margin: 0;
             padding: 0;
             list-style: none;
+            background: #ffffff;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-sm);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
         }
+
         .info-list li {
-            margin-bottom: 18px;
+            margin-bottom: 1.5rem;
             display: flex;
-            gap: 12px;
-            font-size: 1.07rem;
+            gap: 1rem;
+            font-size: 1rem;
+            align-items: flex-start;
+            padding: 1rem;
+            background: var(--gray-50);
+            border-radius: var(--border-radius);
+            border: 1px solid var(--gray-200);
         }
+
+        .info-list li:last-child {
+            margin-bottom: 0;
+        }
+
         .label {
-            min-width: 120px;
-            color: #718096;
+            min-width: 140px;
+            color: var(--gray-700);
             font-weight: 600;
+            flex-shrink: 0;
         }
+
         .value {
-            color: #2d3748;
+            color: var(--gray-800);
             font-weight: 500;
+            flex: 1;
         }
+
         .status-badge {
             display: inline-flex;
             align-items: center;
-            gap: 8px;
-            padding: 6px 15px;
-            border-radius: 18px;
-            font-size: 1.07rem;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 16px;
+            font-size: 0.9rem;
             font-weight: 600;
+            border: 1px solid transparent;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            min-width: 120px;
+            justify-content: center;
         }
-        .status-badge.pending { background: #fef3c7; color: #92400e; }
-        .status-badge.progress { background: #dbeafe; color: #1e40af; }
-        .status-badge.resolved { background: #d1fae5; color: #065f46; }
-        .status-badge.closed { background: #f3f4f6; color: #374151; }
 
-        @media (max-width: 600px) {
-            .container { padding: 20px 5px 10px 5px; }
-            .info-list li { flex-direction: column; gap: 2px; }
-            h1 { font-size: 1.4rem; }
+        .status-badge.pending { background: #fef3c7; color: #92400e; }
+        .status-badge.in-progress { background: #dbeafe; color: #1e40af; }
+        .status-badge.resolved { background: #d1fae5; color: #065f46; }
+        .status-badge.closed { background: var(--gray-100); color: var(--gray-600); }
+
+        .issue-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            padding: 0.75rem 1.5rem;
+            border: 1px solid var(--gray-200);
+            border-radius: var(--border-radius);
+            background: #ffffff;
+            color: var(--gray-700);
+            text-decoration: none;
+            font-size: 0.95rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .action-btn:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+            transform: translateY(-1px);
+            text-decoration: none;
+            box-shadow: var(--shadow-md);
+        }
+
+        .action-btn.primary {
+            background: var(--primary-color);
+            color: #ffffff;
+            border-color: var(--primary-color);
+        }
+
+        .action-btn.primary:hover {
+            background: var(--primary-hover);
+            border-color: var(--primary-hover);
+        }
+
+        @media (max-width: 768px) {
+            .container { 
+                margin: 1rem;
+                padding: 1.5rem;
+            }
+            .info-list li { 
+                flex-direction: column; 
+                gap: 0.5rem; 
+            }
+            .label {
+                min-width: auto;
+            }
+            h1 { 
+                font-size: 1.5rem; 
+            }
+            .issue-actions {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+
+        /* CSS cho navbar */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 70px;
+            background: var(--primary-color);
+            color: white;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Điều chỉnh container để không bị che bởi navbar */
+        .container {
+            margin-top: 90px;
+        }
+
+        /* CSS cho footer */
+        .footer {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 4rem 0 2rem;
+            margin-top: auto;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 3rem;
+            margin-bottom: 2rem;
+        }
+
+        .footer-brand {
+            max-width: 400px;
+        }
+
+        .brand-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .footer-logo {
+            height: 40px;
+            width: auto;
+        }
+
+        .brand-name {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: white;
+            margin: 0;
+        }
+
+        .brand-description {
+            color: rgba(255, 255, 255, 0.8);
+            line-height: 1.6;
+            margin-bottom: 2rem;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .social-link {
+            width: 44px;
+            height: 44px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            color: rgba(255, 255, 255, 0.8);
+            transition: all 0.3s ease;
+        }
+
+        .social-link:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .social-link i {
+            width: 20px;
+            height: 20px;
+        }
+
+        .footer-column h3 {
+            color: white;
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+        }
+
+        .footer-links {
+            list-style: none;
+        }
+
+        .footer-links li {
+            margin-bottom: 0.75rem;
+        }
+
+        .footer-links a {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: white;
+            transform: translateX(4px);
+        }
+
+        .footer-divider {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.2);
+            margin: 2rem 0 1.5rem;
+        }
+
+        .footer-bottom {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .copyright {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.875rem;
+        }
+
+        .footer-bottom-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .footer-bottom-links a {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            font-size: 0.875rem;
+            transition: color 0.3s ease;
+        }
+
+        .footer-bottom-links a:hover {
+            color: white;
+        }
+
+
+
+        @media (max-width: 768px) {
+            .container {
+                margin-top: 80px;
+            }
+
+            .footer-content {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+                text-align: center;
+            }
+
+            .footer-brand {
+                max-width: 100%;
+            }
+
+            .brand-header {
+                justify-content: center;
+            }
+
+            .social-links {
+                justify-content: center;
+            }
+
+            .footer-bottom {
+                flex-direction: column;
+                text-align: center;
+                gap: 1rem;
+            }
         }
     </style>
 </head>
 <body>
-<div class="container">
-    <a th:href="@{/SWP/issues/my-issues}" class="back-btn">&larr; Quay lại</a>
-    <h1>Chi tiết Issue</h1>
-    <ul class="info-list">
-        <li><span class="label">ID:</span> <span class="value" th:text="${issue.id}">15</span></li>
-        <li><span class="label">Chủ đề:</span> <span class="value" th:text="${issue.subject}">Tiêu đề issue</span></li>
-        <li><span class="label">Mô tả:</span> <span class="value" th:text="${issue.description}">Mô tả chi tiết...</span></li>
-        <li>
-            <span class="label">Khách hàng:</span>
-            <span class="value" th:text="${issue.customer != null ? issue.customer.fullname : 'Không có'}">Tên khách hàng</span>
-        </li>
-        <li><span class="label">Staff phụ trách:</span> <span class="value" th:text="${issue.assignedStaff.fullname}">Tên staff</span></li>
-        <li><span class="label">Ngày tạo:</span> <span class="value" th:text="${#dates.format(issue.createdDate, 'dd/MM/yyyy HH:mm')}">27/06/2025 00:56</span></li>
-        <li>
-            <span class="label">Trạng thái:</span>
-            <span class="status-badge" th:classappend="${#strings.toLowerCase(issue.status)}">
-                <span th:switch="${issue.status}">
-                    <span th:case="'Pending'">⏱️ Chờ xử lý</span>
-                    <span th:case="'In_Progress'">🔄 Đang xử lý</span>
-                    <span th:case="'Resolved'">✅ Đã giải quyết</span>
-                    <span th:case="'Closed'">❌ Đã đóng</span>
+    <!-- Navbar -->
+    <div th:replace="taskbar/customer-navbar :: customerNavbar"></div>
+
+    <div class="container">
+        <a th:href="@{/SWP/issues}" class="back-btn">← Quay lại danh sách</a>
+        <h1>Chi tiết Issue</h1>
+        
+        <ul class="info-list">
+            <li><span class="label">ID:</span> <span class="value" th:text="${issue.id}">15</span></li>
+            <li><span class="label">Chủ đề:</span> <span class="value" th:text="${issue.subject}">Tiêu đề issue</span></li>
+            <li><span class="label">Mô tả:</span> <span class="value" th:text="${issue.description}">Mô tả chi tiết...</span></li>
+            <li>
+                <span class="label">Khách hàng:</span>
+                <span class="value" th:text="${issue.customer != null ? issue.customer.fullname : 'Không có'}">Tên khách hàng</span>
+            </li>
+            <li>
+                <span class="label">Staff phụ trách:</span> 
+                <span class="value" th:text="${issue.assignedStaff != null ? issue.assignedStaff.fullname : 'Chưa phân công'}">Tên staff</span>
+            </li>
+            <li><span class="label">Ngày tạo:</span> <span class="value" th:text="${#dates.format(issue.createdDate, 'dd/MM/yyyy HH:mm')}">27/06/2025 00:56</span></li>
+            <li>
+                <span class="label">Trạng thái:</span>
+                <span class="status-badge" th:classappend="${issue.status != null ? #strings.toLowerCase(issue.status.toString()) : 'null'}">
+                    <span th:switch="${issue.status.toString()}">
+                        <span th:case="'Pending'">⏱️ Chờ xử lý</span>
+                        <span th:case="'In_Progress'">🔄 Đang xử lý</span>
+                        <span th:case="'Resolved'">✅ Đã giải quyết</span>
+                        <span th:case="'Closed'">❌ Đã đóng</span>
+                    </span>
                 </span>
-            </span>
-        </li>
-    </ul>
-</div>
+            </li>
+        </ul>
+
+        <div class="issue-actions">
+            <a th:href="@{/SWP/issues/edit(id=${issue.id})}" class="action-btn">
+                ✏️ Sửa Issue
+            </a>
+            <a th:href="@{/SWP/issues}" class="action-btn primary">
+                📋 Danh sách Issues
+            </a>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer" style="margin-top: 30px;">
+        <div th:replace="taskbar/customer-footer :: customerFooter"></div>
+    </div>
 </body>
 </html>

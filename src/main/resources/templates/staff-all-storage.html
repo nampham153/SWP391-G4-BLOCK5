@@ -402,6 +402,14 @@
             </button>
             <h1>Kho của tôi</h1>
         </div>
+        <div class="header-right">
+            <form th:action="@{/logout}" method="post" style="margin: 0;">
+                <button type="submit" class="btn btn-secondary" title="Đăng xuất" style="display:inline-flex;align-items:center;gap:8px;">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Đăng xuất</span>
+                </button>
+            </form>
+        </div>
     </header>
 
     <!-- Page Content -->
@@ -412,7 +420,7 @@
             <p class="page-subtitle">Quản lý và theo dõi các kho bãi được phân công</p>
             <div class="page-actions">
                 <button class="btn-back">
-                    <a href="/staff/staff-dashboard" style="color: inherit; text-decoration: none;">
+                    <a href="/SWP/staff/staff-dashboard" style="color: inherit; text-decoration: none;">
                         <i class="fas fa-arrow-left"></i>
                         Quay Lại Dashboard
                     </a>
@@ -455,31 +463,17 @@
                         </div>
                         
                         <div class="detail-item">
-                            <span class="detail-label">Giá thuê/ngày</span>
-                            <div class="detail-value" th:text="${#numbers.formatDecimal(storage.pricePerDay, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'">0 VNĐ</div>
+                            <span class="detail-label">Giá khu/ngày</span>
+                            <div class="detail-value"
+                                 th:text="${#numbers.formatDecimal(((storage.zones != null and !#lists.isEmpty(storage.zones)) ? storage.zones.get(0).pricePerDay : storage.pricePerDay), 0, 'COMMA', 0, 'POINT')} + ' VNĐ'">
+                                0 VNĐ
+                            </div>
                         </div>
                         
-                                                 <div class="detail-item">
-                             <span class="detail-label">Diện tích tổng</span>
-                             <div class="detail-value" th:text="${#numbers.formatDecimal(storage.area, 1, 'COMMA', 1, 'POINT')} + ' m²'">0 m²</div>
-                         </div>
-                         
-                         <div class="detail-item">
-                             <span class="detail-label">Diện tích đã thuê</span>
-                             <div class="detail-value" th:with="rentedArea=${#vars['rentedArea_' + storage.storageid]}, availableArea=${#vars['availableArea_' + storage.storageid]}" 
-                                  th:text="${#numbers.formatDecimal(rentedArea != null ? rentedArea : 0, 1, 'COMMA', 1, 'POINT')} + ' m²'">0 m²</div>
-                         </div>
-                         
-                         <div class="detail-item">
-                             <span class="detail-label">Diện tích còn lại</span>
-                             <div class="detail-value" th:with="rentedArea=${#vars['rentedArea_' + storage.storageid]}, availableArea=${#vars['availableArea_' + storage.storageid]}" 
-                                  th:text="${#numbers.formatDecimal(availableArea != null ? availableArea : storage.area, 1, 'COMMA', 1, 'POINT')} + ' m²'">0 m²</div>
-                         </div>
-                         
-                         <div class="detail-item">
-                             <span class="detail-label">Tọa độ</span>
-                             <div class="detail-value" th:text="(${storage.latitude} != null ? ${storage.latitude} : 'N/A') + ', ' + (${storage.longitude} != null ? ${storage.longitude} : 'N/A')">N/A, N/A</div>
-                         </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Tổng số zone</span>
+                            <div class="detail-value" th:text="${storage.zones != null ? storage.zones.size() : 0}">0</div>
+                        </div>
                         
                         <div class="detail-item full-width">
                             <span class="detail-label">Địa chỉ</span>

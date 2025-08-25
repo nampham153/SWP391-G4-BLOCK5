@@ -30,19 +30,24 @@
             box-sizing: border-box;
         }
 
+        html, body { overflow-x: hidden; }
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             line-height: 1.6;
             color: var(--gray-800);
-            background: var(--gray-50);
+            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
             min-height: 100vh;
-            padding: 1rem;
+            padding: 0; /* remove top spacing to push navbar up */
             margin: 0;
         }
+
+        /* Page-specific navbar overrides: full width and no extra margins */
+        .navbar { margin: 0; }
 
         .container {
             max-width: 1200px;
             margin: 0 auto;
+            margin-left: 250px; /* Để không bị che bởi taskbar */
         }
 
         .header {
@@ -233,6 +238,93 @@
             box-shadow: 0 0 0 3px rgba(44, 62, 80, 0.1);
         }
 
+        /* CSS cho bộ lọc mới */
+        .filter-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .filter-row {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .date-filter {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            min-width: 150px;
+        }
+
+        .date-filter label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--gray-700);
+        }
+
+        .date-input {
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--gray-200);
+            border-radius: var(--border-radius);
+            font-size: 0.95rem;
+            color: var(--gray-800);
+            background: #ffffff;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .date-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(44, 62, 80, 0.1);
+        }
+
+
+
+        .filter-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: 0.95rem;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .filter-btn.primary {
+            background: var(--primary-color);
+            color: #ffffff;
+        }
+
+        .filter-btn.primary:hover {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+
+        .filter-btn.secondary {
+            background: var(--gray-100);
+            color: var(--gray-700);
+            border: 1px solid var(--gray-200);
+        }
+
+        .filter-btn.secondary:hover {
+            background: var(--gray-200);
+            transform: translateY(-1px);
+        }
+
         .issues-container {
             display: flex;
             flex-direction: column;
@@ -291,12 +383,28 @@
             display: inline-flex;
             align-items: center;
             gap: 0.25rem;
+            text-transform: capitalize;
+            white-space: nowrap;
+            position: relative;
+            z-index: 1;
+            cursor: default;
+            user-select: none;
+            border: 1px solid transparent;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            min-width: 120px;
+            justify-content: center;
         }
 
         .status-badge.pending { background: #fef3c7; color: #92400e; }
-        .status-badge.progress { background: #dbeafe; color: #1e40af; }
+        .status-badge.in-progress { background: #dbeafe; color: #1e40af; }
         .status-badge.resolved { background: #d1fae5; color: #065f46; }
         .status-badge.closed { background: var(--gray-100); color: var(--gray-600); }
+        
+        /* Thêm CSS cho các trạng thái khác nếu có */
+        .status-badge.default { background: var(--gray-200); color: var(--gray-700); }
+        .status-badge.null { background: #fee2e2; color: #991b1b; }
+        .status-badge.unknown { background: #f3e8ff; color: #7c3aed; }
+        .status-badge.in_progress { background: #dbeafe; color: #1e40af; }
 
         .issue-description {
             color: var(--gray-700);
@@ -493,6 +601,15 @@
                 padding: 0.5rem 0.75rem;
                 font-size: 0.85rem;
             }
+
+            .container {
+                margin-left: 1rem; /* Trên mobile, không cần margin-left */
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
         }
 
         .icon {
@@ -500,16 +617,126 @@
             height: 14px;
             display: inline-block;
         }
+
+        /* CSS cho taskbar */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            height: 100vh;
+            width: 250px;
+            background: var(--primary-color);
+            color: white;
+            z-index: 1000;
+            overflow-y: auto;
+        }
+
+        .sidebar-header {
+            padding: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .menu-item a {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            color: white;
+            text-decoration: none;
+            transition: background-color 0.2s ease;
+        }
+
+        .menu-item a:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-footer {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            padding: 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .user-details {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-name {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .user-role {
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
+
+        /* CSS cho nút quay lại */
+        .back-button {
+            background: #2c3e50;
+            color: #ffffff;
+            border: 2px solid rgba(44, 62, 80, 0.2);
+            padding: 10px 18px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            margin: 20px 0 20px 20px;
+            width: fit-content;
+        }
+
+        .back-button:hover {
+            background: #34495e;
+            border-color: rgba(44, 62, 80, 0.3);
+            transform: translateX(-3px);
+            color: #ffffff;
+            text-decoration: none;
+            box-shadow: 0 4px 12px rgba(44, 62, 80, 0.2);
+        }
         /*]]>*/
     </style>
 </head>
 <body>
-<div class="navbar" style="margin-bottom: 10px;">
-    <div th:replace="taskbar/customer-navbar :: customerNavbar"></div>
-</div>
+<div th:replace="taskbar/customer-navbar :: customerNavbar"></div>
 <!-- Nút quay lại -->
-<a href="javascript:history.back()" class="back-button" title="Quay lại trang trước">← Quay lại</a>
-<div class="container">
+<a th:href="@{/home-page}" class="back-button" title="Quay về trang chủ">← Quay về trang chủ</a>
+<div class="container" style="padding: 0 16px;">
     <!-- Header -->
     <div class="header">
         <div class="header-content">
@@ -554,27 +781,46 @@
         </div>
     </div>
 
-    <!-- Filters (giữ nguyên, không sửa) -->
+    <!-- Bộ lọc tìm kiếm nâng cao -->
     <div class="filters">
-        <form th:action="@{/SWP/issues}" method="get" class="filter-row">
-            <div class="search-box">
-                <span class="search-icon">🔍</span>
-                <input type="text"
-                       name="search"
-                       th:value="${search}"
-                       class="search-input"
-                       placeholder="Tìm kiếm theo chủ đề, khách hàng, staff...">
+        <form th:action="@{/SWP/issues}" method="get" class="filter-form">
+            <div class="filter-row">
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text"
+                           name="search"
+                           th:value="${search}"
+                           class="search-input"
+                           placeholder="Tìm kiếm theo ID, chủ đề, mô tả, tên khách hàng...">
+                </div>
+                <select name="status" class="filter-select">
+                    <option value="">Tất cả trạng thái</option>
+                    <option value="Pending" th:selected="${status == 'Pending'}">Chờ xử lý</option>
+                    <option value="In_Progress" th:selected="${status == 'In_Progress'}">Đang xử lý</option>
+                    <option value="Resolved" th:selected="${status == 'Resolved'}">Đã giải quyết</option>
+                    <option value="Closed" th:selected="${status == 'Closed'}">Đã đóng</option>
+                </select>
             </div>
-            <select name="status" class="filter-select" th:value="${status}">
-                <option value="">Tất cả trạng thái</option>
-                <option value="Pending" th:selected="${status == 'Pending'}">Chờ xử lý</option>
-                <option value="In_Progress" th:selected="${status == 'In_Progress'}">Đang xử lý</option>
-                <option value="Resolved" th:selected="${status == 'Resolved'}">Đã giải quyết</option>
-                <option value="Closed" th:selected="${status == 'Closed'}">Đã đóng</option>
-            </select>
-            <button type="submit" class="action-btn">
-                🔍 Lọc
-            </button>
+            
+            <div class="filter-row">
+                <div class="date-filter">
+                    <label>Từ ngày:</label>
+                    <input type="date" name="startDate" th:value="${startDate}" class="date-input">
+                </div>
+                <div class="date-filter">
+                    <label>Đến ngày:</label>
+                    <input type="date" name="endDate" th:value="${endDate}" class="date-input">
+                </div>
+            </div>
+            
+            <div class="filter-actions">
+                <button type="submit" class="filter-btn primary">
+                    🔍 Tìm kiếm
+                </button>
+                <a th:href="@{/SWP/issues}" class="filter-btn secondary">
+                    🗑️ Xóa bộ lọc
+                </a>
+            </div>
         </form>
     </div>
     <!-- Issues List -->
@@ -587,7 +833,7 @@
 
         <div th:each="issue : ${issues}"
              class="issue-card"
-             th:classappend="${#strings.toLowerCase(issue.status)}">
+             th:classappend="${issue.status != null ? #strings.toLowerCase(issue.status.toString()) : 'null'}">
 
             <div class="issue-header">
                 <div class="issue-title">
@@ -595,8 +841,8 @@
                     <h3 th:text="${issue.subject}">Tiêu đề issue</h3>
                 </div>
                 <span class="status-badge"
-                      th:classappend="${#strings.toLowerCase(issue.status)}">
-                        <span th:switch="${issue.status}">
+                      th:classappend="${issue.status != null ? #strings.toLowerCase(issue.status.toString()) : 'null'}">
+                        <span th:switch="${issue.status.toString()}">
                             <span th:case="'Pending'">⏱️ Chờ xử lý</span>
                             <span th:case="'In_Progress'">🔄 Đang xử lý</span>
                             <span th:case="'Resolved'">✅ Đã giải quyết</span>
@@ -621,7 +867,7 @@
             </div>
 
             <div class="issue-actions">
-                <a th:href="@{/SWP/issues/view(id=${issue.id})}" class="action-btn">
+                <a th:href="@{/SWP/issues/{id}/view(id=${issue.id})}" class="action-btn">
                     👁️ Xem
                 </a>
                 <a th:href="@{/SWP/issues/edit(id=${issue.id})}" class="action-btn">
@@ -645,7 +891,7 @@
         <ul class="pagination" style="display: inline-flex; list-style: none; padding-left: 0;">
             <!-- Previous -->
             <li th:classappend="${currentPage == 0} ? 'disabled'" style="margin: 0 5px;">
-                <a th:href="@{/SWP/issues(page=${currentPage - 1}, size=${pageSize}, search=${search}, status=${status})}"
+                <a th:href="@{/SWP/issues(page=${currentPage - 1}, size=${pageSize}, search=${search}, status=${status}, startDate=${startDate}, endDate=${endDate})}"
                    style="padding: 8px 12px; border-radius: 8px; border: 1.5px solid #cbd5e0; background: white; color: #4a5568; text-decoration: none;">
                     « Trước
                 </a>
@@ -657,7 +903,7 @@
                   style="padding:8px 12px; background:#667eea; color:white; border-radius:8px; border:none; font-weight:600;">
             </span>
                 <a th:if="${i != currentPage}"
-                   th:href="@{/SWP/issues(page=${i}, size=${pageSize}, search=${search}, status=${status})}"
+                   th:href="@{/SWP/issues(page=${i}, size=${pageSize}, search=${search}, status=${status}, startDate=${startDate}, endDate=${endDate})}"
                    th:text="${i + 1}"
                    style="padding:8px 12px; border-radius:8px; border: 1.5px solid #cbd5e0; background: white; color: #4a5568; text-decoration: none;">
                 </a>
@@ -665,7 +911,7 @@
 
             <!-- Next -->
             <li th:classappend="${currentPage + 1 >= totalPages} ? 'disabled'" style="margin: 0 5px;">
-                <a th:href="@{/SWP/issues(page=${currentPage + 1}, size=${pageSize}, search=${search}, status=${status})}"
+                <a th:href="@{/SWP/issues(page=${currentPage + 1}, size=${pageSize}, search=${search}, status=${status}, startDate=${startDate}, endDate=${endDate})}"
                    style="padding: 8px 12px; border-radius: 8px; border: 1.5px solid #cbd5e0; background: white; color: #4a5568; text-decoration: none;">
                     Tiếp »
                 </a>
@@ -683,6 +929,8 @@
         this.form.submit();
     });
 
+
+
     // Click vào stat-card để lọc nhanh
     document.querySelectorAll('.stat-card').forEach(function(card, idx) {
         card.addEventListener('click', function() {
@@ -692,6 +940,19 @@
             select.value = status;
             select.form.submit();
         })
+    });
+
+    // Xử lý bộ lọc thời gian
+    document.querySelectorAll('input[type="date"]').forEach(function(input) {
+        input.addEventListener('change', function() {
+            // Chỉ submit khi cả 2 ngày đã được chọn
+            let startDate = document.querySelector('input[name="startDate"]').value;
+            let endDate = document.querySelector('input[name="endDate"]').value;
+            
+            if (startDate && endDate) {
+                this.form.submit();
+            }
+        });
     });
 
     // Add loading state to action buttons (trừ delete)

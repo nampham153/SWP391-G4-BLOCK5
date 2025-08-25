@@ -1,6 +1,20 @@
 // src/main/java/com/example/swp/service/impl/StaffServiceImpl.java
 package com.example.swp.service.impl;
 
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.UUID;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
 import com.example.swp.dto.NewStaffForm;
 import com.example.swp.dto.StaffRequest;
 import com.example.swp.entity.Staff;
@@ -9,13 +23,6 @@ import com.example.swp.repository.CustomerRepository;
 import com.example.swp.repository.StaffRepository;
 import com.example.swp.service.EmailService;
 import com.example.swp.service.StaffService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.data.domain.*;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-
-import java.util.*;
 
 @Service
 public class StaffServiceImpl implements StaffService {

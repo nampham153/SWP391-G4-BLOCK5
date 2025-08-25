@@ -65,10 +65,11 @@
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
             margin: 20px auto;
             position: relative;
-            overflow: hidden;
+            overflow: visible;
             animation: slideUp 0.5s ease;
             flex: 1 0 auto;
-            max-height: 70vh;
+            max-height: none;
+            padding-bottom: 96px; /* đảm bảo không che nút submit */
         }
 
         @keyframes slideUp {
@@ -532,39 +533,32 @@
         <div class="form-grid">
             <div class="form-group">
                 <label class="form-label">
-                    Khách hàng <span class="required">*</span>
+                    Đơn hàng <span class="required">*</span>
                 </label>
                 <div class="input-wrapper">
-                    <select class="form-select" th:field="*{customerId}" required>
-                        <option value="">-- Chọn khách hàng --</option>
-                        <option th:each="cus : ${customers}"
-                                th:value="${cus.id}"
-                                th:text="${cus.fullname}"></option>
+                    <select class="form-select" id="orderSelect" required>
+                        <option value="">-- Chọn đơn hàng --</option>
+                        <option th:each="o : ${orders}"
+                                th:value="${o.id}"
+                                th:text="${'#' + o.id + ' - ' + (o.customer != null ? o.customer.fullname : 'Khách lẻ') + ' - ' + (o.storage != null ? o.storage.storagename : 'Kho?')}"></option>
                     </select>
                 </div>
-                <div class="form-error" th:if="${#fields.hasErrors('customerId')}" th:errors="*{customerId}">
-                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
-                    </svg>
+            </div>
+
+            <input type="hidden" th:field="*{customerId}" id="customerIdHidden" />
+            <input type="hidden" th:field="*{assignedStaffId}" id="staffIdHidden" />
+
+            <div class="form-group">
+                <label class="form-label">Nhân viên phụ trách</label>
+                <div class="input-wrapper">
+                    <input class="form-input" id="staffDisplay" type="text" placeholder="Sẽ tự điền theo đơn" readonly>
                 </div>
             </div>
 
             <div class="form-group">
-                <label class="form-label">
-                    Staff phụ trách <span class="required">*</span>
-                </label>
+                <label class="form-label">Kho</label>
                 <div class="input-wrapper">
-                    <select class="form-select" th:field="*{assignedStaffId}" required>
-                        <option value="">-- Chọn staff --</option>
-                        <option th:each="staff : ${staffs}"
-                                th:value="${staff.staffid}"
-                                th:text="${staff.fullname}"></option>
-                    </select>
-                </div>
-                <div class="form-error" th:if="${#fields.hasErrors('assignedStaffId')}" th:errors="*{assignedStaffId}">
-                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
-                    </svg>
+                    <input class="form-input" id="storageDisplay" type="text" placeholder="Sẽ tự điền theo đơn" readonly>
                 </div>
             </div>
         </div>
@@ -583,6 +577,31 @@
 </div>
 
 <script>
+    // Khi chọn đơn: gọi API để lấy thông tin đơn và fill các trường ẩn
+    document.addEventListener('DOMContentLoaded', function() {
+        const orderSelect = document.getElementById('orderSelect');
+        const customerIdHidden = document.getElementById('customerIdHidden');
+        const staffIdHidden = document.getElementById('staffIdHidden');
+        const staffDisplay = document.getElementById('staffDisplay');
+        const storageDisplay = document.getElementById('storageDisplay');
+
+        async function loadOrder(orderId) {
+            try {
+                const res = await fetch(`/SWP/issues/api/orders/${orderId}`);
+                if (!res.ok) return;
+                const o = await res.json();
+                customerIdHidden.value = o.customerId || '';
+                staffIdHidden.value = o.staffId || '';
+                staffDisplay.value = o.staffName || '';
+                storageDisplay.value = o.storageName || '';
+            } catch (e) {}
+        }
+
+        orderSelect?.addEventListener('change', function() {
+            const id = this.value;
+            if (id) loadOrder(id);
+        });
+    });
     function updateCount(field, max) {
         const input = document.querySelector(`[name='${field}']`);
         const count = input.value.length;
@@ -628,6 +647,11 @@
                     field.classList.add('success');
                 }
             });
+
+            // Ensure order has populated hidden customer/staff
+            if (!customerIdHidden.value || !staffIdHidden.value) {
+                isValid = false;
+            }
 
             if (!isValid) {
                 e.preventDefault();
