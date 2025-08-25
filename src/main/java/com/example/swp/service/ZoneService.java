@@ -14,4 +14,5 @@ public interface ZoneService {
     void deleteZone(int id);
     double getTotalZoneAreaByStorageId(int storageId);
     boolean validateZoneArea(int storageId, double newZoneArea);
+    int countZonesByStorageId(int storageId);
 }

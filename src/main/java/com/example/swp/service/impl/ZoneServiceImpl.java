@@ -82,4 +82,10 @@ public class ZoneServiceImpl implements ZoneService {
         // Kiểm tra: tổng diện tích zone (bao gồm zone mới) phải <= diện tích kho
         return (totalExistingZoneArea + newZoneArea) <= storageArea;
     }
+
+    @Override
+    public int countZonesByStorageId(int storageId) {
+        List<Zone> zones = zoneRepository.findAllByStorageId(storageId);
+        return zones.size();
+    }
 }
