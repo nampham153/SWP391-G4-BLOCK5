@@ -21,11 +21,7 @@
   <!-- Bọc CSS vào CDATA để khỏi lỗi entity -->
   <style type="text/css" th:inline="none">
     /*<![CDATA[*/
-    @font-face {
-      font-family: 'Inter';
-      font-weight: normal;
-      font-style: normal;
-    }
+    /* Loại bỏ @font-face tự khai báo để tránh cảnh báo lint; đã nạp font qua Google Fonts */
 
     :root {
       --primary-color: #2c3e50; /* Primary dark color */
@@ -134,6 +130,9 @@
       padding: 1.25rem;
       border-radius: var(--border-radius);
       transition: transform 0.2s ease, box-shadow 0.2s ease;
+      /* Ngăn tràn nội dung dài */
+      word-break: break-word;
+      overflow-wrap: anywhere;
     }
 
     .info-item:hover {
@@ -153,6 +152,9 @@
       font-size: 1.1rem;
       font-weight: 600;
       color: var(--gray-900);
+      /* Ngăn tràn số tiền/dòng chữ dài */
+      word-break: break-word;
+      overflow-wrap: anywhere;
     }
 
     .info-value.highlight {
@@ -432,7 +434,7 @@
           <div class="info-value" th:text="${order.rentalArea + ' m²'}">100 m²</div>
         </div>
 
-        <div class="info-item" style="width: 830px;">
+        <div class="info-item">
           <div class="info-label">Tổng tiền</div>
           <div class="info-value amount" th:text="${order.totalAmount + ' VNĐ'}">1,000,000 VNĐ</div>
         </div>
