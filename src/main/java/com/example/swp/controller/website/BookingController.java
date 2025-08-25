@@ -1204,14 +1204,38 @@ public class BookingController {
      */
     @GetMapping("/customers/expired-orders/data")
     @ResponseBody
-    public List<Order> getExpiredOrdersForCustomer(HttpSession session) {
+    public List<java.util.Map<String, Object>> getExpiredOrdersForCustomer(HttpSession session) {
         Customer customer = getLoggedInCustomer(session);
         if (customer == null) {
-            // Giữ hành vi cũ: trả mảng rỗng khi chưa đăng nhập
             return java.util.Collections.emptyList();
         }
-        // Trả trực tiếp danh sách Order như trước
-        return orderService.findExpiredOrdersByCustomer(customer.getId());
+
+        List<Order> orders = orderService.findExpiredOrdersByCustomer(customer.getId());
+        List<java.util.Map<String, Object>> dtoList = new ArrayList<>();
+
+        for (Order o : orders) {
+            java.util.Map<String, Object> m = new java.util.HashMap<>();
+            m.put("id", o.getId());
+            m.put("startDate", o.getStartDate());
+            m.put("endDate", o.getEndDate());
+            m.put("orderDate", o.getOrderDate());
+            m.put("totalAmount", o.getTotalAmount());
+            m.put("status", o.getStatus());
+            m.put("rentalArea", o.getRentalArea());
+
+            // Thu gọn thông tin storage để tránh vòng lặp JSON
+            java.util.Map<String, Object> storageMap = null;
+            if (o.getStorage() != null) {
+                storageMap = new java.util.HashMap<>();
+                storageMap.put("storageid", o.getStorage().getStorageid());
+                storageMap.put("storagename", o.getStorage().getStoragename());
+            }
+            m.put("storage", storageMap);
+
+            dtoList.add(m);
+        }
+
+        return dtoList;
     }
 
     /**
