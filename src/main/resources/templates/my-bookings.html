@@ -121,6 +121,15 @@
             transition: all 0.2s ease;
         }
 
+        /* Ensure icon-text spacing inside buttons */
+        .btn i { margin-right: 8px !important; font-size: 14px; line-height: 1; }
+
+        .btn i {
+            font-size: 14px;
+            line-height: 1;
+            margin-right: 6px;
+        }
+
         .btn-primary {
             background: #007bff;
             color: white;
@@ -206,10 +215,15 @@
             color: #666;
         }
 
-        .empty-state i {
-            font-size: 64px;
+        .empty-state > i {
+            font-size: 40px;
             margin-bottom: 20px;
-            color: #ddd;
+            color: #bbb;
+        }
+
+        .empty-state .btn i {
+            font-size: 14px;
+            margin-right: 6px;
         }
 
         .empty-state h3 {
@@ -253,7 +267,8 @@
         .contract-signed{ background:rgba(40,167,69,.2); color:#28a745; }
         .contract-pending{ background:rgba(255,193,7,.2); color:#ffc107; }
         .empty-state{ text-align:center; padding:60px 20px; color:#666; }
-        .empty-state i{ font-size:64px; margin-bottom:20px; color:#ddd; }
+        .empty-state > i{ font-size:40px; margin-bottom:20px; color:#bbb; }
+        .empty-state .btn i{ font-size:14px; margin-right:6px; }
         .empty-state h3{ margin-bottom:10px; color:#333; }
         .amount-highlight{ color:#28a745; font-weight:700; }
     </style>
@@ -280,6 +295,7 @@
                     <p th:text="'Tổng cộng: ' + ${orders.size()} + ' đơn hàng'"></p>
                 </div>
                 <div class="header-actions">
+
                     <a href="/SWP/storages" class="btn btn-primary"><i class="fas fa-plus"></i> Đặt kho</a>
 
                     <!-- NEW: go to My Transactions -->
@@ -287,6 +303,9 @@
                         <i class="fas fa-receipt"></i> Lịch sử giao dịch
                     </a>
                     <a href="#" id="btn-expired-orders" class="btn btn-secondary"><i class="fas fa-hourglass-end"></i> Đơn hết hạn</a>
+
+                    <a href="/SWP/storages" class="btn btn-primary"><i class="fas fa-plus fa-sm" style="margin-right:6px"></i>Đặt kho</a>
+
                 </div>
             </div>
 
@@ -398,11 +417,11 @@
 
                 <!-- Không có đơn hàng -->
                 <div th:if="${orders == null or orders.empty}" class="empty-state">
-                    <i class="fas fa-inbox"></i>
+                    <i class="fas fa-inbox fa-2x"></i>
                     <h3>Chưa có đơn hàng nào</h3>
                     <p>Bạn chưa có đơn hàng thuê kho nào. Hãy bắt đầu đặt kho ngay!</p>
                     <a href="/SWP/storages" class="btn btn-primary" style="margin-top:20px;">
-                        <i class="fas fa-warehouse"></i> Khám phá kho
+                        <i class="fas fa-warehouse fa-sm" style="margin-right:6px"></i>Khám phá kho
                     </a>
                 </div>
             </div>

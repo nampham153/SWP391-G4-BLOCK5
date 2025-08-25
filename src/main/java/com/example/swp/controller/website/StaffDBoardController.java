@@ -5,6 +5,8 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,6 +15,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -31,6 +34,7 @@ import com.example.swp.service.CustomerService;
 import com.example.swp.service.FeedbackService;
 import com.example.swp.service.OrderService;
 import com.example.swp.service.RecentActivityService;
+import com.example.swp.service.StaffService;
 import com.example.swp.service.StorageService;
 import com.example.swp.service.StorageTransactionService;
 import com.example.swp.service.VoucherService;
@@ -59,6 +63,8 @@ public class StaffDBoardController {
     StorageTransactionService storageTransactionService;
     @Autowired
     VoucherService voucherService;
+    @Autowired
+    StaffService staffService;
 
     @GetMapping("/staff-dashboard")
     public String showDashboard(Model model, HttpSession session) {
@@ -195,6 +201,20 @@ public class StaffDBoardController {
     @GetMapping("/staff-all-storage")
     public String showAllStorageList(Model model, HttpSession session) {
         Object loggedInStaffObj = session.getAttribute("loggedInStaff");
+        if (!(loggedInStaffObj instanceof Staff)) {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication != null && authentication.isAuthenticated()) {
+                String email = authentication.getName();
+                Staff resolved = staffService.findByEmail(email).orElse(null);
+                if (resolved != null) {
+                    session.setAttribute("loggedInStaff", resolved);
+                    loggedInStaffObj = resolved;
+                }
+            }
+            if (!(loggedInStaffObj instanceof Staff)) {
+                return "redirect:/api/login";
+            }
+        }
         List<Storage> storages;
         if (loggedInStaffObj instanceof Staff) {
             int staffId = ((Staff) loggedInStaffObj).getStaffid();
@@ -227,6 +247,48 @@ public class StaffDBoardController {
         List<RecentActivity> recentActivities = recentActivityService.getAllActivities();
         model.addAttribute("recentActivities", recentActivities);
         return "all-recent-activity"; // Tên file Thymeleaf: all-customer-recent-activity-list.html
+    }
+
+    // Diagnostic API to verify storages assigned to logged-in staff
+    @GetMapping("/api/my-storages")
+    @ResponseBody
+    public java.util.Map<String, Object> getMyStorages(HttpSession session) {
+        java.util.Map<String, Object> result = new java.util.HashMap<>();
+        Object loggedInStaffObj = session.getAttribute("loggedInStaff");
+        if (!(loggedInStaffObj instanceof Staff)) {
+            // Try resolve from security context
+            org.springframework.security.core.Authentication authentication = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+            if (authentication != null && authentication.isAuthenticated()) {
+                String email = authentication.getName();
+                Staff resolved = staffService.findByEmail(email).orElse(null);
+                if (resolved != null) {
+                    session.setAttribute("loggedInStaff", resolved);
+                    loggedInStaffObj = resolved;
+                }
+            }
+        }
+
+        if (loggedInStaffObj instanceof Staff staff) {
+            List<Storage> storages = storageService.findByStaffId(staff.getStaffid());
+            java.util.List<java.util.Map<String, Object>> items = new java.util.ArrayList<>();
+            for (Storage s : storages) {
+                java.util.Map<String, Object> item = new java.util.HashMap<>();
+                item.put("storageId", s.getStorageid());
+                item.put("storageName", s.getStoragename());
+                item.put("status", s.isStatus());
+                item.put("pricePerDay", s.getPricePerDay());
+                item.put("city", s.getCity());
+                item.put("zonesCount", s.getZones() != null ? s.getZones().size() : 0);
+                items.add(item);
+            }
+            result.put("staffId", staff.getStaffid());
+            result.put("email", staff.getEmail());
+            result.put("storages", items);
+        } else {
+            result.put("error", "NOT_LOGGED_IN_AS_STAFF");
+        }
+
+        return result;
     }
 
     @PostMapping("/staff-add-storage")
